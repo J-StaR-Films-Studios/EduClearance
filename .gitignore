@@ -18,6 +18,8 @@ venv/
 *.pkl
 *.pth
 *.safetensors
+.env.local
+.env.*.local
 
 # --- Node / Web ---
 node_modules/
@@ -27,6 +29,7 @@ build/
 coverage/
 .npm
 *.log
+*.tsbuildinfo
 
 # --- IDEs ---
 .vscode/

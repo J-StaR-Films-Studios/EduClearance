@@ -1,0 +1,196 @@
+'use client';
+
+import { useState, type FormEvent } from 'react';
+
+export function IssueReportForm({ fromInboundRequest = false }: { fromInboundRequest?: boolean }) {
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    setSubmitted(true);
+    form.reset();
+  }
+
+  return (
+    <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
+      {submitted ? (
+        <div className="mb-4 space-y-2 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
+          <p>Issue reported successfully. The record is staged as unresolved and should be audit logged once the server action is connected.</p>
+          <a href="/issues" className="inline-flex font-semibold underline">
+            View reported issues
+          </a>
+        </div>
+      ) : null}
+
+      {fromInboundRequest ? (
+        <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800">
+          This report will answer an inbound clearance request. Keep the wording factual and upload school evidence where available.
+        </div>
+      ) : null}
+
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="space-y-1">
+          <label htmlFor="issueStudentName" className="block text-xs font-semibold text-navy-800">
+            Student&apos;s Full Name
+          </label>
+          <input
+            id="issueStudentName"
+            type="text"
+            required
+            placeholder="e.g. Aisha Bello"
+            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label htmlFor="issueClass" className="block text-xs font-semibold text-navy-800">
+              Last Class Attended
+            </label>
+            <select
+              id="issueClass"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              defaultValue="JSS 3"
+            >
+              <option>JSS 3</option>
+              <option>Basic 6</option>
+              <option>SSS 1</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="issueCategory" className="block text-xs font-semibold text-navy-800">
+              Issue Category
+            </label>
+            <select
+              id="issueCategory"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              defaultValue="Outstanding School Fees"
+            >
+              <option>Outstanding School Fees</option>
+              <option>Unreturned Books / Library</option>
+              <option>Unpaid Uniform / Materials</option>
+              <option>Other Obligation</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="issueAmount" className="block text-xs font-semibold text-navy-800">
+            Unresolved Balance Owed by Parent/Student (₦)
+          </label>
+          <input
+            id="issueAmount"
+            type="number"
+            required
+            min="1"
+            placeholder="e.g. 45000"
+            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label htmlFor="academicSession" className="block text-xs font-semibold text-navy-800">
+              Academic Session
+            </label>
+            <select
+              id="academicSession"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              defaultValue="2025/2026"
+            >
+              <option>2025/2026</option>
+              <option>2024/2025</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="academicTerm" className="block text-xs font-semibold text-navy-800">
+              Academic Term
+            </label>
+            <select
+              id="academicTerm"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              defaultValue="2nd Term"
+            >
+              <option>1st Term</option>
+              <option>2nd Term</option>
+              <option>3rd Term</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label htmlFor="issueParentName" className="block text-xs font-semibold text-navy-800">
+              Parent / Guardian Name
+            </label>
+            <input
+              id="issueParentName"
+              type="text"
+              required
+              placeholder="e.g. Mr. Bello"
+              className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="issuePhone" className="block text-xs font-semibold text-navy-800">
+              Parent Contact Phone Number
+            </label>
+            <input
+              id="issuePhone"
+              type="tel"
+              required
+              placeholder="e.g. +234 802 111 2222"
+              className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="issueNote" className="block text-xs font-semibold text-navy-800">
+            Official Note / Description
+          </label>
+          <textarea
+            id="issueNote"
+            required
+            rows={3}
+            placeholder="Outline tuition balances, contact attempts, and settlement milestones..."
+            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="issueEvidence" className="block text-xs font-semibold text-navy-800">
+            Upload Supporting Evidence (Optional invoice, ledger printout, or bill)
+          </label>
+          <input
+            id="issueEvidence"
+            type="file"
+            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+          />
+        </div>
+
+        <div className="flex items-start gap-2.5 py-2">
+          <input
+            id="ethicalCheck"
+            type="checkbox"
+            required
+            className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800"
+          />
+          <label htmlFor="ethicalCheck" className="text-xs leading-relaxed text-slate-500">
+            I certify under penalty of account suspension that this record is accurate, matches our physical accounts ledger, and complies with cluster data privacy policies.
+          </label>
+        </div>
+
+        <button type="submit" className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800">
+          Save Unresolved Issue
+        </button>
+      </form>
+    </div>
+  );
+}
