@@ -13,7 +13,7 @@ The core product action is:
 
 Not:
 
-> Search a debtor database.
+> Run a passive one-off lookup.
 
 ## Stack to Use
 
@@ -93,3 +93,21 @@ Prepare a demo that shows:
 6. Match case shows an unresolved issue professionally.
 7. Previous school can report/resolve/dispute.
 8. Admin can monitor and intervene.
+
+## Mandatory Mockup-Driven Implementation
+The `/docs/mockups` folder is the **UNQUESTIONABLE source of truth** for all front-end UI/UX.
+You must NOT deviate from the layout, color palette, typography, or component structure defined in the mockups.
+Before implementing any page, open the corresponding mockup file and replicate it exactly.
+
+## Design Critique Refinements Locked for Build
+Also preserve the refinements from `docs/design/design_critique.md`:
+
+- Private/authenticated pages must use `noindex, nofollow` metadata and production routes should send `X-Robots-Tag: noindex, nofollow` where applicable.
+- `/clearance` must include tabs for outbound checks and inbound clearance requests.
+- If previous school is not listed in `/clearance/new`, show a manual previous-school name field.
+- WhatsApp outreach should use a direct `wa.me` share link or equivalent generated message action.
+- Issue reporting must use strong certification wording and the label “Unresolved Balance Owed by Parent/Student (₦)”.
+- Wallet billing must be hidden or locked for `school_staff` users.
+- Dispute resolution that clears an inaccurate record should refund the admitting school’s ₦100 check credit.
+- Tables must be horizontally scrollable on narrow mobile screens.
+

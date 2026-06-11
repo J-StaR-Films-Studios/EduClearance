@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Wallet & Billing - EduClearance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: { DEFAULT: '#FAF9F6', card: '#FFFFFF', secondary: '#F5F2EB' },
+            navy: { 800: '#1E293B', 900: '#0F172A' },
+            emerald: { 50: '#ECFDF5', 600: '#059669' },
+            amber: { 50: '#FEF3C7', 600: '#D97706' },
+            slate: { 500: '#64748B' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen flex flex-col md:flex-row">
+  <!-- Sidebar -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-background-secondary min-h-screen p-6 space-y-8 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-navy-900 text-white p-2 rounded-lg font-display font-bold">EC</div>
+      <span class="font-display font-bold text-lg text-navy-900">EduClearance</span>
+    </div>
+    <nav class="space-y-1.5 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Dashboard
+      </a>
+      <a href="wallet.html" class="flex items-center gap-3 bg-background-secondary text-navy-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5 text-navy-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+        Wallet & Billing
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 pb-24 md:pb-8 max-w-4xl mx-auto w-full">
+    <!-- Header -->
+    <header class="flex items-center justify-between border-b border-background-secondary pb-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-navy-900">Wallet & Top Up</h1>
+        <p class="text-xs text-slate-500">Manage school clearance credits via Paystack</p>
+      </div>
+      <a href="dashboard.html" class="text-xs text-slate-500 hover:text-navy-900">← Back</a>
+    </header>
+
+    <!-- Top Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Balance Card -->
+      <div class="bg-navy-900 text-white p-6 rounded-2xl border border-navy-800 shadow-sm flex flex-col justify-between h-40">
+        <div>
+          <p class="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest">Clearance Balance</p>
+          <p class="text-3xl font-bold font-display mt-2">₦4,500</p>
+        </div>
+        <p class="text-xs text-navy-200">Equals 45 remaining student checks</p>
+      </div>
+
+      <!-- Top Up Card -->
+      <div class="bg-white p-6 rounded-2xl border border-background-secondary shadow-sm md:col-span-2 space-y-4">
+        <h3 class="font-display font-semibold text-navy-900 text-sm">Purchase Clearance Credits</h3>
+        
+        <!-- Quick Packages -->
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="selectAmt(5000)" class="border border-background-secondary rounded-lg py-2.5 text-xs font-semibold hover:bg-background-secondary transition bg-background">₦5,000</button>
+          <button onclick="selectAmt(10000)" class="border border-background-secondary rounded-lg py-2.5 text-xs font-semibold hover:bg-background-secondary transition bg-background">₦10,000</button>
+          <button onclick="selectAmt(20000)" class="border border-background-secondary rounded-lg py-2.5 text-xs font-semibold hover:bg-background-secondary transition bg-background">₦20,000</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="number" id="custom-amt" placeholder="Enter custom amount" class="flex-1 bg-background border border-background-secondary rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
+          <button onclick="initPaystack()" class="bg-navy-900 text-white font-medium text-xs px-5 py-2.5 rounded-lg hover:bg-navy-800 transition">
+            Top Up
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="bg-white rounded-2xl border border-background-secondary shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-background-secondary">
+        <h3 class="font-display text-sm font-bold text-navy-900">Transaction History Log</h3>
+      </div>
+      <div class="overflow-x-auto whitespace-nowrap">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-background border-b border-background-secondary font-bold text-slate-500 uppercase tracking-wider">
+              <th class="px-6 py-3">Date</th>
+              <th class="px-6 py-3">Reference</th>
+              <th class="px-6 py-3">Type</th>
+              <th class="px-6 py-3">Description</th>
+              <th class="px-6 py-3 text-right">Amount (₦)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-background-secondary text-slate-600">
+            <tr>
+              <td class="px-6 py-4">2026-06-11 11:22</td>
+              <td class="px-6 py-4 font-mono">pstk_92a188f</td>
+              <td class="px-6 py-4"><span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100 font-semibold">Credit</span></td>
+              <td class="px-6 py-4 text-navy-900 font-medium">Paystack Wallet Deposit</td>
+              <td class="px-6 py-4 text-right font-semibold text-emerald-600">+5,000.00</td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4">2026-06-11 11:42</td>
+              <td class="px-6 py-4 font-mono">ec_tx_901a72</td>
+              <td class="px-6 py-4"><span class="bg-background text-slate-700 px-2 py-0.5 rounded-full border border-background-secondary font-semibold">Debit</span></td>
+              <td class="px-6 py-4">Clearance Check: Chinedu Alao</td>
+              <td class="px-6 py-4 text-right font-semibold text-navy-900">-100.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paystack Simulation Popup -->
+    <div id="paystack-modal" class="hidden fixed inset-0 bg-navy-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="w-full max-w-sm bg-white p-6 rounded-2xl border border-background-secondary shadow-md space-y-6">
+        <div class="flex items-center justify-between border-b border-background-secondary pb-3">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Paystack Gateway Mock</span>
+          <button onclick="closePaystack()" class="text-slate-400 hover:text-navy-900">✕</button>
+        </div>
+        <div class="text-center space-y-2">
+          <p class="text-xs text-slate-500">Securing payment transaction for Grace Academy</p>
+          <p class="text-2xl font-bold font-display text-navy-900" id="modal-amt">₦5,000.00</p>
+        </div>
+        <!-- Simulated Payment Options -->
+        <div class="space-y-2">
+          <button onclick="confirmPayment()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
+            Simulate Successful Payment
+          </button>
+          <button onclick="closePaystack()" class="w-full bg-background hover:bg-background-secondary text-slate-600 border border-background-secondary font-medium py-3 rounded-lg text-xs transition">
+            Simulate Cancel/Decline
+          </button>
+        </div>
+        <p class="text-[10px] text-center text-slate-400">Secure transaction encrypted by Paystack mock sandbox.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function selectAmt(val) {
+      document.getElementById('custom-amt').value = val;
+    }
+
+    function initPaystack() {
+      const val = document.getElementById('custom-amt').value;
+      if (!val || val <= 0) {
+        alert('Please enter a valid deposit amount.');
+        return;
+      }
+      document.getElementById('modal-amt').innerText = '₦' + parseFloat(val).toLocaleString() + '.00';
+      document.getElementById('paystack-modal').classList.remove('hidden');
+    }
+
+    function closePaystack() {
+      document.getElementById('paystack-modal').classList.add('hidden');
+    }
+
+    function confirmPayment() {
+      closePaystack();
+      alert('Mock payment callback received. In production, the wallet is credited only after server-side Paystack verification.');
+      window.location.href = 'wallet.html?payment_reference=mock_pending_verification';
+    }
+  </script>
+</body>
+</html>

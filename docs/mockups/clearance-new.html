@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Start Clearance Request - EduClearance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: { DEFAULT: '#FAF9F6', card: '#FFFFFF', secondary: '#F5F2EB' },
+            navy: { 800: '#1E293B', 900: '#0F172A' },
+            emerald: { 50: '#ECFDF5', 600: '#059669' },
+            slate: { 500: '#64748B' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen flex flex-col md:flex-row">
+  <!-- Sidebar -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-background-secondary min-h-screen p-6 space-y-8 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-navy-900 text-white p-2 rounded-lg font-display font-bold">EC</div>
+      <span class="font-display font-bold text-lg text-navy-900">EduClearance</span>
+    </div>
+    <nav class="space-y-1.5 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Dashboard
+      </a>
+      <a href="clearance-new.html" class="flex items-center gap-3 bg-background-secondary text-navy-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5 text-navy-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+        Start Check (₦100)
+      </a>
+      <a href="issues-new.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        Report Issue (Free)
+      </a>
+      <a href="wallet.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+        Wallet & Billing
+      </a>
+    </nav>
+    <div class="border-t border-background-secondary pt-4 text-xs text-slate-400">
+      <p>Grace Academy, Ikeja</p>
+      <p class="mt-1 font-semibold text-navy-800">Status: Active</p>
+    </div>
+  </aside>
+
+  <!-- Mobile Nav -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-background-secondary h-16 flex items-center justify-around z-50">
+    <a href="dashboard.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
+    </a>
+    <a href="clearance-new.html" class="flex flex-col items-center text-navy-900">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+      <span class="text-[10px] font-semibold mt-0.5">Verify (₦100)</span>
+    </a>
+    <a href="issues-new.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Report Issue</span>
+    </a>
+    <a href="wallet.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Wallet</span>
+    </a>
+  </nav>
+
+  <!-- Content -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 pb-24 md:pb-8 max-w-2xl mx-auto w-full">
+    <!-- Header -->
+    <header class="flex items-center justify-between border-b border-background-secondary pb-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-navy-900">Start Clearance Request</h1>
+        <p class="text-xs text-slate-500">Initiate a transfer verification for an incoming student</p>
+      </div>
+      <a href="dashboard.html" class="text-xs text-slate-500 hover:text-navy-900">← Back</a>
+    </header>
+
+    <!-- Main Form Card -->
+    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-background-secondary shadow-sm space-y-6">
+      <form class="space-y-4">
+        <!-- Student Name -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-navy-800 block">Student's Full Name</label>
+          <input type="text" required placeholder="e.g. Chinedu Okafor" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Gender -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-navy-800 block">Gender</label>
+            <select class="w-full bg-background border border-background-secondary rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+          <!-- Last Class -->
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-navy-800 block">Last Class Attended</label>
+            <select class="w-full bg-background border border-background-secondary rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+              <option>Basic 6</option>
+              <option>JSS 1</option>
+              <option>JSS 2</option>
+              <option>JSS 3</option>
+              <option>SSS 1</option>
+              <option>SSS 2</option>
+              <option>SSS 3</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Parent Name -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-navy-800 block">Parent / Guardian Full Name</label>
+          <input type="text" required placeholder="e.g. Mr. Emeka Okafor" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+        </div>
+
+        <!-- Parent Phone -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-navy-800 block">Parent Phone Number (Key for Matching)</label>
+          <input type="tel" required placeholder="e.g. +234 803 123 4567" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+          <span class="text-slate-500 text-[10px]">Phone numbers are normalized and matched against unresolved school balances.</span>
+        </div>
+
+        <!-- Previous School -->
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-navy-800 block">Previous Attending School</label>
+          <select id="previous-school-select" onchange="toggleManualSchool()" class="w-full bg-background border border-background-secondary rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+            <option>Springfield International School (Ikeja)</option>
+            <option>Hilltop Preparatory (Gbagada)</option>
+            <option>Grace Prep School (Garki Abuja)</option>
+            <option>School not listed (Manual Type-in)</option>
+          </select>
+        </div>
+
+        <div id="manual-school-group" class="hidden space-y-1">
+          <label class="text-xs font-semibold text-navy-800 block">Specify Previous School Name</label>
+          <input type="text" placeholder="e.g. Bright Future Academy, Nyanya" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+          <span class="text-slate-500 text-[10px]">Use this when the previous school is not yet listed in the EduClearance directory.</span>
+        </div>
+
+        <!-- Cost breakdown card -->
+        <div class="bg-background border border-background-secondary rounded-xl p-4 flex items-center justify-between text-sm">
+          <div>
+            <p class="font-semibold text-navy-900">Check Fee</p>
+            <p class="text-xs text-slate-500">Charged from school wallet balance</p>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-navy-900">₦100</p>
+            <p class="text-xs text-emerald-600">Balance: ₦4,500</p>
+          </div>
+        </div>
+
+        <!-- Verification Actions (Demo Redirects) -->
+        <div class="pt-2 space-y-2">
+          <p class="text-xs text-slate-400 text-center font-medium">Select a result state below to simulate search outcome:</p>
+          <div class="grid grid-cols-2 gap-4">
+            <a href="clearance-detail-no-record.html" class="bg-navy-900 text-white font-medium text-center py-3 rounded-lg hover:bg-navy-800 transition text-sm">
+              Simulate No Record
+            </a>
+            <a href="clearance-detail-match.html" class="bg-terracotta-600 text-white font-medium text-center py-3 rounded-lg hover:bg-terracotta-700 transition text-sm">
+              Simulate Match
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+  <script>
+    function toggleManualSchool() {
+      const select = document.getElementById('previous-school-select');
+      const group = document.getElementById('manual-school-group');
+      if (!select || !group) return;
+      group.classList.toggle('hidden', select.value !== 'School not listed (Manual Type-in)');
+    }
+  </script>
+</body>
+</html>

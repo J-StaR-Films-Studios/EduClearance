@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduClearance Design System</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: {
+              DEFAULT: '#FAF9F6',
+              card: '#FFFFFF',
+              secondary: '#F5F2EB',
+            },
+            navy: {
+              50: '#F0F4F8',
+              100: '#D9E2EC',
+              800: '#1E293B',
+              900: '#0F172A',
+            },
+            emerald: {
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              600: '#059669',
+              700: '#047857',
+            },
+            amber: {
+              50: '#FEF3C7',
+              100: '#FEEBEE',
+              600: '#D97706',
+              700: '#B45309',
+            },
+            terracotta: {
+              50: '#FEF2F2',
+              600: '#DC2626',
+              700: '#B91C1C',
+            },
+            slate: {
+              500: '#64748B',
+              600: '#475569',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen p-8">
+  <div class="max-w-4xl mx-auto space-y-12">
+    <!-- Header -->
+    <header class="border-b border-background-secondary pb-6">
+      <h1 class="font-display text-4xl font-bold text-navy-900">EduClearance Design System</h1>
+      <p class="text-slate-500 mt-2 text-lg">Official visual system and components spec sheet for Nigeria's private transfer clearance network.</p>
+    </header>
+
+    <!-- Colors Section -->
+    <section class="space-y-4">
+      <h2 class="font-display text-2xl font-semibold text-navy-900 border-l-4 border-navy-800 pl-3">Color Palette</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <!-- Background/Cream -->
+        <div class="bg-background-secondary p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-[#FAF9F6] rounded-lg border border-background-secondary mb-2"></div>
+          <p class="font-semibold text-xs">Background</p>
+          <p class="text-slate-500 text-xs mt-1">#FAF9F6</p>
+        </div>
+        <!-- Navy/Ink -->
+        <div class="bg-white p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-navy-800 rounded-lg mb-2"></div>
+          <p class="font-semibold text-xs">Navy / Ink</p>
+          <p class="text-slate-500 text-xs mt-1">#1E293B</p>
+        </div>
+        <!-- Muted Cream -->
+        <div class="bg-white p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-background-secondary rounded-lg mb-2 border border-background-secondary"></div>
+          <p class="font-semibold text-xs">Muted Cream</p>
+          <p class="text-slate-500 text-xs mt-1">#F5F2EB</p>
+        </div>
+        <!-- Emerald/Trust -->
+        <div class="bg-white p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-emerald-600 rounded-lg mb-2"></div>
+          <p class="font-semibold text-xs">Emerald (Trust)</p>
+          <p class="text-slate-500 text-xs mt-1">#059669</p>
+        </div>
+        <!-- Amber/Warning -->
+        <div class="bg-white p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-amber-600 rounded-lg mb-2"></div>
+          <p class="font-semibold text-xs">Amber (Warning)</p>
+          <p class="text-slate-500 text-xs mt-1">#D97706</p>
+        </div>
+        <!-- Terracotta/Error -->
+        <div class="bg-white p-4 rounded-xl border border-background-secondary">
+          <div class="h-12 w-full bg-terracotta-600 rounded-lg mb-2"></div>
+          <p class="font-semibold text-xs">Terracotta (Error)</p>
+          <p class="text-slate-500 text-xs mt-1">#DC2626</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section class="space-y-4">
+      <h2 class="font-display text-2xl font-semibold text-navy-900 border-l-4 border-navy-800 pl-3">Typography Hierarchy</h2>
+      <div class="bg-white p-6 rounded-xl border border-background-secondary space-y-4">
+        <div>
+          <span class="text-xs text-slate-500 font-mono">Font Display - Outfit</span>
+          <h1 class="font-display text-3xl font-bold text-navy-900">Heading 1: Protect your school before admitting a new student</h1>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-mono">Font Display - Outfit (Medium/Semi-bold)</span>
+          <h2 class="font-display text-2xl font-semibold text-navy-800">Heading 2: Active Clearance Cases</h2>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-mono">Font Sans - Inter (Medium)</span>
+          <h3 class="font-sans text-lg font-medium text-navy-800">Heading 3: Start a Clearance Request</h3>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-mono">Font Sans - Inter (Regular)</span>
+          <p class="font-sans text-sm text-slate-600 leading-relaxed">Body Text: EduClearance is a private school-to-school student transfer clearance network for local school clusters. This helps you track clearances and obligations.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- UI Components -->
+    <section class="space-y-4">
+      <h2 class="font-display text-2xl font-semibold text-navy-900 border-l-4 border-navy-800 pl-3">UI Components</h2>
+      <div class="bg-white p-6 rounded-xl border border-background-secondary space-y-8">
+        <!-- Buttons -->
+        <div>
+          <h3 class="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Buttons</h3>
+          <div class="flex flex-wrap gap-4">
+            <button class="bg-navy-900 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-navy-800 transition duration-150">Primary CTA</button>
+            <button class="bg-emerald-600 text-white font-medium px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition duration-150">Trust/Active Action</button>
+            <button class="bg-white text-navy-900 font-medium px-5 py-2.5 rounded-lg border border-background-secondary hover:bg-background-secondary transition duration-150">Secondary Action</button>
+            <button class="text-terracotta-600 font-medium px-5 py-2.5 rounded-lg hover:bg-terracotta-50 transition duration-150">Danger/Dispute Text</button>
+          </div>
+        </div>
+
+        <!-- Form Elements -->
+        <div>
+          <h3 class="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Form Elements</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-navy-800 block">Student's Full Name</label>
+              <input type="text" placeholder="e.g. Chinedu Okafor" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-navy-800 block">Parent's Phone Number</label>
+              <input type="tel" placeholder="e.g. +234 803 123 4567" class="w-full bg-background border border-background-secondary rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800">
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges & Status Tags -->
+        <div>
+          <h3 class="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wider">Status Badges (Premium Styles)</h3>
+          
+          <div class="space-y-6">
+            <!-- Option 1: The Ledger Ticket (Recommended) -->
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Style A: The Ledger Ticket (Accented left-border, no dots, uppercase tracking)</p>
+              <div class="flex flex-wrap gap-3">
+                <span class="inline-flex items-center bg-white border border-background-secondary text-navy-900 text-[10px] font-bold uppercase tracking-wider pl-2.5 pr-3.5 py-1.5 rounded-md border-l-4 border-l-emerald-600 shadow-sm">
+                  No Platform Record
+                </span>
+                <span class="inline-flex items-center bg-white border border-background-secondary text-navy-900 text-[10px] font-bold uppercase tracking-wider pl-2.5 pr-3.5 py-1.5 rounded-md border-l-4 border-l-amber-600 shadow-sm">
+                  Disputed / Pending
+                </span>
+                <span class="inline-flex items-center bg-white border border-background-secondary text-navy-900 text-[10px] font-bold uppercase tracking-wider pl-2.5 pr-3.5 py-1.5 rounded-md border-l-4 border-l-terracotta-600 shadow-sm">
+                  Outstanding Balance
+                </span>
+              </div>
+            </div>
+
+            <!-- Option 2: The Square-Dot Grid Tag -->
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Style B: The Square-Dot Grid Tag (Subtle borders, tiny geometric square marker)</p>
+              <div class="flex flex-wrap gap-3">
+                <span class="inline-flex items-center gap-1.5 border border-emerald-600/20 bg-emerald-50/40 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                  <span class="h-2 w-2 bg-emerald-600 rounded-sm"></span>
+                  No Platform Record Found
+                </span>
+                <span class="inline-flex items-center gap-1.5 border border-amber-600/20 bg-amber-50/40 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                  <span class="h-2 w-2 bg-amber-600 rounded-sm"></span>
+                  Disputed / Pending
+                </span>
+                <span class="inline-flex items-center gap-1.5 border border-terracotta-600/20 bg-terracotta-50/40 text-terracotta-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                  <span class="h-2 w-2 bg-terracotta-600 rounded-sm"></span>
+                  Outstanding Balance
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div>
+          <h3 class="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Disclaimers & Alerts</h3>
+          <div class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm leading-relaxed space-y-1">
+            <p class="font-bold flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              Standard System Disclaimer (No Record Found)
+            </p>
+            <p>No unresolved record was found on EduClearance. This does not confirm that the student has cleared the previous school. Please contact the previous school directly or wait for their response.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

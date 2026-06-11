@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Platform Disputes - Admin EduClearance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: { DEFAULT: '#FAF9F6', card: '#FFFFFF', secondary: '#F5F2EB' },
+            navy: { 800: '#1E293B', 900: '#0F172A' },
+            emerald: { 50: '#ECFDF5', 600: '#059669' },
+            amber: { 50: '#FEF3C7', 600: '#D97706' },
+            terracotta: { 50: '#FEF2F2', 600: '#DC2626' },
+            slate: { 500: '#64748B' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen flex flex-col md:flex-row">
+  <!-- Sidebar -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-background-secondary min-h-screen p-6 space-y-8 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-navy-900 text-white p-2 rounded-lg font-display font-bold">EC</div>
+      <span class="font-display font-bold text-lg text-navy-900">EduClearance Admin</span>
+    </div>
+    <nav class="space-y-1.5 flex-1">
+      <a href="admin.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        Admin Overview
+      </a>
+      <a href="admin-disputes.html" class="flex items-center gap-3 bg-background-secondary text-navy-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5 text-navy-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        Platform Disputes
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+    <!-- Header -->
+    <header class="border-b border-background-secondary pb-4">
+      <h1 class="font-display text-2xl font-bold text-navy-900">Dispute Resolution Workspace</h1>
+      <p class="text-xs text-slate-500">Resolve inter-school record contests and billing disputes</p>
+    </header>
+
+    <!-- Split Pane -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Disputes List -->
+      <div class="bg-white rounded-2xl border border-background-secondary shadow-sm overflow-hidden lg:col-span-2 space-y-4 p-6">
+        <h3 class="font-display font-bold text-navy-900 text-sm">Open Disputes Queue</h3>
+        
+        <div class="divide-y divide-background-secondary">
+          <!-- Dispute Item -->
+          <div class="py-4 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 border border-amber-600/20 bg-amber-50/40 text-amber-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-md">
+                <span class="h-1.5 w-1.5 bg-amber-600 rounded-sm"></span>
+                Under Review
+              </span>
+              <span class="text-slate-400">2026-06-11 12:45</span>
+            </div>
+            <div>
+              <p class="font-bold text-navy-900 text-sm">Dispute: Aisha Bello (₦45,000 Owed)</p>
+              <p class="text-slate-600 mt-1">Raised by: <strong>Grace Academy</strong> (Admitting School)</p>
+              <p class="text-slate-600">Against: <strong>Hilltop Preparatory</strong> (Reporting School)</p>
+              <p class="text-slate-500 bg-background p-2 rounded border border-background-secondary mt-2 italic leading-relaxed">
+                Reason: "Parent has presented clear physical receipt number #4492 indicating that the outstanding tuition was paid in full on April 12th. Hilltop prep ledger may be out of date."
+              </p>
+            </div>
+            <div class="pt-2 space-y-2">
+              <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-2">Note: Clearing this record will automatically issue a ₦100 credit refund to the admitting school's wallet.</p>
+              <div class="flex gap-2">
+                <button onclick="resolveDispute('Aisha Bello', 'Approve dispute / Clear record')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">Clear Record (Resolve)</button>
+                <button onclick="resolveDispute('Aisha Bello', 'Reject dispute / Keep record')" class="bg-white text-slate-600 border border-background-secondary font-semibold px-3 py-1.5 rounded-lg hover:bg-background-secondary transition">Keep Record (Decline)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="bg-white p-6 rounded-2xl border border-background-secondary shadow-sm space-y-3 h-fit text-xs leading-relaxed">
+        <h3 class="font-display font-bold text-navy-900 text-sm">Resolution Standard Protocol</h3>
+        <p class="text-slate-500">1. Inspect both admitting and reporting school comments.</p>
+        <p class="text-slate-500">2. Request parent ledger receipts if necessary.</p>
+        <p class="text-slate-500">3. Resolving clears the student's cluster record from active warning lists and sends emails to both parties.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function resolveDispute(student, action) {
+      alert('Dispute for ' + student + ' resolved: ' + action + '.\nSystem logs and audit trails updated.');
+    }
+  </script>
+</body>
+</html>

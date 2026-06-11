@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Clearance History - EduClearance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: { DEFAULT: '#FAF9F6', card: '#FFFFFF', secondary: '#F5F2EB' },
+            navy: { 800: '#1E293B', 900: '#0F172A' },
+            emerald: { 50: '#ECFDF5', 600: '#059669', 700: '#047857' },
+            amber: { 50: '#FFFBEB', 100: '#FEF3C7', 600: '#D97706', 700: '#B45309' },
+            terracotta: { 50: '#FEF2F2', 600: '#DC2626' },
+            slate: { 500: '#64748B', 600: '#475569' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen flex flex-col md:flex-row">
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-background-secondary min-h-screen p-6 space-y-8 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-navy-900 text-white p-2 rounded-lg font-display font-bold">EC</div>
+      <span class="font-display font-bold text-lg text-navy-900">EduClearance</span>
+    </div>
+    <nav class="space-y-1.5 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">Dashboard</a>
+      <a href="clearance-new.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">Start Check (₦100)</a>
+      <a href="clearance.html" class="flex items-center gap-3 bg-background-secondary text-navy-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition">Clearance History</a>
+      <a href="issues-new.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">Report Issue (Free)</a>
+      <a href="wallet.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">Wallet & Billing</a>
+    </nav>
+    <div class="border-t border-background-secondary pt-4 text-xs text-slate-400">
+      <p>Grace Academy, Ikeja</p>
+      <p class="mt-1 font-semibold text-navy-800">Role: School Admin</p>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-8 space-y-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-background-secondary pb-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-navy-900">Clearance History</h1>
+        <p class="text-xs text-slate-500">Track checks your school started and requests sent to your school by others.</p>
+      </div>
+      <a href="clearance-new.html" class="bg-navy-900 text-white font-medium text-center px-4 py-2.5 rounded-lg text-xs hover:bg-navy-800 transition">Start New Clearance</a>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-xl border border-background-secondary p-4 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Outbound checks</p>
+        <p class="font-display text-2xl font-bold text-navy-900 mt-1">18</p>
+        <p class="text-xs text-slate-500">Started by Grace Academy</p>
+      </div>
+      <div class="bg-white rounded-xl border border-background-secondary p-4 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Inbound requests</p>
+        <p class="font-display text-2xl font-bold text-amber-700 mt-1">3</p>
+        <p class="text-xs text-slate-500">Need your school response</p>
+      </div>
+      <div class="bg-white rounded-xl border border-background-secondary p-4 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Open disputes</p>
+        <p class="font-display text-2xl font-bold text-terracotta-600 mt-1">1</p>
+        <p class="text-xs text-slate-500">Under admin review</p>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-background-secondary shadow-sm overflow-hidden">
+      <div class="p-4 sm:p-6 border-b border-background-secondary space-y-4">
+        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Clearance history tabs">
+          <button onclick="showTab('outbound')" id="tab-outbound" class="tab-btn bg-navy-900 text-white text-xs font-semibold px-4 py-2 rounded-lg">Checks Initiated (Outbound)</button>
+          <button onclick="showTab('inbound')" id="tab-inbound" class="tab-btn bg-background text-slate-600 border border-background-secondary text-xs font-semibold px-4 py-2 rounded-lg">Clearances Requested (Inbound)</button>
+        </div>
+        <p class="text-xs text-slate-500">Inbound requests must be answered carefully. Confirm only whether there is an unresolved issue; do not expose unnecessary student data.</p>
+      </div>
+
+      <div id="panel-outbound" class="overflow-x-auto whitespace-nowrap">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-background border-b border-background-secondary font-bold text-slate-500 uppercase tracking-wider">
+              <th class="px-6 py-3">Student</th>
+              <th class="px-6 py-3">Previous School</th>
+              <th class="px-6 py-3">Result</th>
+              <th class="px-6 py-3">Charged</th>
+              <th class="px-6 py-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-background-secondary text-slate-600">
+            <tr>
+              <td class="px-6 py-4 font-semibold text-navy-900">Chinedu Alao</td>
+              <td class="px-6 py-4">Springfield International</td>
+              <td class="px-6 py-4"><span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-semibold">No platform record found</span></td>
+              <td class="px-6 py-4">₦100</td>
+              <td class="px-6 py-4"><a class="text-navy-900 font-semibold hover:underline" href="clearance-detail-no-record.html">Open</a></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-semibold text-navy-900">Aisha Bello</td>
+              <td class="px-6 py-4">Hilltop Preparatory</td>
+              <td class="px-6 py-4"><span class="bg-terracotta-50 text-terracotta-600 border border-terracotta-100 px-2 py-0.5 rounded-full font-semibold">Unresolved balance reported</span></td>
+              <td class="px-6 py-4">₦100</td>
+              <td class="px-6 py-4"><a class="text-navy-900 font-semibold hover:underline" href="clearance-detail-match.html">Open</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="panel-inbound" class="hidden overflow-x-auto whitespace-nowrap">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-background border-b border-background-secondary font-bold text-slate-500 uppercase tracking-wider">
+              <th class="px-6 py-3">Student</th>
+              <th class="px-6 py-3">Requesting School</th>
+              <th class="px-6 py-3">Status</th>
+              <th class="px-6 py-3">Requested</th>
+              <th class="px-6 py-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-background-secondary text-slate-600">
+            <tr>
+              <td class="px-6 py-4 font-semibold text-navy-900">Obinna Okafor</td>
+              <td class="px-6 py-4">Springfield International</td>
+              <td class="px-6 py-4"><span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-semibold">Response needed</span></td>
+              <td class="px-6 py-4">Today, 10:41</td>
+              <td class="px-6 py-4 flex gap-2">
+                <button class="bg-emerald-600 text-white font-semibold px-3 py-1.5 rounded-lg">No Outstanding Issue</button>
+                <a href="issues-new.html" class="bg-white text-navy-900 border border-background-secondary font-semibold px-3 py-1.5 rounded-lg">Report Issue</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-background-secondary h-16 flex items-center justify-around z-50">
+    <a href="dashboard.html" class="text-[10px] text-slate-500 font-medium">Dashboard</a>
+    <a href="clearance-new.html" class="text-[10px] text-slate-500 font-medium">Verify</a>
+    <a href="clearance.html" class="text-[10px] text-navy-900 font-bold">History</a>
+    <a href="wallet.html" class="text-[10px] text-slate-500 font-medium">Wallet</a>
+  </nav>
+
+  <script>
+    function showTab(tab) {
+      const outbound = document.getElementById('panel-outbound');
+      const inbound = document.getElementById('panel-inbound');
+      const tabOutbound = document.getElementById('tab-outbound');
+      const tabInbound = document.getElementById('tab-inbound');
+      const active = 'bg-navy-900 text-white text-xs font-semibold px-4 py-2 rounded-lg';
+      const idle = 'bg-background text-slate-600 border border-background-secondary text-xs font-semibold px-4 py-2 rounded-lg';
+      outbound.classList.toggle('hidden', tab !== 'outbound');
+      inbound.classList.toggle('hidden', tab !== 'inbound');
+      tabOutbound.className = tab === 'outbound' ? active : idle;
+      tabInbound.className = tab === 'inbound' ? active : idle;
+    }
+  </script>
+</body>
+</html>

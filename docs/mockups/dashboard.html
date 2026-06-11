@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>School Dashboard - EduClearance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: { DEFAULT: '#FAF9F6', card: '#FFFFFF', secondary: '#F5F2EB' },
+            navy: { 800: '#1E293B', 900: '#0F172A' },
+            emerald: { 50: '#ECFDF5', 100: '#D1FAE5', 600: '#059669' },
+            amber: { 50: '#FEF3C7', 100: '#FFFBEB', 600: '#D97706' },
+            terracotta: { 50: '#FEF2F2', 600: '#DC2626' },
+            slate: { 500: '#64748B' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-navy-800 font-sans min-h-screen flex flex-col md:flex-row">
+  <!-- Desktop Sidebar -->
+  <aside class="hidden md:flex flex-col w-64 bg-white border-r border-background-secondary min-h-screen p-6 space-y-8 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="bg-navy-900 text-white p-2 rounded-lg font-display font-bold">EC</div>
+      <span class="font-display font-bold text-lg text-navy-900">EduClearance</span>
+    </div>
+
+    <!-- Navigation links -->
+    <nav class="space-y-1.5 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 bg-background-secondary text-navy-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5 text-navy-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Dashboard
+      </a>
+      <a href="clearance-new.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+        Start Check (₦100)
+      </a>
+      <a href="issues-new.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        Report Issue (Free)
+      </a>
+      <a href="wallet.html" class="flex items-center gap-3 text-slate-600 hover:text-navy-900 font-medium px-4 py-2.5 rounded-lg text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+        Wallet & Billing
+      </a>
+    </nav>
+
+    <div class="border-t border-background-secondary pt-4 text-xs text-slate-400">
+      <p>Grace Academy, Ikeja</p>
+      <p class="mt-1 font-semibold text-navy-800">Status: Active</p>
+    </div>
+  </aside>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-background-secondary h-16 flex items-center justify-around z-50">
+    <a href="dashboard.html" class="flex flex-col items-center text-navy-900">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span class="text-[10px] font-semibold mt-0.5">Dashboard</span>
+    </a>
+    <a href="clearance-new.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Verify (₦100)</span>
+    </a>
+    <a href="issues-new.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Report Issue</span>
+    </a>
+    <a href="wallet.html" class="flex flex-col items-center text-slate-500">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+      <span class="text-[10px] font-medium mt-0.5">Wallet</span>
+    </a>
+  </nav>
+
+  <!-- Main Content Wrapper -->
+  <main class="flex-1 p-6 md:p-8 space-y-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
+    <!-- Header Summary -->
+    <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-background-secondary pb-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-navy-900">Grace Academy</h1>
+        <p class="text-xs text-slate-500">Local Cluster: Ikeja Private Schools Cluster</p>
+      </div>
+      <!-- Wallet Panel -->
+      <a href="wallet.html" class="bg-white p-3 rounded-xl border border-background-secondary shadow-sm flex items-center gap-3 hover:bg-background-secondary transition">
+        <div class="bg-navy-50 p-2 rounded-lg text-navy-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+        </div>
+        <div>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Wallet Balance</p>
+          <p class="font-semibold text-navy-900 text-sm">₦4,500 <span class="text-xs text-slate-500 font-normal">(45 checks left)</span></p>
+        </div>
+      </a>
+    </header>
+
+    <!-- Top Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Start Request CTA -->
+      <div class="bg-white p-6 rounded-2xl border border-background-secondary shadow-sm flex flex-col justify-between space-y-4">
+        <div>
+          <h2 class="font-display text-xl font-bold text-navy-900">Incoming Student Verification</h2>
+          <p class="text-sm text-slate-600 mt-1">Initiate a transfer clearance request before completing student enrollment. Costs ₦100.</p>
+        </div>
+        <a href="clearance-new.html" class="bg-navy-900 text-white font-medium text-center py-3 rounded-lg hover:bg-navy-800 transition text-sm flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+          Start Clearance Request
+        </a>
+      </div>
+
+      <!-- Report Issue CTA -->
+      <div class="bg-white p-6 rounded-2xl border border-background-secondary shadow-sm flex flex-col justify-between space-y-4">
+        <div>
+          <h2 class="font-display text-xl font-bold text-navy-900">Report Unresolved Issue</h2>
+          <p class="text-sm text-slate-600 mt-1">Submit departures with outstanding school fees, books, or uniform balances to the cluster index for free.</p>
+        </div>
+        <a href="issues-new.html" class="bg-white text-navy-900 font-medium text-center py-3 rounded-lg border border-background-secondary hover:bg-background-secondary transition text-sm flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          Report Unresolved Issue (Free)
+        </a>
+      </div>
+    </div>
+
+    <!-- Active In-bound Case Alert -->
+    <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-sm leading-relaxed space-y-2">
+      <div class="flex items-center gap-2 font-bold">
+        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        Pending Clearance Response Required
+      </div>
+      <p class="text-xs">
+        <strong>Springfield International</strong> has opened a clearance verification check for <strong>Obinna Okafor</strong>, who registered your school as their previous attending school. Please verify or update their clearance status.
+      </p>
+      <div class="flex gap-2">
+        <button class="bg-amber-600 text-white font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-700 transition">Confirm No Outstanding Issue</button>
+        <button class="bg-white text-amber-900 border border-amber-300 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-50 transition">Report Owed Balance</button>
+      </div>
+    </div>
+
+    <!-- Case History lists -->
+    <div class="bg-white rounded-2xl border border-background-secondary shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-background-secondary">
+        <h3 class="font-display text-lg font-bold text-navy-900">Recent Student Checks Initiated By You</h3>
+      </div>
+      <!-- List Table -->
+      <div class="overflow-x-auto whitespace-nowrap">
+        <table class="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr class="bg-background border-b border-background-secondary text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="px-6 py-3">Student Name</th>
+              <th class="px-6 py-3">Previous School</th>
+              <th class="px-6 py-3">Date Checked</th>
+              <th class="px-6 py-3">System Match Status</th>
+              <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-background-secondary">
+            <tr>
+              <td class="px-6 py-4 font-semibold text-navy-900">Chinedu Alao</td>
+              <td class="px-6 py-4 text-slate-600">Springfield International</td>
+              <td class="px-6 py-4 text-slate-500">2026-06-11</td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center bg-white border border-background-secondary text-navy-900 text-[10px] font-bold uppercase tracking-wider pl-2.5 pr-3.5 py-1 rounded-md border-l-4 border-l-emerald-600 shadow-sm">No Record</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <a href="clearance-detail-no-record.html" class="text-navy-900 hover:underline font-semibold text-xs">View Details</a>
+              </td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-semibold text-navy-900">Aisha Bello</td>
+              <td class="px-6 py-4 text-slate-600">Hilltop Preparatory</td>
+              <td class="px-6 py-4 text-slate-500">2026-06-09</td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center bg-white border border-background-secondary text-navy-900 text-[10px] font-bold uppercase tracking-wider pl-2.5 pr-3.5 py-1 rounded-md border-l-4 border-l-terracotta-600 shadow-sm">Owed Balance</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <a href="clearance-detail-match.html" class="text-navy-900 hover:underline font-semibold text-xs">Review Issue</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
