@@ -30,6 +30,9 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
 
   const paymentReference = searchParams.get('payment_reference');
   const numericAmount = Number(amount);
+  const trimmedBillingEmail = billingEmail.trim();
+  const hasValidBillingEmail = emailPattern.test(trimmedBillingEmail);
+  const canOpenCheckout = !isInitializing && Number.isFinite(numericAmount) && numericAmount > 0 && hasValidBillingEmail;
   const formattedAmount = useMemo(() => formatTopUpAmount(Number.isFinite(numericAmount) ? numericAmount : 0), [numericAmount]);
 
   async function initializeTopUp() {
@@ -38,10 +41,8 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
       return;
     }
 
-    const trimmedBillingEmail = billingEmail.trim();
-
-    if (trimmedBillingEmail && !emailPattern.test(trimmedBillingEmail)) {
-      setErrorMessage('Please enter a valid billing email or leave it blank.');
+    if (!hasValidBillingEmail) {
+      setErrorMessage('Enter a valid billing email before checkout.');
       return;
     }
 
@@ -166,19 +167,23 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
               value={billingEmail}
               onChange={(event) => setBillingEmail(event.target.value)}
               placeholder="accounts@school.com"
+              required
+              aria-invalid={billingEmail.length > 0 && !hasValidBillingEmail}
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-xs font-normal normal-case tracking-normal text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-800"
             />
           </label>
           <button
             type="button"
             onClick={initializeTopUp}
-            disabled={isInitializing}
+            disabled={!canOpenCheckout}
+            title={!hasValidBillingEmail ? 'Enter a valid billing email before checkout.' : undefined}
             className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {isInitializing ? 'Opening checkout…' : 'Continue to secure checkout'}
           </button>
         </div>
 
+        {!hasValidBillingEmail ? <p className="text-xs font-medium text-slate-500">Enter a billing email to continue to checkout.</p> : null}
         {errorMessage ? <p className="text-xs font-medium text-terracotta-700">{errorMessage}</p> : null}
         {statusMessage ? <p className="text-xs font-medium text-emerald-700">{statusMessage}</p> : null}
 

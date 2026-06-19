@@ -12,7 +12,7 @@ const MAX_PAYMENT_AMOUNT_KOBO = 100_000_000;
 
 const paystackInitializeSchema = z.object({
   amountKobo: z.number().int().positive().max(MAX_PAYMENT_AMOUNT_KOBO),
-  email: z.string().email().optional(),
+  email: z.string().trim().email().refine(isPublicEmailAddress, 'Enter a valid billing email.'),
   callbackUrl: z.string().trim().url().optional(),
 });
 
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   const payload = paystackInitializeSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Invalid checkout request.', issues: payload.error.flatten() }, { status: 400 });
+    return NextResponse.json({ ok: false, message: 'Enter a valid billing email before checkout.', issues: payload.error.flatten() }, { status: 400 });
   }
 
   const env = getServerEnv();
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     callbackUrl,
     customerEmail,
     signedInEmail: actor.userEmail,
-    requestedEmail: payload.data.email ?? null,
+    requestedEmail: payload.data.email,
     mode: env.PAYSTACK_SECRET_KEY ? 'paystack' : 'local_pending',
   };
 
