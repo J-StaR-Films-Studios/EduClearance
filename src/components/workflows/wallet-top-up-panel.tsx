@@ -7,6 +7,7 @@ import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { cn } from '@/lib/utils';
 
 const quickAmounts = [5000, 10000, 20000] as const;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function formatTopUpAmount(amountNaira: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -21,6 +22,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState('5000');
+  const [billingEmail, setBillingEmail] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -36,6 +38,13 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
       return;
     }
 
+    const trimmedBillingEmail = billingEmail.trim();
+
+    if (trimmedBillingEmail && !emailPattern.test(trimmedBillingEmail)) {
+      setErrorMessage('Please enter a valid billing email or leave it blank.');
+      return;
+    }
+
     setErrorMessage('');
     setStatusMessage('');
     setIsInitializing(true);
@@ -47,6 +56,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
         body: JSON.stringify({
           amountKobo: Math.round(numericAmount * 100),
           callbackUrl: `${window.location.origin}${withRoleQuery('/wallet', role)}`,
+          ...(trimmedBillingEmail ? { email: trimmedBillingEmail } : {}),
         }),
       });
       const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; authorizationUrl?: string } | null;
@@ -135,16 +145,30 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            inputMode="numeric"
-            min="1"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            placeholder="Enter custom amount"
-            className="flex-1 rounded-lg border border-background-secondary bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800"
-          />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+          <label className="space-y-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Amount
+            <input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="Enter custom amount"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-xs font-normal normal-case tracking-normal text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-800"
+            />
+          </label>
+          <label className="space-y-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Billing email for receipt
+            <input
+              type="email"
+              inputMode="email"
+              value={billingEmail}
+              onChange={(event) => setBillingEmail(event.target.value)}
+              placeholder="accounts@school.com"
+              className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-xs font-normal normal-case tracking-normal text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-800"
+            />
+          </label>
           <button
             type="button"
             onClick={initializeTopUp}
