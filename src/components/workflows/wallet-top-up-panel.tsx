@@ -21,33 +21,95 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState('5000');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const paymentReference = searchParams.get('payment_reference');
   const numericAmount = Number(amount);
-  const modalAmount = useMemo(() => formatTopUpAmount(Number.isFinite(numericAmount) ? numericAmount : 0), [numericAmount]);
+  const formattedAmount = useMemo(() => formatTopUpAmount(Number.isFinite(numericAmount) ? numericAmount : 0), [numericAmount]);
 
-  function openCheckout() {
+  async function initializeTopUp() {
     if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
       setErrorMessage('Please enter a valid deposit amount.');
       return;
     }
 
     setErrorMessage('');
-    setIsModalOpen(true);
+    setStatusMessage('');
+    setIsInitializing(true);
+
+    try {
+      const response = await fetch('/api/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountKobo: Math.round(numericAmount * 100),
+          callbackUrl: `${window.location.origin}${withRoleQuery('/wallet', role)}`,
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; authorizationUrl?: string } | null;
+
+      if (!response.ok || !result?.ok || !result.authorizationUrl) {
+        setErrorMessage(result?.message ?? 'Unable to initialize payment. Please try again.');
+        return;
+      }
+
+      window.location.assign(result.authorizationUrl);
+    } catch {
+      setErrorMessage('Unable to initialize payment. Please try again.');
+    } finally {
+      setIsInitializing(false);
+    }
   }
 
-  function returnWithPendingReference() {
-    setIsModalOpen(false);
-    router.replace(withRoleQuery('/wallet?payment_reference=local_pending_verification', role));
+  async function verifyPayment() {
+    if (!paymentReference) {
+      return;
+    }
+
+    setErrorMessage('');
+    setStatusMessage('');
+    setIsVerifying(true);
+
+    try {
+      const response = await fetch('/api/paystack/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: paymentReference }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; credited?: boolean } | null;
+
+      if (!response.ok || !result?.ok) {
+        setErrorMessage(result?.message ?? 'Unable to verify payment. Please try again.');
+        return;
+      }
+
+      setStatusMessage(result.credited ? 'Payment verified and wallet credit posted.' : 'Payment was already verified for this wallet.');
+      router.refresh();
+    } catch {
+      setErrorMessage('Unable to verify payment. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
   }
 
   return (
     <>
       {paymentReference ? (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Payment callback received with reference <strong>{paymentReference}</strong>. Wallet credit remains pending until server-side Paystack verification posts the transaction.
+        <div className="space-y-3 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
+          <p>
+            Payment callback received with reference <strong>{paymentReference}</strong>. Wallet credit posts after server-side verification records the transaction.
+          </p>
+          <button
+            type="button"
+            onClick={verifyPayment}
+            disabled={isVerifying}
+            className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          >
+            {isVerifying ? 'Verifying…' : 'Verify payment'}
+          </button>
         </div>
       ) : null}
 
@@ -55,7 +117,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
         <div className="space-y-1">
           <h3 className="text-sm font-semibold text-navy-900">Purchase Clearance Credits</h3>
           <p className="text-[10px] leading-relaxed text-slate-500">
-            In this local environment, checkout returns a pending reference for verification review before any wallet credit is posted.
+            Checkout creates a pending payment reference first. Wallet credit posts only after server verification succeeds.
           </p>
         </div>
 
@@ -87,55 +149,21 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
           />
           <button
             type="button"
-            onClick={openCheckout}
-            className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800"
+            onClick={initializeTopUp}
+            disabled={isInitializing}
+            className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            Continue to Paystack
+            {isInitializing ? 'Initializing…' : 'Continue to Paystack'}
           </button>
         </div>
 
         {errorMessage ? <p className="text-xs font-medium text-terracotta-700">{errorMessage}</p> : null}
+        {statusMessage ? <p className="text-xs font-medium text-emerald-700">{statusMessage}</p> : null}
 
         <p className="text-[10px] leading-relaxed text-slate-500">
-          Card or transfer checkout can be initialized from the server. A successful browser return never credits the wallet by itself.
+          Selected amount: <strong>{formattedAmount}</strong>. A successful browser return never credits the wallet by itself.
         </p>
       </div>
-
-      {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-md">
-            <div className="flex items-center justify-between border-b border-background-secondary pb-3">
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Paystack Checkout</span>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-navy-900">
-                ✕
-              </button>
-            </div>
-            <div className="space-y-2 text-center">
-              <p className="text-xs text-slate-500">Preparing payment transaction for Grace Academy</p>
-              <p className="font-display text-2xl font-bold text-navy-900">{modalAmount}</p>
-            </div>
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={returnWithPendingReference}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-3 text-xs font-medium text-white transition hover:bg-emerald-700"
-              >
-                Return with Pending Reference
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="w-full rounded-lg border border-background-secondary bg-background py-3 text-xs font-medium text-slate-600 transition hover:bg-background-secondary"
-              >
-                Cancel Checkout
-              </button>
-            </div>
-            <p className="text-center text-[10px] text-slate-400">
-              Wallet credits remain pending until the server verifies the Paystack reference and records the transaction once only.
-            </p>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }

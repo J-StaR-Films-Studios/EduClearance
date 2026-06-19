@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { desc, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { WalletTopUpPanel } from '@/components/workflows/wallet-top-up-panel';
-import { APP_NAME } from '@/lib/site';
-import {
-  schoolProfile,
-  walletTransactions,
-  withRoleQuery,
-} from '@/lib/local-school-data';
+import { db } from '@/db/client';
+import { walletTransactions, wallets } from '@/db/schema';
+import { type WalletTransactionView, schoolProfile, withRoleQuery } from '@/lib/local-school-data';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
+import { APP_NAME } from '@/lib/site';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = noIndexMetadata(`Wallet & Billing | ${APP_NAME}`, 'Private wallet and billing page.');
@@ -23,9 +23,48 @@ function formatTransactionAmount(amountKobo: number) {
   }).format(Math.abs(amountKobo) / 100);
 }
 
+async function getWalletViewData(): Promise<{ balanceKobo: number; transactions: WalletTransactionView[] }> {
+  const actor = await resolveLocalSchoolActor();
+
+  if (!actor) {
+    return { balanceKobo: schoolProfile.walletBalanceKobo, transactions: [] };
+  }
+
+  const [[wallet], transactionRows] = await Promise.all([
+    db.select({ balanceKobo: wallets.balanceKobo }).from(wallets).where(eq(wallets.schoolId, actor.schoolId)).limit(1),
+    db
+      .select({
+        id: walletTransactions.id,
+        createdAt: walletTransactions.createdAt,
+        reference: walletTransactions.reference,
+        type: walletTransactions.type,
+        description: walletTransactions.description,
+        amountKobo: walletTransactions.amountKobo,
+      })
+      .from(walletTransactions)
+      .where(eq(walletTransactions.schoolId, actor.schoolId))
+      .orderBy(desc(walletTransactions.createdAt))
+      .limit(20),
+  ]);
+
+  return {
+    balanceKobo: wallet?.balanceKobo ?? 0,
+    transactions: transactionRows.map((transaction) => ({
+      id: transaction.id,
+      createdAt: transaction.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+      reference: transaction.reference,
+      type: transaction.type === 'adjustment' ? 'refund' : transaction.type,
+      description: transaction.description,
+      amountKobo: transaction.type === 'debit' ? -transaction.amountKobo : transaction.amountKobo,
+      statusLabel: transaction.type === 'credit' ? 'Credit' : transaction.type === 'refund' ? 'Refund' : transaction.type === 'adjustment' ? 'Adjustment' : 'Debit',
+    })),
+  };
+}
+
 export default async function WalletPage() {
   const currentRole = await requireSchoolSession('/wallet');
   const isStaff = currentRole === 'school_staff';
+  const walletViewData = await getWalletViewData();
 
   return (
     <SchoolAppShell activeKey="wallet" mobileMode="history" role={currentRole}>
@@ -48,9 +87,9 @@ export default async function WalletPage() {
           <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
             <div className="rounded-xl bg-navy-900 p-6 text-white">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Clearance Balance</p>
-              <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(schoolProfile.walletBalanceKobo)}</p>
+              <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(walletViewData.balanceKobo)}</p>
               <p className="mt-2 text-xs text-navy-200">
-                Equals {formatChecksFromKobo(schoolProfile.walletBalanceKobo)} remaining student checks
+                Equals {formatChecksFromKobo(walletViewData.balanceKobo)} remaining student checks
               </p>
             </div>
             <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
@@ -63,10 +102,10 @@ export default async function WalletPage() {
               <div className="flex h-40 flex-col justify-between rounded-2xl border border-navy-800 bg-navy-900 p-6 text-white shadow-sm">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Clearance Balance</p>
-                  <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(schoolProfile.walletBalanceKobo)}</p>
+                  <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(walletViewData.balanceKobo)}</p>
                 </div>
                 <p className="text-xs text-navy-200">
-                  Equals {formatChecksFromKobo(schoolProfile.walletBalanceKobo)} remaining student checks
+                  Equals {formatChecksFromKobo(walletViewData.balanceKobo)} remaining student checks
                 </p>
               </div>
 
@@ -89,7 +128,7 @@ export default async function WalletPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-background-secondary text-slate-600">
-                    {walletTransactions.map((transaction) => (
+                    {walletViewData.transactions.map((transaction) => (
                       <tr key={transaction.id}>
                         <td className="px-6 py-4">{transaction.createdAt}</td>
                         <td className="px-6 py-4 font-mono">{transaction.reference}</td>

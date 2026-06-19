@@ -1,7 +1,7 @@
 import { CHECK_PRICE_KOBO } from '@/lib/money';
 
 export type SchoolUserRole = 'school_owner' | 'school_admin' | 'school_staff';
-export type ClearanceResultState = 'no_record' | 'match';
+export type ClearanceResultState = 'no_record' | 'possible_match' | 'match';
 
 export type OutboundClearance = {
   id: string;
@@ -18,9 +18,9 @@ export type OutboundClearance = {
   resultLabel: string;
   resultState: ClearanceResultState;
   statusLabel: string;
-  searchResult: 'no_match' | 'confirmed_match';
+  searchResult: 'no_match' | 'possible_match' | 'confirmed_match';
   amountChargedKobo: number;
-  notificationStatus: 'whatsapp_generated' | 'sent' | 'dashboard' | 'not_sent';
+  notificationStatus: 'whatsapp_generated' | 'sent' | 'dashboard' | 'not_sent' | 'failed';
   whatsappMessage: string;
   issue?: {
     reportingSchool: string;

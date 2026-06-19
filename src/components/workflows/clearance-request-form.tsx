@@ -20,10 +20,11 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
   const router = useRouter();
   const [selectedSchool, setSelectedSchool] = useState<string>(previousSchoolOptions[0].value);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const remainingBalanceKobo = useMemo(() => Math.max(schoolProfile.walletBalanceKobo - CHECK_PRICE_KOBO, 0), []);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const form = document.getElementById('clearance-request-form');
     if (!(form instanceof HTMLFormElement)) {
       return;
@@ -32,11 +33,6 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
     setErrorMessage('');
 
     if (!form.reportValidity()) {
-      return;
-    }
-
-    if (schoolProfile.walletBalanceKobo < CHECK_PRICE_KOBO) {
-      setErrorMessage('Your wallet balance is below ₦100. Please top up before starting a clearance request.');
       return;
     }
 
@@ -51,17 +47,34 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
       previousSchoolValue === 'manual'
         ? manualSchoolName
         : selectedDirectorySchool?.label.replace(/\s*\([^)]*\)$/, '') ?? '';
-    const detailId = previousSchoolValue === 'manual' ? 'chinedu-alao' : selectedDirectorySchool?.routeId ?? 'chinedu-alao';
-    const query = new URLSearchParams({
-      student: studentName,
-      parent: parentName,
-      phone: parentPhone,
-      previousSchool: previousSchoolLabel,
-      listed: previousSchoolValue === 'manual' ? '0' : '1',
-      charged: '1',
-    });
 
-    router.push(`/clearance/${detailId}?${query.toString()}`);
+    try {
+      setIsSubmitting(true);
+      const response = await fetch('/api/clearance/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName,
+          parentName,
+          parentPhone,
+          previousSchoolName: previousSchoolLabel,
+          gender: String(formData.get('gender') ?? '').trim(),
+          lastClass: String(formData.get('lastClass') ?? '').trim(),
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; routeUrl?: string } | null;
+
+      if (!response.ok || !result?.ok || !result.routeUrl) {
+        setErrorMessage(result?.message ?? 'Unable to start clearance request. Please try again.');
+        return;
+      }
+
+      router.push(result.routeUrl);
+    } catch {
+      setErrorMessage('Unable to start clearance request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -217,9 +230,10 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
-        Run Clearance Check
+        {isSubmitting ? 'Starting Clearance Check…' : 'Run Clearance Check'}
       </button>
     </form>
   );
