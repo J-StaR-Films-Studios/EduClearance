@@ -4,31 +4,26 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
-  demoSchoolProfile,
+  schoolProfile,
   getPreviousSchoolSelection,
   previousSchoolOptions,
-  type DemoUserRole,
+  type SchoolUserRole,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { CHECK_PRICE_KOBO, formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 
 type ClearanceRequestFormProps = {
-  role: DemoUserRole;
+  role: SchoolUserRole;
 };
-
-type ResultTarget = 'no-record' | 'match';
 
 export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
   const router = useRouter();
   const [selectedSchool, setSelectedSchool] = useState<string>(previousSchoolOptions[0].value);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const remainingBalanceKobo = useMemo(
-    () => Math.max(demoSchoolProfile.walletBalanceKobo - CHECK_PRICE_KOBO, 0),
-    [],
-  );
+  const remainingBalanceKobo = useMemo(() => Math.max(schoolProfile.walletBalanceKobo - CHECK_PRICE_KOBO, 0), []);
 
-  function handleSubmit(target: ResultTarget) {
+  function handleSubmit() {
     const form = document.getElementById('clearance-request-form');
     if (!(form instanceof HTMLFormElement)) {
       return;
@@ -40,7 +35,7 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
       return;
     }
 
-    if (demoSchoolProfile.walletBalanceKobo < CHECK_PRICE_KOBO) {
+    if (schoolProfile.walletBalanceKobo < CHECK_PRICE_KOBO) {
       setErrorMessage('Your wallet balance is below ₦100. Please top up before starting a clearance request.');
       return;
     }
@@ -51,11 +46,12 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
     const parentPhone = String(formData.get('parentPhone') ?? '').trim();
     const previousSchoolValue = String(formData.get('previousSchool') ?? '');
     const manualSchoolName = String(formData.get('manualSchoolName') ?? '').trim();
+    const selectedDirectorySchool = getPreviousSchoolSelection(previousSchoolValue);
     const previousSchoolLabel =
       previousSchoolValue === 'manual'
         ? manualSchoolName
-        : getPreviousSchoolSelection(previousSchoolValue)?.label.replace(/\s*\([^)]*\)$/, '') ?? '';
-    const detailId = target === 'match' ? 'aisha-bello' : 'chinedu-alao';
+        : selectedDirectorySchool?.label.replace(/\s*\([^)]*\)$/, '') ?? '';
+    const detailId = previousSchoolValue === 'manual' ? 'chinedu-alao' : selectedDirectorySchool?.routeId ?? 'chinedu-alao';
     const query = new URLSearchParams({
       student: studentName,
       parent: parentName,
@@ -69,7 +65,14 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
   }
 
   return (
-    <form id="clearance-request-form" className="space-y-4">
+    <form
+      id="clearance-request-form"
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit();
+      }}
+    >
       <div className="space-y-1">
         <label htmlFor="studentName" className="block text-xs font-semibold text-navy-800">
           Student&apos;s Full Name
@@ -197,7 +200,7 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
         <div className="text-right">
           <p className="font-bold text-navy-900">₦100</p>
           <p className="text-xs text-emerald-600">
-            Balance: {formatNairaFromKobo(demoSchoolProfile.walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
+            Balance: {formatNairaFromKobo(schoolProfile.walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
           </p>
         </div>
       </div>
@@ -212,27 +215,12 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
         </div>
       ) : null}
 
-      <div className="space-y-2 pt-2">
-        <p className="text-center text-xs font-medium text-slate-400">
-          Select a result state below to simulate the server-side search outcome after the ₦100 charge.
-        </p>
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => handleSubmit('no-record')}
-            className="rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800"
-          >
-            Simulate No Record
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('match')}
-            className="rounded-lg bg-terracotta-600 py-3 text-sm font-medium text-white transition hover:bg-terracotta-700"
-          >
-            Simulate Match
-          </button>
-        </div>
-      </div>
+      <button
+        type="submit"
+        className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800"
+      >
+        Run Clearance Check
+      </button>
     </form>
   );
 }

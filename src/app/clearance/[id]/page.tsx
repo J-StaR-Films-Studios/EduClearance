@@ -11,7 +11,7 @@ import {
   getOutboundClearance,
   NO_RECORD_DISCLAIMER,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
@@ -63,7 +63,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
 
         {chargedThisFlow ? (
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
-            ₦100 clearance request charge has been simulated for this workflow. In production, the wallet debit and request creation should happen transactionally on the server.
+            This local workflow displays the standard ₦100 clearance charge. In the live flow, wallet debit and request creation should be posted together on the server.
           </div>
         ) : null}
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { adminDisputes, type AdminDisputeRecord } from '@/lib/demo-admin-data';
+import { adminDisputes, type AdminDisputeRecord } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
 type DisputeFilter = 'open' | 'all' | AdminDisputeRecord['status'];
@@ -53,8 +53,8 @@ export function AdminDisputesWorkspace() {
 
     setNotice(
       action === 'resolved'
-        ? `${record.studentName}: dispute cleared. Demo notice prepared for dispute audit logging and ₦100 refund transaction.`
-        : `${record.studentName}: dispute declined. Demo notice prepared for dispute audit logging and school notification.`,
+        ? `${record.studentName}: dispute cleared. Audit logging and the ₦100 refund transaction should be persisted when live resolution actions are connected.`
+        : `${record.studentName}: dispute declined. Audit logging and school notification should be persisted when live resolution actions are connected.`,
     );
   }
 

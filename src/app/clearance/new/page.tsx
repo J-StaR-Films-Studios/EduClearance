@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { ClearanceRequestForm } from '@/components/workflows/clearance-request-form';
-import { withRoleQuery } from '@/lib/demo-school-data';
+import { withRoleQuery } from '@/lib/local-school-data';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
@@ -27,7 +27,7 @@ export default async function ClearanceNewPage() {
         </header>
 
         <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Demo clearance workflow only. This screen previews result states, but production must create the clearance request and debit ₦100 from the wallet transactionally on the server.
+          Clearance requests should create the request row and apply the ₦100 wallet debit together on the server. This local workspace lets you review the request flow with provisioned school data.
         </div>
 
         <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">

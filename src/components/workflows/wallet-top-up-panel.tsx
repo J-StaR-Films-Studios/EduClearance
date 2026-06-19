@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { type DemoUserRole, withRoleQuery } from '@/lib/demo-school-data';
+import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { cn } from '@/lib/utils';
 
 const quickAmounts = [5000, 10000, 20000] as const;
@@ -17,7 +17,7 @@ function formatTopUpAmount(amountNaira: number) {
   }).format(amountNaira);
 }
 
-export function WalletTopUpPanel({ role }: { role: DemoUserRole }) {
+export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState('5000');
@@ -28,7 +28,7 @@ export function WalletTopUpPanel({ role }: { role: DemoUserRole }) {
   const numericAmount = Number(amount);
   const modalAmount = useMemo(() => formatTopUpAmount(Number.isFinite(numericAmount) ? numericAmount : 0), [numericAmount]);
 
-  function openPaystackModal() {
+  function openCheckout() {
     if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
       setErrorMessage('Please enter a valid deposit amount.');
       return;
@@ -38,24 +38,25 @@ export function WalletTopUpPanel({ role }: { role: DemoUserRole }) {
     setIsModalOpen(true);
   }
 
-  function confirmMockPayment() {
+  function returnWithPendingReference() {
     setIsModalOpen(false);
-    router.replace(withRoleQuery('/wallet?payment_reference=mock_pending_verification', role));
+    router.replace(withRoleQuery('/wallet?payment_reference=local_pending_verification', role));
   }
 
   return (
     <>
       {paymentReference ? (
         <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Mock payment callback received with reference <strong>{paymentReference}</strong>. The wallet balance above has <strong>not</strong>{' '}
-          been credited from the client callback. Server-side Paystack verification is required before any wallet credit is posted.
+          Payment callback received with reference <strong>{paymentReference}</strong>. Wallet credit remains pending until server-side Paystack verification posts the transaction.
         </div>
       ) : null}
 
-      <div className="bg-white p-6 rounded-2xl border border-background-secondary shadow-sm md:col-span-2 space-y-4">
+      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm md:col-span-2">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold text-navy-900">Purchase Clearance Credits</h3>
-          <p className="text-[10px] leading-relaxed text-slate-500">Prototype mode only. This panel does not post a real wallet credit.</p>
+          <p className="text-[10px] leading-relaxed text-slate-500">
+            In this local environment, checkout returns a pending reference for verification review before any wallet credit is posted.
+          </p>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
@@ -86,17 +87,17 @@ export function WalletTopUpPanel({ role }: { role: DemoUserRole }) {
           />
           <button
             type="button"
-            onClick={openPaystackModal}
+            onClick={openCheckout}
             className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800"
           >
-            Open Paystack Demo
+            Continue to Paystack
           </button>
         </div>
 
         {errorMessage ? <p className="text-xs font-medium text-terracotta-700">{errorMessage}</p> : null}
 
         <p className="text-[10px] leading-relaxed text-slate-500">
-          Card or transfer checkout can be initialized from the server. A successful client callback never credits the wallet by itself.
+          Card or transfer checkout can be initialized from the server. A successful browser return never credits the wallet by itself.
         </p>
       </div>
 
@@ -104,29 +105,29 @@ export function WalletTopUpPanel({ role }: { role: DemoUserRole }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-md">
             <div className="flex items-center justify-between border-b border-background-secondary pb-3">
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Paystack Gateway Demo</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Paystack Checkout</span>
               <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-navy-900">
                 ✕
               </button>
             </div>
             <div className="space-y-2 text-center">
-              <p className="text-xs text-slate-500">Securing payment transaction for Grace Academy</p>
+              <p className="text-xs text-slate-500">Preparing payment transaction for Grace Academy</p>
               <p className="font-display text-2xl font-bold text-navy-900">{modalAmount}</p>
             </div>
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={confirmMockPayment}
+                onClick={returnWithPendingReference}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-3 text-xs font-medium text-white transition hover:bg-emerald-700"
               >
-                Simulate Successful Callback
+                Return with Pending Reference
               </button>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="w-full rounded-lg border border-background-secondary bg-background py-3 text-xs font-medium text-slate-600 transition hover:bg-background-secondary"
               >
-                Simulate Cancel/Decline
+                Cancel Checkout
               </button>
             </div>
             <p className="text-center text-[10px] text-slate-400">

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { buildSchoolLoginPageHref, getSchoolSessionRole } from '@/lib/demo-session';
+import { buildSchoolLoginPageHref, getSchoolSessionRole } from '@/lib/local-session';
 
 export async function requireSchoolSession(redirectPath: string) {
   const role = await getSchoolSessionRole();

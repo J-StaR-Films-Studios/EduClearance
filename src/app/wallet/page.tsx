@@ -5,10 +5,10 @@ import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { WalletTopUpPanel } from '@/components/workflows/wallet-top-up-panel';
 import { APP_NAME } from '@/lib/site';
 import {
-  demoSchoolProfile,
+  schoolProfile,
   walletTransactions,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
@@ -41,16 +41,16 @@ export default async function WalletPage() {
         </header>
 
         <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Demo billing workspace only. Wallet balance, deposits, and Paystack outcomes shown here are prototype data. Use the server-side initialize and verify endpoints before crediting any wallet in production.
+          Wallet credits post only after server-side Paystack verification completes. Browser return states should never credit a school wallet on their own.
         </div>
 
         {isStaff ? (
           <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
             <div className="rounded-xl bg-navy-900 p-6 text-white">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Clearance Balance</p>
-              <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(demoSchoolProfile.walletBalanceKobo)}</p>
+              <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(schoolProfile.walletBalanceKobo)}</p>
               <p className="mt-2 text-xs text-navy-200">
-                Equals {formatChecksFromKobo(demoSchoolProfile.walletBalanceKobo)} remaining student checks
+                Equals {formatChecksFromKobo(schoolProfile.walletBalanceKobo)} remaining student checks
               </p>
             </div>
             <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
@@ -63,10 +63,10 @@ export default async function WalletPage() {
               <div className="flex h-40 flex-col justify-between rounded-2xl border border-navy-800 bg-navy-900 p-6 text-white shadow-sm">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">Clearance Balance</p>
-                  <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(demoSchoolProfile.walletBalanceKobo)}</p>
+                  <p className="mt-2 text-3xl font-bold">{formatNairaFromKobo(schoolProfile.walletBalanceKobo)}</p>
                 </div>
                 <p className="text-xs text-navy-200">
-                  Equals {formatChecksFromKobo(demoSchoolProfile.walletBalanceKobo)} remaining student checks
+                  Equals {formatChecksFromKobo(schoolProfile.walletBalanceKobo)} remaining student checks
                 </p>
               </div>
 

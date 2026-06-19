@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 
-type AuthDemoFormProps = {
+type AuthAccessFormProps = {
   mode: 'login' | 'register';
   audience?: 'school' | 'admin';
   destination?: string;
@@ -14,31 +14,31 @@ const formContent = {
   login: {
     school: {
       title: 'Sign In to EduClearance',
-      description: 'Verify clearances and manage unresolved student obligations',
+      description: 'Verify transfer clearances, manage issue reports, and monitor wallet activity.',
       buttonLabel: 'Sign In',
-      pendingLabel: 'Opening dashboard...',
-      destination: '/auth/demo-login?role=school_admin&redirect=%2Fdashboard',
+      pendingLabel: 'Opening workspace...',
+      destination: '/auth/local-access?role=school_admin&redirect=%2Fdashboard',
       emailLabel: 'Official School Email',
     },
     admin: {
       title: 'Platform Admin Sign In',
-      description: 'Review schools, wallet operations, clearance cases, and disputes',
-      buttonLabel: 'Open Admin Workspace',
+      description: 'Review school claims, wallet operations, clearance cases, and disputes.',
+      buttonLabel: 'Sign In',
       pendingLabel: 'Opening admin workspace...',
-      destination: '/auth/demo-login?role=platform_admin&redirect=%2Fadmin',
+      destination: '/auth/local-access?role=platform_admin&redirect=%2Fadmin',
       emailLabel: 'Platform Admin Email',
     },
   },
   register: {
-    title: 'Create Proprietor Account',
-    description: 'Register to claim and verify clearances',
+    title: 'Create School Account',
+    description: 'Register a proprietor account to claim your school and manage clearance operations.',
     buttonLabel: 'Register Account',
     pendingLabel: 'Opening claim flow...',
     destination: '/claim-school',
   },
 } as const;
 
-export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDemoFormProps) {
+export function AuthAccessForm({ mode, audience = 'school', destination }: AuthAccessFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loginContent = {
@@ -126,10 +126,12 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
                 <p className="text-slate-500">
                   Need to claim your school?{' '}
                   <Link href="/claim-school" className="font-semibold text-navy-900 hover:underline">
-                    Claim pre-seeded profile
+                    Claim pre-listed profile
                   </Link>
                 </p>
-                <p className="text-slate-400">Demo school sign-in sets a server-readable school session cookie for protected private routes.</p>
+                <p className="text-slate-400">
+                  Local development access is enabled for protected school routes in this environment.
+                </p>
                 <p className="text-slate-400">
                   Are you a Platform Admin?{' '}
                   <Link href="/login?role=admin" className="font-semibold text-slate-500 hover:underline">
@@ -145,7 +147,9 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
                     Go to School Sign In
                   </Link>
                 </p>
-                <p className="text-slate-400">Demo admin access sets a platform_admin session cookie for protected admin routes.</p>
+                <p className="text-slate-400">
+                  Local development access is enabled for platform administration in this environment.
+                </p>
               </>
             )}
           </div>

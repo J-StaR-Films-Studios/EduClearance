@@ -7,7 +7,7 @@ import {
   recentIssueSummaries,
   walletWatchSchools,
   type AdminClearanceRecord,
-} from '@/lib/demo-admin-data';
+} from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
 type ClearanceStatusFilter = 'all' | AdminClearanceRecord['status'];
@@ -60,7 +60,7 @@ export function AdminClearanceWorkspace() {
     const reason = String(formData.get('reason') ?? 'No reason provided');
 
     setNotice(
-      `${schoolName}: ${adjustmentType.toLowerCase()} of ₦${Number(amount).toLocaleString('en-NG')} staged as provider=manual. Demo notice prepared for wallet transaction and audit logging. Reason: ${reason}`,
+      `${schoolName}: ${adjustmentType.toLowerCase()} of ₦${Number(amount).toLocaleString('en-NG')} recorded for local review as provider=manual. Wallet transaction and audit logging should persist this action when live admin controls are connected. Reason: ${reason}`,
     );
     form.reset();
   }

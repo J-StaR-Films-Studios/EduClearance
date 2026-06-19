@@ -4,10 +4,10 @@ import type { Metadata } from 'next';
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { APP_NAME } from '@/lib/site';
 import {
-  demoSchoolProfile,
+  schoolProfile,
   outboundClearances,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
@@ -23,8 +23,8 @@ export default async function DashboardPage() {
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <header className="flex flex-col items-start justify-between gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-navy-900">{demoSchoolProfile.name}</h1>
-            <p className="text-xs text-slate-500">Local Cluster: {demoSchoolProfile.cluster}</p>
+            <h1 className="text-2xl font-bold text-navy-900">{schoolProfile.name}</h1>
+            <p className="text-xs text-slate-500">Cluster: {schoolProfile.cluster}</p>
           </div>
 
           {currentRole === 'school_staff' ? (
@@ -44,9 +44,9 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Wallet Balance</p>
                 <p className="text-sm font-semibold text-navy-900">
-                  {formatNairaFromKobo(demoSchoolProfile.walletBalanceKobo)}{' '}
+                  {formatNairaFromKobo(schoolProfile.walletBalanceKobo)}{' '}
                   <span className="text-xs font-normal text-slate-500">
-                    ({formatChecksFromKobo(demoSchoolProfile.walletBalanceKobo)} checks left)
+                    ({formatChecksFromKobo(schoolProfile.walletBalanceKobo)} checks left)
                   </span>
                 </p>
               </div>

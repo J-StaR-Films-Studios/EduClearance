@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { AdminAccessRequired } from '@/components/admin/admin-access-required';
 import { AdminClearanceWorkspace } from '@/components/admin/admin-clearance-workspace';
 import { AdminAppShell } from '@/components/app/admin-app-shell';
-import { isPlatformAdminSession } from '@/lib/demo-session';
+import { isPlatformAdminSession } from '@/lib/local-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 

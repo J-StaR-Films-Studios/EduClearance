@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
-import { reportedIssues } from '@/lib/demo-school-data';
+import { reportedIssues } from '@/lib/local-school-data';
 import { formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { APP_NAME } from '@/lib/site';
@@ -36,7 +36,7 @@ export default async function IssuesPage() {
         </header>
 
         <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Demo list only. Resolve, withdraw, and evidence-review actions should move to server-side handlers with school-scoped authorization and audit logs before production use.
+          Issue resolution, withdrawal, and evidence review should run through school-scoped server handlers with audit logging.
         </div>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -53,7 +53,7 @@ export default async function IssuesPage() {
           <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Resolved</p>
             <p className="mt-1 text-2xl font-bold text-emerald-700">{resolvedCount}</p>
-            <p className="text-xs text-slate-500">Retained in demo history only</p>
+            <p className="text-xs text-slate-500">Retained for audit context</p>
           </div>
         </section>
 

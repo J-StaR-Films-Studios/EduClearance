@@ -1,23 +1,23 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { DEMO_SESSION_COOKIE, demoSessionRoles, getSafeInternalPath, type DemoSessionRole } from '@/lib/demo-session';
+import { LOCAL_SESSION_COOKIE, getSafeInternalPath, sessionRoles, type SessionRole } from '@/lib/local-session';
 
-function isAllowedRole(value: string | null): value is DemoSessionRole {
-  return demoSessionRoles.includes(value as DemoSessionRole);
+function isAllowedRole(value: string | null): value is SessionRole {
+  return sessionRoles.includes(value as SessionRole);
 }
 
-function getSafeRedirect(redirect: string | null, role: DemoSessionRole) {
+function getSafeRedirect(redirect: string | null, role: SessionRole) {
   return getSafeInternalPath(redirect, role === 'platform_admin' ? '/admin' : '/dashboard');
 }
 
 export async function GET(request: NextRequest) {
   const roleParam = request.nextUrl.searchParams.get('role');
-  const role: DemoSessionRole = isAllowedRole(roleParam) ? roleParam : 'school_admin';
+  const role: SessionRole = isAllowedRole(roleParam) ? roleParam : 'school_admin';
   const redirectPath = getSafeRedirect(request.nextUrl.searchParams.get('redirect'), role);
   const response = NextResponse.redirect(new URL(redirectPath, request.url));
 
-  response.cookies.set(DEMO_SESSION_COOKIE, role, {
+  response.cookies.set(LOCAL_SESSION_COOKIE, role, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',

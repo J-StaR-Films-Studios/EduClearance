@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import { adminHref, type AdminNavKey } from '@/lib/demo-admin-data';
+import { adminHref, type AdminNavKey } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
 const navItems: Array<{ key: AdminNavKey; href: ReturnType<typeof adminHref>; label: string }> = [

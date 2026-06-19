@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getSchoolSessionRole } from '@/lib/demo-session';
+import { getSchoolSessionRole } from '@/lib/local-session';
 
 const paystackInitializeSchema = z.object({
   amountKobo: z.number().int().positive(),
@@ -25,12 +25,12 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       ok: false,
-      demo: true,
+      environment: 'local',
       action: 'paystack_initialize',
-      message: 'Demo placeholder only. No Paystack transaction was initialized.',
-      requiredProductionWork: [
+      message: 'Paystack initialization is not enabled in the current local environment. No transaction was created.',
+      implementationNotes: [
         'Create a pending payment record on the server before calling Paystack.',
-        'Use secret keys only on the server and return the provider authorization URL/reference.',
+        'Use secret keys only on the server and return the provider authorization URL and reference.',
         'Link the initialized payment to the school wallet for later verification.',
       ],
       received: payload.data,

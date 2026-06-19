@@ -7,9 +7,9 @@ import {
   adminOverviewMetrics,
   recentIssueSummaries,
   suspiciousAlerts,
-} from '@/lib/demo-admin-data';
+} from '@/lib/local-admin-data';
 import { APP_NAME } from '@/lib/site';
-import { isPlatformAdminSession } from '@/lib/demo-session';
+import { isPlatformAdminSession } from '@/lib/local-session';
 import { noIndexMetadata } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { adminClaimSchools, type AdminClaimSchool } from '@/lib/demo-admin-data';
+import { adminClaimSchools, type AdminClaimSchool } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
 type SchoolStatusFilter = 'pending' | 'active' | 'suspended';
@@ -71,7 +71,7 @@ export function AdminSchoolsWorkspace() {
     updateSchool(
       school.id,
       { status: nextStatus, adminNote: nextNote },
-      `${school.name}: ${action} action recorded. Demo notice prepared for lifecycle audit logging.`,
+      `${school.name}: ${action} action recorded locally. Lifecycle audit logging should persist this change when live admin controls are connected.`,
     );
 
     if (nextStatus !== activeTab) {
@@ -97,7 +97,7 @@ export function AdminSchoolsWorkspace() {
     updateSchool(
       selectedSchool.id,
       updates,
-      `${selectedSchool.name}: official contact details updated. Demo notice prepared for admin audit logging.`,
+      `${selectedSchool.name}: official contact details updated locally. Admin audit logging should persist this change when live controls are connected.`,
     );
   }
 

@@ -6,15 +6,15 @@ import { useMemo, useState } from 'react';
 import {
   inboundRequests,
   outboundClearances,
-  type DemoUserRole,
+  type SchoolUserRole,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { formatNairaFromKobo } from '@/lib/money';
 import { cn } from '@/lib/utils';
 
 type ClearanceHistoryTabsProps = {
   initialTab?: 'outbound' | 'inbound';
-  role: DemoUserRole;
+  role: SchoolUserRole;
 };
 
 export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: ClearanceHistoryTabsProps) {

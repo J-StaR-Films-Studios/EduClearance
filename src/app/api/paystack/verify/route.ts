@@ -15,10 +15,10 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       ok: false,
-      demo: true,
+      environment: 'local',
       action: 'paystack_verify',
-      message: 'Demo placeholder only. The supplied reference was not verified and no wallet credit was created.',
-      requiredProductionWork: [
+      message: 'Paystack verification is not enabled in the current local environment. No wallet credit was created.',
+      implementationNotes: [
         'Verify the reference against Paystack on the server or via a signed webhook.',
         'Credit the wallet only after a successful, idempotent verification result.',
         'Persist payment verification timestamps and audit log the credit event.',

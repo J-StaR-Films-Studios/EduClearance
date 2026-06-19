@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { ClearanceHistoryTabs } from '@/components/workflows/clearance-history-tabs';
-import { dashboardStats, withRoleQuery } from '@/lib/demo-school-data';
+import { dashboardStats, withRoleQuery } from '@/lib/local-school-data';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';

@@ -1,9 +1,9 @@
 import { CHECK_PRICE_KOBO } from '@/lib/money';
 
-export type DemoUserRole = 'school_owner' | 'school_admin' | 'school_staff';
-export type DemoClearanceState = 'no_record' | 'match';
+export type SchoolUserRole = 'school_owner' | 'school_admin' | 'school_staff';
+export type ClearanceResultState = 'no_record' | 'match';
 
-export type DemoOutboundClearance = {
+export type OutboundClearance = {
   id: string;
   studentName: string;
   parentName: string;
@@ -16,7 +16,7 @@ export type DemoOutboundClearance = {
   lastClass: string;
   createdAt: string;
   resultLabel: string;
-  resultState: DemoClearanceState;
+  resultState: ClearanceResultState;
   statusLabel: string;
   searchResult: 'no_match' | 'confirmed_match';
   amountChargedKobo: number;
@@ -33,7 +33,7 @@ export type DemoOutboundClearance = {
   };
 };
 
-export type DemoInboundRequest = {
+export type InboundRequest = {
   id: string;
   studentName: string;
   requestingSchool: string;
@@ -41,7 +41,7 @@ export type DemoInboundRequest = {
   status: 'response_needed' | 'resolved';
 };
 
-export type DemoWalletTransaction = {
+export type WalletTransactionView = {
   id: string;
   createdAt: string;
   reference: string;
@@ -51,7 +51,7 @@ export type DemoWalletTransaction = {
   statusLabel: string;
 };
 
-export type DemoReportedIssue = {
+export type ReportedIssueView = {
   id: string;
   studentName: string;
   parentName: string;
@@ -67,7 +67,7 @@ export type DemoReportedIssue = {
 export const NO_RECORD_DISCLAIMER =
   'No unresolved record was found on EduClearance. This does not confirm that the student has cleared the previous school. Please contact the previous school directly or wait for their response.';
 
-export const demoSchoolProfile = {
+export const schoolProfile = {
   name: 'Grace Academy',
   area: 'Ikeja',
   cluster: 'Ikeja Private Schools Cluster',
@@ -75,9 +75,9 @@ export const demoSchoolProfile = {
   walletBalanceKobo: 450_000,
 };
 
-export const demoUser = {
+export const schoolUser = {
   name: 'Ope Alabi',
-  role: 'school_admin' as DemoUserRole,
+  role: 'school_admin' as SchoolUserRole,
 };
 
 export const previousSchoolOptions = [
@@ -98,12 +98,12 @@ export const previousSchoolOptions = [
   },
   {
     value: 'manual',
-    label: 'School not listed (Manual Type-in)',
+    label: 'School not listed (Enter manually)',
     routeId: 'chinedu-alao',
   },
 ] as const;
 
-export const outboundClearances: DemoOutboundClearance[] = [
+export const outboundClearances: OutboundClearance[] = [
   {
     id: 'chinedu-alao',
     studentName: 'Chinedu Alao',
@@ -158,7 +158,7 @@ export const outboundClearances: DemoOutboundClearance[] = [
   },
 ];
 
-export const inboundRequests: DemoInboundRequest[] = [
+export const inboundRequests: InboundRequest[] = [
   {
     id: 'obinna-okafor',
     studentName: 'Obinna Okafor',
@@ -174,7 +174,7 @@ export const dashboardStats = {
   openDisputes: 1,
 };
 
-export const walletTransactions: DemoWalletTransaction[] = [
+export const walletTransactions: WalletTransactionView[] = [
   {
     id: 'tx-1',
     createdAt: '2026-06-11 11:22',
@@ -204,7 +204,7 @@ export const walletTransactions: DemoWalletTransaction[] = [
   },
 ];
 
-export const reportedIssues: DemoReportedIssue[] = [
+export const reportedIssues: ReportedIssueView[] = [
   {
     id: 'issue-1',
     studentName: 'Aisha Bello',
@@ -239,11 +239,11 @@ export const reportedIssues: DemoReportedIssue[] = [
     reportedAt: '2026-05-28 15:18',
     status: 'resolved',
     sourceLabel: 'Manual school report',
-    note: 'Record retained for demo history only. Resolution should be audit logged once server actions are connected.',
+    note: 'Record retained for historical context. Resolution should be audit logged once server actions are connected.',
   },
 ];
 
-export function resolveDemoRole(role?: string | string[]): DemoUserRole {
+export function resolveSchoolRole(role?: string | string[]) {
   if (role === 'school_owner') {
     return 'school_owner';
   }
@@ -251,7 +251,7 @@ export function resolveDemoRole(role?: string | string[]): DemoUserRole {
   return role === 'school_staff' ? 'school_staff' : 'school_admin';
 }
 
-export function withRoleQuery(href: string, role?: DemoUserRole) {
+export function withRoleQuery(href: string, role?: SchoolUserRole) {
   void role;
   return href;
 }
