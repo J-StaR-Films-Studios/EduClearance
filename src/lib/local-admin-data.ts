@@ -23,7 +23,7 @@ export type AdminClaimSchool = {
   phone: string;
   documentName: string;
   status: 'pending' | 'active' | 'suspended';
-  claimType: 'pre_seeded' | 'new_registration';
+  claimType: 'existing_directory_profile' | 'new_registration';
   submittedAt: string;
   officialContact: string;
   contactEmail: string;
@@ -112,12 +112,12 @@ export const adminClaimSchools: AdminClaimSchool[] = [
     phone: '+234 803 123 4567',
     documentName: 'brightway_moe_license.pdf',
     status: 'pending',
-    claimType: 'pre_seeded',
+    claimType: 'existing_directory_profile',
     submittedAt: '1 hour ago',
     officialContact: '+234 803 123 4567',
     contactEmail: 'clearance@brightway.edu.ng',
     contactPerson: 'Pastor Joshua Alabi',
-    adminNote: 'Claimed pre-seeded profile. CAC and ministry license uploaded for review.',
+    adminNote: 'Claimed existing directory profile. CAC and ministry license uploaded for review.',
   },
   {
     id: 'school-grace',
@@ -128,7 +128,7 @@ export const adminClaimSchools: AdminClaimSchool[] = [
     phone: '+234 802 100 2000',
     documentName: 'grace_clearance_contact_update.pdf',
     status: 'active',
-    claimType: 'pre_seeded',
+    claimType: 'existing_directory_profile',
     submittedAt: 'Approved 2 days ago',
     officialContact: '+234 802 100 2000',
     contactEmail: 'clearance@graceacademy.edu.ng',

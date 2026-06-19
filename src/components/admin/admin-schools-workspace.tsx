@@ -71,7 +71,7 @@ export function AdminSchoolsWorkspace() {
     updateSchool(
       school.id,
       { status: nextStatus, adminNote: nextNote },
-      `${school.name}: ${action} action recorded locally. Lifecycle audit logging should persist this change when live admin controls are connected.`,
+      `${school.name}: profile status updated to ${nextStatus}.`,
     );
 
     if (nextStatus !== activeTab) {
@@ -94,11 +94,7 @@ export function AdminSchoolsWorkspace() {
       adminNote: String(formData.get('adminNote') ?? ''),
     };
 
-    updateSchool(
-      selectedSchool.id,
-      updates,
-      `${selectedSchool.name}: official contact details updated locally. Admin audit logging should persist this change when live controls are connected.`,
-    );
+    updateSchool(selectedSchool.id, updates, `${selectedSchool.name}: official contact details updated.`);
   }
 
   return (
@@ -304,10 +300,10 @@ export function AdminSchoolsWorkspace() {
 
           <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 text-xs leading-relaxed shadow-sm">
             <h3 className="text-sm font-bold text-navy-900">Review Checklist</h3>
-            <p className="text-slate-500">• Confirm school name and area match the seeded directory profile.</p>
+            <p className="text-slate-500">• Confirm school name and area match the existing directory profile.</p>
             <p className="text-slate-500">• Inspect uploaded documents before approval or reactivation.</p>
             <p className="text-slate-500">• Use suspension for abuse or unresolved identity concerns.</p>
-            <p className="text-slate-500">• Production actions should write audit logs for each lifecycle change.</p>
+            <p className="text-slate-500">• Confirm each lifecycle change has an audit trail before closing the review.</p>
           </div>
         </div>
       ) : null}

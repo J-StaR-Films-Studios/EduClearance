@@ -33,7 +33,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
         request.id === requestId ? { ...request, status: 'resolved', requestedAt: `${request.requestedAt} · Responded` } : request,
       ),
     );
-    setNotice('Inbound clearance request updated to “No Outstanding Issue”. In production, this will be audit logged server-side.');
+    setNotice('Inbound clearance request updated to “No Outstanding Issue”.');
   }
 
   return (

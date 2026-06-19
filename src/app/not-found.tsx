@@ -8,7 +8,7 @@ export default function NotFound() {
       <div className="max-w-md space-y-4 rounded-2xl border border-background-secondary bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">{APP_NAME}</p>
         <h1 className="text-3xl font-bold text-navy-900">Page not found</h1>
-        <p className="text-sm text-slate-600">The requested page is not available in this build foundation yet.</p>
+        <p className="text-sm text-slate-600">The requested page is unavailable or may require a valid sign-in.</p>
         <Link href="/" className="inline-flex rounded-lg bg-navy-900 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800">
           Back to home
         </Link>

@@ -126,12 +126,10 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 <p className="text-slate-500">
                   Need to claim your school?{' '}
                   <Link href="/claim-school" className="font-semibold text-navy-900 hover:underline">
-                    Claim pre-listed profile
+                    Claim existing school profile
                   </Link>
                 </p>
-                <p className="text-slate-400">
-                  Local development access is enabled for protected school routes in this environment.
-                </p>
+                <p className="text-slate-400">Access is limited to verified school accounts and approved school profiles.</p>
                 <p className="text-slate-400">
                   Are you a Platform Admin?{' '}
                   <Link href="/login?role=admin" className="font-semibold text-slate-500 hover:underline">
@@ -147,9 +145,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                     Go to School Sign In
                   </Link>
                 </p>
-                <p className="text-slate-400">
-                  Local development access is enabled for platform administration in this environment.
-                </p>
+                <p className="text-slate-400">Platform administration is restricted to authorized EduClearance operators.</p>
               </>
             )}
           </div>

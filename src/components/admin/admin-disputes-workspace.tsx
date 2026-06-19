@@ -44,7 +44,7 @@ export function AdminDisputesWorkspace() {
               status: action,
               adminNote:
                 action === 'resolved'
-                  ? 'Record cleared after evidence review. Admitting school refund helper should create a ₦100 wallet credit.'
+                  ? 'Record cleared after evidence review. Refund review noted for the admitting school wallet.'
                   : 'Dispute rejected after evidence review. Existing issue record remains active.',
             }
           : entry,
@@ -53,8 +53,8 @@ export function AdminDisputesWorkspace() {
 
     setNotice(
       action === 'resolved'
-        ? `${record.studentName}: dispute cleared. Audit logging and the ₦100 refund transaction should be persisted when live resolution actions are connected.`
-        : `${record.studentName}: dispute declined. Audit logging and school notification should be persisted when live resolution actions are connected.`,
+        ? `${record.studentName}: dispute resolved and the refund path has been noted for the admitting school.`
+        : `${record.studentName}: dispute rejected and the existing issue record remains active.`,
     );
   }
 
@@ -150,7 +150,7 @@ export function AdminDisputesWorkspace() {
                   <div className="space-y-2 pt-2">
                     {record.refundReady ? (
                       <p className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-[11px] text-amber-700">
-                        Note: Clearing this record will automatically issue a ₦100 credit refund to the admitting school&apos;s wallet.
+                        Note: Clearing this record marks a ₦100 wallet credit for refund review by an authorized operator.
                       </p>
                     ) : null}
                     {record.status === 'under_review' ? (
@@ -182,8 +182,8 @@ export function AdminDisputesWorkspace() {
           <h3 className="text-sm font-bold text-navy-900">Resolution Standard Protocol</h3>
           <p className="text-slate-500">1. Inspect admitting and reporting school comments before changing any live record.</p>
           <p className="text-slate-500">2. Request parent ledger receipts or bursary proof where necessary.</p>
-          <p className="text-slate-500">3. Clearing an inaccurate record should also prepare the ₦100 refund path for the admitting school.</p>
-          <p className="text-slate-500">4. Production resolution actions should write audit logs and notify both schools.</p>
+          <p className="text-slate-500">3. Clearing an inaccurate record includes refund-review notes for the admitting school.</p>
+          <p className="text-slate-500">4. Confirm audit logs and school notifications before closing the dispute.</p>
         </div>
       </div>
     </div>

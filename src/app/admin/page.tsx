@@ -82,7 +82,7 @@ export default async function AdminOverviewPage() {
                 <span className="font-bold text-navy-900">Brightway College</span>
                 <span className="font-mono text-slate-500">1 hour ago</span>
               </div>
-              <p className="text-slate-600">Claimed pre-seeded profile. CAC document uploaded.</p>
+              <p className="text-slate-600">Claimed existing directory profile. CAC document uploaded.</p>
               <Link href="/admin/schools" className="inline-block font-bold text-navy-900 hover:underline">
                 Review Claim →
               </Link>

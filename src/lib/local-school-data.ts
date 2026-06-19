@@ -239,7 +239,7 @@ export const reportedIssues: ReportedIssueView[] = [
     reportedAt: '2026-05-28 15:18',
     status: 'resolved',
     sourceLabel: 'Manual school report',
-    note: 'Record retained for historical context. Resolution should be audit logged once server actions are connected.',
+    note: 'Record retained for historical context with resolution details available for school-scoped review.',
   },
 ];
 

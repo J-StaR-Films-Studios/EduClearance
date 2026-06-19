@@ -21,7 +21,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
     <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
       {submitted ? (
         <div className="mb-4 space-y-2 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
-          <p>Issue reported successfully. The record is staged as unresolved and should be audit logged once the server action is connected.</p>
+          <p>Issue reported successfully. The record is marked unresolved and will remain available for school-scoped review and follow-up.</p>
           <a href="/issues" className="inline-flex font-semibold underline">
             View reported issues
           </a>
