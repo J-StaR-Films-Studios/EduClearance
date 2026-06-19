@@ -43,7 +43,7 @@ const networkHighlights = [
   },
 ];
 
-const pricingBullets = ['₦100 per student verification', 'Free unresolved issue reporting', 'Pay safely via Paystack'];
+const pricingBullets = ['₦100 per student verification', 'Free unresolved issue reporting', 'Pay securely online'];
 
 const structuredData = buildHomepageStructuredData();
 

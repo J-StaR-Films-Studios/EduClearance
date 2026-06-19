@@ -60,7 +60,7 @@ export function AdminClearanceWorkspace() {
     const reason = String(formData.get('reason') ?? 'No reason provided');
 
     setNotice(
-      `${schoolName}: ${adjustmentType.toLowerCase()} of ₦${Number(amount).toLocaleString('en-NG')} recorded with provider=manual. Reason: ${reason}`,
+      `${schoolName}: ${adjustmentType.toLowerCase()} of ₦${Number(amount).toLocaleString('en-NG')} recorded as a manual adjustment. Reason: ${reason}`,
     );
     form.reset();
   }
@@ -161,7 +161,7 @@ export function AdminClearanceWorkspace() {
           <div className="space-y-3 rounded-xl border border-background-secondary bg-background p-4 text-xs leading-relaxed">
             <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">Operational hints</h4>
             <p className="text-slate-500">• Use this workspace to monitor paid clearance requests and compare issue trends across schools.</p>
-            <p className="text-slate-500">• Manual credits or debits should remain clearly marked as provider=manual.</p>
+            <p className="text-slate-500">• Manual credits or debits should include a clear adjustment reason.</p>
             <p className="text-slate-500">• Refund helpers for inaccurate dispute outcomes should add a ₦100 wallet credit back to the admitting school.</p>
           </div>
         </div>

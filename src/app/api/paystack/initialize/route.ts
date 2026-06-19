@@ -51,17 +51,17 @@ export async function POST(request: Request) {
   const actor = await resolveLocalSchoolActor();
 
   if (!actor) {
-    return NextResponse.json({ ok: false, message: 'Active school session required.' }, { status: 401 });
+    return NextResponse.json({ ok: false, message: 'Please sign in to continue.' }, { status: 401 });
   }
 
   if (!canManageSchoolWallet(actor)) {
-    return NextResponse.json({ ok: false, message: 'School owner or admin permission required.' }, { status: 403 });
+    return NextResponse.json({ ok: false, message: 'Only a school owner or admin can manage billing.' }, { status: 403 });
   }
 
   const payload = paystackInitializeSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Invalid Paystack initialize payload.', issues: payload.error.flatten() }, { status: 400 });
+    return NextResponse.json({ ok: false, message: 'Invalid checkout request.', issues: payload.error.flatten() }, { status: 400 });
   }
 
   const env = getServerEnv();
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   const allowLocalPaymentFallback = isLocalAppUrl(env.NEXT_PUBLIC_APP_URL) && isLocalRequest(request);
 
   if (!env.PAYSTACK_SECRET_KEY && !allowLocalPaymentFallback) {
-    return NextResponse.json({ ok: false, message: 'Paystack secret key is required outside local development.' }, { status: 503 });
+    return NextResponse.json({ ok: false, message: 'Checkout is temporarily unavailable. Please contact support.' }, { status: 503 });
   }
 
   try {
@@ -170,7 +170,7 @@ export async function POST(request: Request) {
 
       await db.update(payments).set({ status: 'failed', metadataJson: { ...metadata, providerMessage: paystackJson?.message ?? 'Initialization failed' } }).where(eq(payments.id, paymentId));
 
-      return NextResponse.json({ ok: false, message: 'Payment initialization failed.' }, { status: 502 });
+      return NextResponse.json({ ok: false, message: 'Unable to start checkout. Please try again.' }, { status: 502 });
     }
 
     await db
@@ -195,6 +195,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Paystack initialize failed.', error);
-    return NextResponse.json({ ok: false, message: 'Unable to initialize payment.' }, { status: 500 });
+    return NextResponse.json({ ok: false, message: 'Unable to start checkout. Please try again.' }, { status: 500 });
   }
 }

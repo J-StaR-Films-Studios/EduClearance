@@ -44,14 +44,14 @@ export async function POST(request: Request) {
   const webhookSecret = env.PAYSTACK_WEBHOOK_SECRET ?? env.PAYSTACK_SECRET_KEY;
 
   if (!webhookSecret) {
-    return NextResponse.json({ ok: false, message: 'Paystack webhook secret is not configured.' }, { status: 503 });
+    return NextResponse.json({ ok: false, message: 'Payment notifications are temporarily unavailable.' }, { status: 503 });
   }
 
   const rawBody = await request.text();
   const signature = request.headers.get('x-paystack-signature');
 
   if (!isValidSignature(rawBody, signature, webhookSecret)) {
-    return NextResponse.json({ ok: false, message: 'Invalid Paystack webhook signature.' }, { status: 401 });
+    return NextResponse.json({ ok: false, message: 'Invalid payment notification signature.' }, { status: 401 });
   }
 
   let payload: PaystackWebhookPayload;
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   try {
     payload = JSON.parse(rawBody) as PaystackWebhookPayload;
   } catch {
-    return NextResponse.json({ ok: false, message: 'Invalid Paystack webhook payload.' }, { status: 400 });
+    return NextResponse.json({ ok: false, message: 'Invalid payment notification payload.' }, { status: 400 });
   }
 
   if (payload.event !== 'charge.success') {
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   const amountKobo = payload.data?.amount;
 
   if (!reference || !amountKobo) {
-    return NextResponse.json({ ok: false, message: 'Webhook payload is missing payment reference or amount.' }, { status: 400 });
+    return NextResponse.json({ ok: false, message: 'Payment notification is missing required details.' }, { status: 400 });
   }
 
   try {
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
           schoolId: payment.schoolId,
           type: 'credit',
           amountKobo: payment.amountKobo,
-          description: 'Paystack wallet top-up',
+          description: 'Wallet top-up',
           reference: creditReference,
           provider: 'paystack',
           createdByUserId: null,
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, credited: result.credited });
   } catch (error) {
-    console.error('Paystack webhook failed.', error);
-    return NextResponse.json({ ok: false, message: 'Unable to process Paystack webhook.' }, { status: 500 });
+    console.error('Payment notification failed.', error);
+    return NextResponse.json({ ok: false, message: 'Unable to process payment notification.' }, { status: 500 });
   }
 }

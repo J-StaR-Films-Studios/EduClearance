@@ -23,6 +23,14 @@ function formatTransactionAmount(amountKobo: number) {
   }).format(Math.abs(amountKobo) / 100);
 }
 
+function formatReceiptId(reference: string) {
+  return reference.replace(/^paystack-credit:/i, 'topup-').replace(/^pstk_/i, 'topup_');
+}
+
+function formatTransactionDescription(description: string) {
+  return description.replace(/Paystack wallet top-up/gi, 'Wallet top-up').replace(/Paystack Wallet Deposit/gi, 'Wallet top-up');
+}
+
 async function getWalletViewData(): Promise<{ balanceKobo: number; transactions: WalletTransactionView[] }> {
   const actor = await resolveLocalSchoolActor();
 
@@ -52,9 +60,9 @@ async function getWalletViewData(): Promise<{ balanceKobo: number; transactions:
     transactions: transactionRows.map((transaction) => ({
       id: transaction.id,
       createdAt: transaction.createdAt.toISOString().slice(0, 16).replace('T', ' '),
-      reference: transaction.reference,
+      reference: formatReceiptId(transaction.reference),
       type: transaction.type === 'adjustment' ? 'refund' : transaction.type,
-      description: transaction.description,
+      description: formatTransactionDescription(transaction.description),
       amountKobo: transaction.type === 'debit' ? -transaction.amountKobo : transaction.amountKobo,
       statusLabel: transaction.type === 'credit' ? 'Credit' : transaction.type === 'refund' ? 'Refund' : transaction.type === 'adjustment' ? 'Adjustment' : 'Debit',
     })),
@@ -72,16 +80,12 @@ export default async function WalletPage() {
         <header className="flex items-center justify-between border-b border-background-secondary pb-4">
           <div>
             <h1 className="text-2xl font-bold text-navy-900">Wallet &amp; Top Up</h1>
-            <p className="text-xs text-slate-500">Manage school clearance credits via Paystack</p>
+            <p className="text-xs text-slate-500">Manage school clearance credits and billing</p>
           </div>
           <Link href={withRoleQuery('/dashboard', currentRole)} className="text-xs text-slate-500 hover:text-navy-900">
             ← Back
           </Link>
         </header>
-
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Wallet credits post only after server-side Paystack verification completes. Browser return states should never credit a school wallet on their own.
-        </div>
 
         {isStaff ? (
           <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
@@ -93,7 +97,7 @@ export default async function WalletPage() {
               </p>
             </div>
             <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
-              Wallet billing is locked for <strong>school_staff</strong> users. Please contact your school proprietor or admin to top up via Paystack or review billing history.
+              Wallet billing is limited for staff accounts. Please contact your school proprietor or admin to top up or review billing history.
             </div>
           </div>
         ) : (
@@ -121,7 +125,7 @@ export default async function WalletPage() {
                   <thead>
                     <tr className="border-b border-background-secondary bg-background font-bold uppercase tracking-wider text-slate-500">
                       <th className="px-6 py-3">Date</th>
-                      <th className="px-6 py-3">Reference</th>
+                      <th className="px-6 py-3">Receipt ID</th>
                       <th className="px-6 py-3">Type</th>
                       <th className="px-6 py-3">Description</th>
                       <th className="px-6 py-3 text-right">Amount (₦)</th>

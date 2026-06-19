@@ -52,13 +52,13 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
       const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; authorizationUrl?: string } | null;
 
       if (!response.ok || !result?.ok || !result.authorizationUrl) {
-        setErrorMessage(result?.message ?? 'Unable to initialize payment. Please try again.');
+        setErrorMessage(result?.message ?? 'Unable to start checkout. Please try again.');
         return;
       }
 
       window.location.assign(result.authorizationUrl);
     } catch {
-      setErrorMessage('Unable to initialize payment. Please try again.');
+      setErrorMessage('Unable to start checkout. Please try again.');
     } finally {
       setIsInitializing(false);
     }
@@ -82,14 +82,14 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
       const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; credited?: boolean } | null;
 
       if (!response.ok || !result?.ok) {
-        setErrorMessage(result?.message ?? 'Unable to verify payment. Please try again.');
+        setErrorMessage(result?.message ?? 'We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
         return;
       }
 
-      setStatusMessage(result.credited ? 'Payment verified and wallet credit posted.' : 'Payment was already verified for this wallet.');
+      setStatusMessage(result.credited ? 'Payment confirmed. Your wallet balance has been updated.' : 'This payment has already been added to your wallet.');
       router.refresh();
     } catch {
-      setErrorMessage('Unable to verify payment. Please try again.');
+      setErrorMessage('We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -98,17 +98,15 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   return (
     <>
       {paymentReference ? (
-        <div className="space-y-3 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          <p>
-            Payment callback received with reference <strong>{paymentReference}</strong>. Wallet credit posts after server-side verification records the transaction.
-          </p>
+        <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-900">
+          <p>Welcome back. If your payment was completed, confirm it now and your wallet balance will update automatically.</p>
           <button
             type="button"
             onClick={verifyPayment}
             disabled={isVerifying}
             className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {isVerifying ? 'Verifying…' : 'Verify payment'}
+            {isVerifying ? 'Confirming…' : 'Confirm payment'}
           </button>
         </div>
       ) : null}
@@ -117,7 +115,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
         <div className="space-y-1">
           <h3 className="text-sm font-semibold text-navy-900">Purchase Clearance Credits</h3>
           <p className="text-[10px] leading-relaxed text-slate-500">
-            Checkout creates a pending payment reference first. Wallet credit posts only after server verification succeeds.
+            Choose an amount and continue to secure checkout. Your balance updates after payment confirmation.
           </p>
         </div>
 
@@ -153,7 +151,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
             disabled={isInitializing}
             className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {isInitializing ? 'Initializing…' : 'Continue to Paystack'}
+            {isInitializing ? 'Opening checkout…' : 'Continue to secure checkout'}
           </button>
         </div>
 
@@ -161,7 +159,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
         {statusMessage ? <p className="text-xs font-medium text-emerald-700">{statusMessage}</p> : null}
 
         <p className="text-[10px] leading-relaxed text-slate-500">
-          Selected amount: <strong>{formattedAmount}</strong>. A successful browser return never credits the wallet by itself.
+          Selected amount: <strong>{formattedAmount}</strong>. Your wallet balance updates once payment is confirmed.
         </p>
       </div>
     </>

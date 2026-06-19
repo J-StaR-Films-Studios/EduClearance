@@ -47,24 +47,24 @@ export async function POST(request: Request) {
   const payload = paystackVerifySchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Invalid Paystack verify payload.', issues: payload.error.flatten() }, { status: 400 });
+    return NextResponse.json({ ok: false, message: 'Invalid payment confirmation request.', issues: payload.error.flatten() }, { status: 400 });
   }
 
   const actor = await resolveOptionalLocalActor();
 
   if (!actor) {
-    return NextResponse.json({ ok: false, message: 'Authorized local session required.' }, { status: 401 });
+    return NextResponse.json({ ok: false, message: 'Please sign in to continue.' }, { status: 401 });
   }
 
   if (actor.sessionRole !== 'platform_admin' && !canManageSchoolWallet(actor)) {
-    return NextResponse.json({ ok: false, message: 'School owner or admin permission required.' }, { status: 403 });
+    return NextResponse.json({ ok: false, message: 'Only a school owner or admin can manage billing.' }, { status: 403 });
   }
 
   const reference = payload.data.reference;
   const env = getServerEnv();
 
   if (!env.PAYSTACK_SECRET_KEY && !(isLocalAppUrl(env.NEXT_PUBLIC_APP_URL) && isLocalRequest(request))) {
-    return NextResponse.json({ ok: false, message: 'Paystack secret key is required outside local development.' }, { status: 503 });
+    return NextResponse.json({ ok: false, message: 'Payment confirmation is temporarily unavailable. Please contact support.' }, { status: 503 });
   }
 
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
@@ -82,15 +82,15 @@ export async function POST(request: Request) {
     .limit(1);
 
   if (!paymentBeforeVerify) {
-    return NextResponse.json({ ok: false, message: 'Payment reference was not found.' }, { status: 404 });
+    return NextResponse.json({ ok: false, message: 'We could not find that payment. Please start checkout again.' }, { status: 404 });
   }
 
   if (!canVerifyPaymentForSchool(actor, paymentBeforeVerify.schoolId)) {
-    return NextResponse.json({ ok: false, message: 'Payment reference is not available for this school session.' }, { status: 403 });
+    return NextResponse.json({ ok: false, message: 'This payment is not available for your school account.' }, { status: 403 });
   }
 
   if (paymentBeforeVerify.status === 'failed' || paymentBeforeVerify.status === 'abandoned') {
-    return NextResponse.json({ ok: false, message: 'Payment reference is not available for wallet credit.' }, { status: 409 });
+    return NextResponse.json({ ok: false, message: 'This payment can no longer be added to a wallet.' }, { status: 409 });
   }
 
   let providerVerification: PaystackVerifyResponse['data'] | null = null;
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
 
     if (!paystackResponse.ok || !paystackJson?.status || !providerStatus) {
       return NextResponse.json(
-        { ok: false, message: 'Payment has not been verified by Paystack.', retryable: true },
+        { ok: false, message: 'We could not confirm this payment yet. If you completed checkout, wait a moment and try again.', retryable: true },
         { status: 400 },
       );
     }
@@ -130,17 +130,17 @@ export async function POST(request: Request) {
           })
           .where(eq(payments.id, paymentBeforeVerify.id));
 
-        return NextResponse.json({ ok: false, message: 'Payment was not successful with Paystack.', retryable: false }, { status: 400 });
+        return NextResponse.json({ ok: false, message: 'This payment was not successful. Please try checkout again.', retryable: false }, { status: 400 });
       }
 
       return NextResponse.json(
-        { ok: false, message: 'Payment is not successful yet. Try verification again after Paystack completes processing.', retryable: true },
+        { ok: false, message: 'This payment is still being processed. Please wait a moment and try again.', retryable: true },
         { status: 400 },
       );
     }
 
     if (providerData?.amount !== paymentBeforeVerify.amountKobo) {
-      return NextResponse.json({ ok: false, message: 'Verified payment amount does not match the initialized amount.', retryable: true }, { status: 409 });
+      return NextResponse.json({ ok: false, message: 'The payment amount does not match this checkout. Please contact support before trying again.', retryable: true }, { status: 409 });
     }
 
     providerVerification = providerData;
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
           schoolId: payment.schoolId,
           type: 'credit',
           amountKobo: payment.amountKobo,
-          description: 'Paystack wallet top-up',
+          description: 'Wallet top-up',
           reference: creditReference,
           provider: 'paystack',
           createdByUserId: actor.userId,
@@ -281,15 +281,15 @@ export async function POST(request: Request) {
     });
 
     if (result.kind === 'not_found') {
-      return NextResponse.json({ ok: false, message: 'Payment reference was not found.' }, { status: 404 });
+      return NextResponse.json({ ok: false, message: 'We could not find that payment. Please start checkout again.' }, { status: 404 });
     }
 
     if (result.kind === 'not_creditable') {
-      return NextResponse.json({ ok: false, message: 'Payment reference is not available for wallet credit.' }, { status: 409 });
+      return NextResponse.json({ ok: false, message: 'This payment can no longer be added to a wallet.' }, { status: 409 });
     }
 
     if (result.kind === 'forbidden') {
-      return NextResponse.json({ ok: false, message: 'Payment reference is not available for this school session.' }, { status: 403 });
+      return NextResponse.json({ ok: false, message: 'This payment is not available for your school account.' }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -302,6 +302,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Paystack verify failed.', error);
-    return NextResponse.json({ ok: false, message: 'Unable to verify payment.' }, { status: 500 });
+    return NextResponse.json({ ok: false, message: 'We could not confirm this payment yet. Please try again.' }, { status: 500 });
   }
 }

@@ -178,9 +178,9 @@ export const walletTransactions: WalletTransactionView[] = [
   {
     id: 'tx-1',
     createdAt: '2026-06-11 11:22',
-    reference: 'pstk_92a188f',
+    reference: 'topup_92a188f',
     type: 'credit',
-    description: 'Paystack Wallet Deposit',
+    description: 'Wallet top-up',
     amountKobo: 500_000,
     statusLabel: 'Credit',
   },
