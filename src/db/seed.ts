@@ -11,330 +11,452 @@ loadEnv({ path: '.env.local' });
 loadEnv();
 
 const makeId = () => randomUUID();
+const verificationEmail = (slug: string) => `verification+${slug}@educlearance.local`;
 
 async function seed() {
   const { connection, db } = await import('./client');
 
   try {
     await db.transaction(async (tx) => {
-    await tx.execute(sql`
-      TRUNCATE TABLE
-        "audit_logs",
-        "disputes",
-        "payments",
-        "wallet_transactions",
-        "wallets",
-        "clearance_issues",
-        "clearance_requests",
-        "users",
-        "schools"
-      RESTART IDENTITY CASCADE
-    `);
+      await tx.execute(sql`
+        TRUNCATE TABLE
+          "audit_logs",
+          "disputes",
+          "payments",
+          "wallet_transactions",
+          "wallets",
+          "clearance_issues",
+          "clearance_requests",
+          "users",
+          "schools"
+        RESTART IDENTITY CASCADE
+      `);
 
-    const riverbendSchoolId = makeId();
-    const summitSchoolId = makeId();
-    const bluegateSchoolId = makeId();
-    const meadowcrestSchoolId = makeId();
+      const wuseLocalSchoolId = makeId();
+      const garkiLocalSchoolId = makeId();
+      const lugbeLocalSchoolId = makeId();
+      const americanInternationalAbujaId = makeId();
+      const loyolaJesuitCollegeId = makeId();
+      const regentSchoolId = makeId();
+      const capitalScienceAcademyId = makeId();
+      const leadBritishInternationalSchoolId = makeId();
+      const whiteplainsBritishSchoolId = makeId();
+      const glistenInternationalAcademyId = makeId();
+      const premierInternationalSchoolId = makeId();
 
-    const riverbendOwnerId = makeId();
-    const summitOwnerId = makeId();
-    const bluegateStaffId = makeId();
-    const platformAdminUserId = makeId();
+      const platformAdminUserId = makeId();
+      const wuseOwnerId = makeId();
+      const wuseAdminId = makeId();
+      const wuseStaffId = makeId();
+      const garkiOwnerId = makeId();
+      const lugbeStaffId = makeId();
 
-    await tx.insert(schools).values([
-      {
-        id: riverbendSchoolId,
-        name: 'Riverbend Academy',
-        slug: 'riverbend-academy',
-        address: '12 Harmony Way, Ikeja, Lagos',
-        area: 'Ikeja',
-        mainPhone: '+2348012340001',
-        clearancePhone: '+2348012340002',
-        contactEmail: 'clearance@riverbend.example',
-        contactPerson: 'Mrs. Adaeze Ibe',
-        logoUrl: null,
-        status: 'active',
-      },
-      {
-        id: summitSchoolId,
-        name: 'Summit Hills College',
-        slug: 'summit-hills-college',
-        address: '44 Crest Avenue, Wuse II, Abuja',
-        area: 'Wuse II',
-        mainPhone: '+2348012340011',
-        clearancePhone: '+2348012340012',
-        contactEmail: 'records@summithills.example',
-        contactPerson: 'Mr. Emeka Nwosu',
-        logoUrl: null,
-        status: 'active',
-      },
-      {
-        id: bluegateSchoolId,
-        name: 'Bluegate Preparatory School',
-        slug: 'bluegate-preparatory-school',
-        address: '8 Orchid Close, Surulere, Lagos',
-        area: 'Surulere',
-        mainPhone: '+2348012340021',
-        clearancePhone: '+2348012340022',
-        contactEmail: 'clearance@bluegate.example',
-        contactPerson: 'Ms. Zainab Yusuf',
-        logoUrl: null,
-        status: 'pending',
-      },
-      {
-        id: meadowcrestSchoolId,
-        name: 'Meadowcrest Secondary School',
-        slug: 'meadowcrest-secondary-school',
-        address: '21 Garden Road, Asokoro, Abuja',
-        area: 'Asokoro',
-        mainPhone: '+2348012340031',
-        clearancePhone: '+2348012340032',
-        contactEmail: 'office@meadowcrest.example',
-        contactPerson: 'Dr. Kemi Balogun',
-        logoUrl: null,
-        status: 'suspended',
-      },
-    ]);
-
-    await tx.insert(users).values([
-      {
-        id: platformAdminUserId,
-        schoolId: null,
-        name: 'Amina Bello',
-        email: 'admin@educlearance.local',
-        phone: '+2348090000001',
-        role: 'platform_admin',
-      },
-      {
-        id: riverbendOwnerId,
-        schoolId: riverbendSchoolId,
-        name: 'Tunde Adeyemi',
-        email: 'owner@riverbend.example',
-        phone: '+2348090000011',
-        role: 'school_owner',
-      },
-      {
-        id: summitOwnerId,
-        schoolId: summitSchoolId,
-        name: 'Zainab Musa',
-        email: 'owner@summithills.example',
-        phone: '+2348090000021',
-        role: 'school_owner',
-      },
-      {
-        id: bluegateStaffId,
-        schoolId: bluegateSchoolId,
-        name: 'Grace Okafor',
-        email: 'staff@bluegate.example',
-        phone: '+2348090000031',
-        role: 'school_staff',
-      },
-    ]);
-
-    await tx.insert(wallets).values([
-      {
-        id: makeId(),
-        schoolId: riverbendSchoolId,
-        balanceKobo: 490_000,
-      },
-      {
-        id: makeId(),
-        schoolId: summitSchoolId,
-        balanceKobo: 320_000,
-      },
-      {
-        id: makeId(),
-        schoolId: bluegateSchoolId,
-        balanceKobo: PROMOTIONAL_WALLET_KOBO,
-      },
-      {
-        id: makeId(),
-        schoolId: meadowcrestSchoolId,
-        balanceKobo: 0,
-      },
-    ]);
-
-    await tx.insert(walletTransactions).values([
-      {
-        id: makeId(),
-        schoolId: riverbendSchoolId,
-        type: 'credit',
-        amountKobo: 500_000,
-        description: 'Promotional wallet top-up for network onboarding',
-        reference: 'seed-credit-riverbend-001',
-        provider: 'manual',
-        createdByUserId: platformAdminUserId,
-      },
-      {
-        id: makeId(),
-        schoolId: riverbendSchoolId,
-        type: 'debit',
-        amountKobo: 10_000,
-        description: 'Clearance request for Ibrahim Sani',
-        reference: 'seed-debit-riverbend-001',
-        provider: 'system',
-        createdByUserId: riverbendOwnerId,
-      },
-      {
-        id: makeId(),
-        schoolId: summitSchoolId,
-        type: 'credit',
-        amountKobo: 400_000,
-        description: 'Paystack wallet top-up for local verification',
-        reference: 'seed-credit-summit-001',
-        provider: 'paystack',
-        createdByUserId: summitOwnerId,
-      },
-      {
-        id: makeId(),
-        schoolId: summitSchoolId,
-        type: 'debit',
-        amountKobo: 10_000,
-        description: 'Clearance request for Aisha Bello',
-        reference: 'seed-debit-summit-001',
-        provider: 'system',
-        createdByUserId: summitOwnerId,
-      },
-    ]);
-
-    await tx.insert(payments).values([
-      {
-        id: makeId(),
-        schoolId: riverbendSchoolId,
-        provider: 'paystack',
-        providerReference: 'PSK-LOCAL-0001',
-        amountKobo: 500_000,
-        status: 'successful',
-        metadataJson: {
-          channel: 'card',
-          note: 'Local payment record for school cluster testing',
+      await tx.insert(schools).values([
+        {
+          id: wuseLocalSchoolId,
+          name: 'Wuse Local Academy',
+          slug: 'wuse-local-academy',
+          address: 'Local development record, Wuse II, Abuja',
+          area: 'Wuse II',
+          mainPhone: '+2348000000101',
+          clearancePhone: '+2348000000102',
+          contactEmail: 'clearance+wuse-local-academy@educlearance.local',
+          contactPerson: 'Local Admissions Operator',
+          logoUrl: null,
+          status: 'active',
         },
-        verifiedAt: new Date(),
-      },
-      {
-        id: makeId(),
-        schoolId: summitSchoolId,
-        provider: 'paystack',
-        providerReference: 'PSK-LOCAL-0002',
-        amountKobo: 400_000,
-        status: 'successful',
-        metadataJson: {
-          channel: 'bank_transfer',
-          note: 'Local payment record for wallet top-up verification',
+        {
+          id: garkiLocalSchoolId,
+          name: 'Garki Local College',
+          slug: 'garki-local-college',
+          address: 'Local development record, Garki II, Abuja',
+          area: 'Garki II',
+          mainPhone: '+2348000000201',
+          clearancePhone: '+2348000000202',
+          contactEmail: 'clearance+garki-local-college@educlearance.local',
+          contactPerson: 'Local Records Operator',
+          logoUrl: null,
+          status: 'active',
         },
-        verifiedAt: new Date(),
-      },
-    ]);
+        {
+          id: lugbeLocalSchoolId,
+          name: 'Lugbe Local Preparatory School',
+          slug: 'lugbe-local-preparatory-school',
+          address: 'Local onboarding record, Lugbe, Abuja',
+          area: 'Lugbe',
+          mainPhone: '+2348000000301',
+          clearancePhone: '+2348000000302',
+          contactEmail: 'verification+lugbe-local-preparatory-school@educlearance.local',
+          contactPerson: 'Verification Pending',
+          logoUrl: null,
+          status: 'pending',
+        },
+        {
+          id: americanInternationalAbujaId,
+          name: 'American International School of Abuja',
+          slug: 'american-international-school-of-abuja',
+          address: 'Area hint: Durumi, Abuja; operator must verify exact campus address before activation',
+          area: 'Durumi',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('american-international-school-of-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: loyolaJesuitCollegeId,
+          name: 'Loyola Jesuit College',
+          slug: 'loyola-jesuit-college-abuja',
+          address: 'Area hint: Gidan Mangoro / Abuja-Keffi Road corridor; operator must verify exact campus address before activation',
+          area: 'Gidan Mangoro',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('loyola-jesuit-college-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: regentSchoolId,
+          name: 'The Regent School',
+          slug: 'the-regent-school-abuja',
+          address: 'Area hint: Maitama, Abuja; operator must verify exact campus address before activation',
+          area: 'Maitama',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('the-regent-school-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: capitalScienceAcademyId,
+          name: 'Capital Science Academy',
+          slug: 'capital-science-academy-abuja',
+          address: 'Area hint: Kuje, Abuja; operator must verify exact campus address before activation',
+          area: 'Kuje',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('capital-science-academy-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: leadBritishInternationalSchoolId,
+          name: 'Lead British International School',
+          slug: 'lead-british-international-school-abuja',
+          address: 'Area hint: Gwarinpa, Abuja; operator must verify exact campus address before activation',
+          area: 'Gwarinpa',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('lead-british-international-school-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: whiteplainsBritishSchoolId,
+          name: 'Whiteplains British School',
+          slug: 'whiteplains-british-school-abuja',
+          address: 'Area hint: Jabi, Abuja; operator must verify exact campus address and ownership claim before activation',
+          area: 'Jabi',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('whiteplains-british-school-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'pending',
+        },
+        {
+          id: glistenInternationalAcademyId,
+          name: 'Glisten International Academy',
+          slug: 'glisten-international-academy-abuja',
+          address: 'Area hint: Jahi, Abuja; operator must verify exact campus address before activation',
+          area: 'Jahi',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('glisten-international-academy-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+        {
+          id: premierInternationalSchoolId,
+          name: 'Premier International School',
+          slug: 'premier-international-school-abuja',
+          address: 'Area hint: Wuse II, Abuja; operator must verify exact campus address before activation',
+          area: 'Wuse II',
+          mainPhone: null,
+          clearancePhone: null,
+          contactEmail: verificationEmail('premier-international-school-abuja'),
+          contactPerson: null,
+          logoUrl: null,
+          status: 'unclaimed',
+        },
+      ]);
 
-    const noRecordRequestId = makeId();
-    const matchRequestId = makeId();
-    const disputeId = makeId();
+      await tx.insert(users).values([
+        {
+          id: platformAdminUserId,
+          schoolId: null,
+          name: 'Amina Bello',
+          email: 'admin@educlearance.local',
+          phone: '+2348000000001',
+          role: 'platform_admin',
+        },
+        {
+          id: wuseOwnerId,
+          schoolId: wuseLocalSchoolId,
+          name: 'Tunde Adeyemi',
+          email: 'owner+wuse-local-academy@educlearance.local',
+          phone: '+2348000000111',
+          role: 'school_owner',
+        },
+        {
+          id: wuseAdminId,
+          schoolId: wuseLocalSchoolId,
+          name: 'Ope Alabi',
+          email: 'admin+wuse-local-academy@educlearance.local',
+          phone: '+2348000000112',
+          role: 'school_admin',
+        },
+        {
+          id: wuseStaffId,
+          schoolId: wuseLocalSchoolId,
+          name: 'Grace Okafor',
+          email: 'staff+wuse-local-academy@educlearance.local',
+          phone: '+2348000000113',
+          role: 'school_staff',
+        },
+        {
+          id: garkiOwnerId,
+          schoolId: garkiLocalSchoolId,
+          name: 'Zainab Musa',
+          email: 'owner+garki-local-college@educlearance.local',
+          phone: '+2348000000211',
+          role: 'school_owner',
+        },
+        {
+          id: lugbeStaffId,
+          schoolId: lugbeLocalSchoolId,
+          name: 'Chika Nwosu',
+          email: 'verification+lugbe-local-preparatory-school@educlearance.local',
+          phone: '+2348000000311',
+          role: 'school_staff',
+        },
+      ]);
 
-    await tx.insert(clearanceRequests).values([
-      {
-        id: noRecordRequestId,
-        incomingSchoolId: riverbendSchoolId,
-        previousSchoolId: null,
-        previousSchoolNameSnapshot: 'Northstar Grammar School',
-        studentName: 'Ibrahim Sani',
-        studentNameNormalized: normalizeSearchText('Ibrahim Sani'),
-        gender: 'Male',
-        lastClass: 'SSS 2',
-        parentName: 'Musa Sani',
-        parentPhone: '+2348091110001',
-        status: 'no_platform_record_found',
-        searchResult: 'no_match',
-        amountCharged: 10_000,
-        notificationStatus: 'whatsapp_generated',
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-        createdByUserId: riverbendOwnerId,
-      },
-      {
-        id: matchRequestId,
-        incomingSchoolId: summitSchoolId,
-        previousSchoolId: bluegateSchoolId,
-        previousSchoolNameSnapshot: 'Bluegate Preparatory School',
-        studentName: 'Aisha Bello',
-        studentNameNormalized: normalizeSearchText('Aisha Bello'),
-        gender: 'Female',
-        lastClass: 'JSS 3',
-        parentName: 'Halima Bello',
-        parentPhone: '+2348091110002',
-        status: 'outstanding_balance_reported',
-        searchResult: 'confirmed_match',
-        amountCharged: 10_000,
-        notificationStatus: 'sent',
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-        createdByUserId: summitOwnerId,
-      },
-    ]);
+      await tx.insert(wallets).values([
+        {
+          id: makeId(),
+          schoolId: wuseLocalSchoolId,
+          balanceKobo: 490_000,
+        },
+        {
+          id: makeId(),
+          schoolId: garkiLocalSchoolId,
+          balanceKobo: PROMOTIONAL_WALLET_KOBO - 10_000,
+        },
+        {
+          id: makeId(),
+          schoolId: lugbeLocalSchoolId,
+          balanceKobo: 0,
+        },
+      ]);
 
-    const issueId = makeId();
+      await tx.insert(walletTransactions).values([
+        {
+          id: makeId(),
+          schoolId: wuseLocalSchoolId,
+          type: 'credit',
+          amountKobo: 500_000,
+          description: 'Local onboarding wallet top-up for Wuse Local Academy',
+          reference: 'local-wallet-credit-wuse-001',
+          provider: 'manual',
+          createdByUserId: platformAdminUserId,
+        },
+        {
+          id: makeId(),
+          schoolId: wuseLocalSchoolId,
+          type: 'debit',
+          amountKobo: 10_000,
+          description: 'Clearance request for Ibrahim Sani',
+          reference: 'local-clearance-debit-wuse-001',
+          provider: 'system',
+          createdByUserId: wuseAdminId,
+        },
+        {
+          id: makeId(),
+          schoolId: garkiLocalSchoolId,
+          type: 'credit',
+          amountKobo: PROMOTIONAL_WALLET_KOBO,
+          description: 'Local onboarding wallet top-up for Garki Local College',
+          reference: 'local-wallet-credit-garki-001',
+          provider: 'paystack',
+          createdByUserId: garkiOwnerId,
+        },
+        {
+          id: makeId(),
+          schoolId: garkiLocalSchoolId,
+          type: 'debit',
+          amountKobo: 10_000,
+          description: 'Clearance request for Aisha Bello',
+          reference: 'local-clearance-debit-garki-001',
+          provider: 'system',
+          createdByUserId: garkiOwnerId,
+        },
+      ]);
 
-    await tx.insert(clearanceIssues).values([
-      {
-        id: issueId,
-        clearanceRequestId: matchRequestId,
-        reportingSchoolId: bluegateSchoolId,
-        studentName: 'Aisha Bello',
-        studentNameNormalized: normalizeSearchText('Aisha Bello'),
-        parentName: 'Halima Bello',
-        parentPhone: '+2348091110002',
-        amountOwed: 45_000,
-        issueType: 'school_fees',
-        academicSession: '2025/2026',
-        term: '2nd Term',
-        note: 'Outstanding balance for tuition and books.',
-        evidenceUrl: null,
-        status: 'unresolved',
-      },
-    ]);
+      await tx.insert(payments).values([
+        {
+          id: makeId(),
+          schoolId: wuseLocalSchoolId,
+          provider: 'paystack',
+          providerReference: 'PSK-LOCAL-SEED-WUSE-0001',
+          amountKobo: 500_000,
+          status: 'successful',
+          metadataJson: {
+            channel: 'card',
+            note: 'Local payment record for wallet top-up verification',
+          },
+          verifiedAt: new Date(),
+        },
+        {
+          id: makeId(),
+          schoolId: garkiLocalSchoolId,
+          provider: 'paystack',
+          providerReference: 'PSK-LOCAL-SEED-GARKI-0001',
+          amountKobo: PROMOTIONAL_WALLET_KOBO,
+          status: 'successful',
+          metadataJson: {
+            channel: 'bank_transfer',
+            note: 'Local payment record for school onboarding verification',
+          },
+          verifiedAt: new Date(),
+        },
+      ]);
 
-    await tx.insert(disputes).values([
-      {
-        id: disputeId,
-        clearanceRequestId: matchRequestId,
-        clearanceIssueId: issueId,
-        raisedBySchoolId: summitSchoolId,
-        reason: 'Amount in report does not match our receipt archive.',
-        status: 'under_review',
-        adminNote: 'Awaiting document comparison and school confirmation.',
-        resolvedAt: null,
-      },
-    ]);
+      const noRecordRequestId = makeId();
+      const matchRequestId = makeId();
+      const disputeId = makeId();
 
-    await tx.insert(auditLogs).values([
-      {
-        id: makeId(),
-        actorUserId: platformAdminUserId,
-        actorSchoolId: null,
-        action: 'seed_local_schools',
-        entityType: 'school',
-        entityId: riverbendSchoolId,
-        metadataJson: { status: 'active' },
-        ipAddress: null,
-      },
-      {
-        id: makeId(),
-        actorUserId: riverbendOwnerId,
-        actorSchoolId: riverbendSchoolId,
-        action: 'seed_local_clearance_request',
-        entityType: 'clearance_request',
-        entityId: noRecordRequestId,
-        metadataJson: { searchResult: 'no_match' },
-        ipAddress: null,
-      },
-      {
-        id: makeId(),
-        actorUserId: summitOwnerId,
-        actorSchoolId: summitSchoolId,
-        action: 'seed_local_dispute',
-        entityType: 'dispute',
-        entityId: disputeId,
-        metadataJson: { status: 'under_review' },
-        ipAddress: null,
-      },
-    ]);
+      await tx.insert(clearanceRequests).values([
+        {
+          id: noRecordRequestId,
+          incomingSchoolId: wuseLocalSchoolId,
+          previousSchoolId: americanInternationalAbujaId,
+          previousSchoolNameSnapshot: 'American International School of Abuja',
+          studentName: 'Ibrahim Sani',
+          studentNameNormalized: normalizeSearchText('Ibrahim Sani'),
+          gender: 'Male',
+          lastClass: 'SSS 2',
+          parentName: 'Musa Sani',
+          parentPhone: '+2348000010001',
+          status: 'no_platform_record_found',
+          searchResult: 'no_match',
+          amountCharged: 10_000,
+          notificationStatus: 'whatsapp_generated',
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          createdByUserId: wuseAdminId,
+        },
+        {
+          id: matchRequestId,
+          incomingSchoolId: garkiLocalSchoolId,
+          previousSchoolId: wuseLocalSchoolId,
+          previousSchoolNameSnapshot: 'Wuse Local Academy',
+          studentName: 'Aisha Bello',
+          studentNameNormalized: normalizeSearchText('Aisha Bello'),
+          gender: 'Female',
+          lastClass: 'JSS 3',
+          parentName: 'Halima Bello',
+          parentPhone: '+2348000010002',
+          status: 'outstanding_balance_reported',
+          searchResult: 'confirmed_match',
+          amountCharged: 10_000,
+          notificationStatus: 'dashboard',
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          createdByUserId: garkiOwnerId,
+        },
+      ]);
+
+      const issueId = makeId();
+
+      await tx.insert(clearanceIssues).values([
+        {
+          id: issueId,
+          clearanceRequestId: matchRequestId,
+          reportingSchoolId: wuseLocalSchoolId,
+          studentName: 'Aisha Bello',
+          studentNameNormalized: normalizeSearchText('Aisha Bello'),
+          parentName: 'Halima Bello',
+          parentPhone: '+2348000010002',
+          amountOwed: 45_000,
+          issueType: 'school_fees',
+          academicSession: '2025/2026',
+          term: '2nd Term',
+          note: 'Outstanding balance for tuition and books in the local verification workflow.',
+          evidenceUrl: null,
+          status: 'unresolved',
+        },
+      ]);
+
+      await tx.insert(disputes).values([
+        {
+          id: disputeId,
+          clearanceRequestId: matchRequestId,
+          clearanceIssueId: issueId,
+          raisedBySchoolId: garkiLocalSchoolId,
+          reason: 'Amount in report does not match the admitting school receipt archive.',
+          status: 'under_review',
+          adminNote: 'Awaiting document comparison and reporting school confirmation.',
+          resolvedAt: null,
+        },
+      ]);
+
+      await tx.insert(auditLogs).values([
+        {
+          id: makeId(),
+          actorUserId: platformAdminUserId,
+          actorSchoolId: null,
+          action: 'local_seed_schools_prepared',
+          entityType: 'school',
+          entityId: wuseLocalSchoolId,
+          metadataJson: { status: 'active', area: 'Wuse II' },
+          ipAddress: null,
+        },
+        {
+          id: makeId(),
+          actorUserId: platformAdminUserId,
+          actorSchoolId: null,
+          action: 'local_seed_directory_candidate_added',
+          entityType: 'school',
+          entityId: americanInternationalAbujaId,
+          metadataJson: { status: 'unclaimed', area: 'Durumi', verificationRequired: true },
+          ipAddress: null,
+        },
+        {
+          id: makeId(),
+          actorUserId: wuseAdminId,
+          actorSchoolId: wuseLocalSchoolId,
+          action: 'local_seed_clearance_request_created',
+          entityType: 'clearance_request',
+          entityId: noRecordRequestId,
+          metadataJson: { searchResult: 'no_match' },
+          ipAddress: null,
+        },
+        {
+          id: makeId(),
+          actorUserId: garkiOwnerId,
+          actorSchoolId: garkiLocalSchoolId,
+          action: 'local_seed_dispute_created',
+          entityType: 'dispute',
+          entityId: disputeId,
+          metadataJson: { status: 'under_review' },
+          ipAddress: null,
+        },
+      ]);
     });
   } finally {
     await connection.end();
