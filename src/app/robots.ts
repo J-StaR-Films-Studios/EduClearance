@@ -6,6 +6,7 @@ const disallowRoutes = [
   '/login',
   '/register',
   '/claim-school',
+  '/auth',
   '/auth/',
   '/dashboard',
   '/clearance',

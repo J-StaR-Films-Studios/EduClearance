@@ -1,10 +1,7 @@
 import 'server-only';
 
-import { asc, eq, inArray, and } from 'drizzle-orm';
-
-import { db } from '@/db/client';
-import { schools, users } from '@/db/schema';
-import { getLocalSessionRole, getSchoolSessionRole, schoolSessionRoles, type SchoolSessionRole, type SessionRole } from '@/lib/local-session';
+import { getAuthenticatedUser } from '@/lib/auth-session';
+import { type SchoolSessionRole, type SessionRole } from '@/lib/local-session';
 
 export type LocalSchoolActor = {
   sessionRole: SchoolSessionRole;
@@ -30,51 +27,27 @@ export type LocalActor =
       schoolStatus: null;
     };
 
-const actorSelection = {
-  userId: users.id,
-  userName: users.name,
-  userEmail: users.email,
-  userRole: users.role,
-  schoolId: schools.id,
-  schoolName: schools.name,
-  schoolStatus: schools.status,
-};
-
 export async function resolveLocalSchoolActor(): Promise<LocalSchoolActor | null> {
-  const sessionRole = await getSchoolSessionRole();
+  const user = await getAuthenticatedUser();
 
-  if (!sessionRole) {
-    return null;
-  }
-
-  const [matchingRole] = await db
-    .select(actorSelection)
-    .from(users)
-    .innerJoin(schools, eq(users.schoolId, schools.id))
-    .where(and(eq(users.role, sessionRole), eq(schools.status, 'active')))
-    .orderBy(asc(schools.createdAt), asc(users.createdAt))
-    .limit(1);
-
-  const actor = matchingRole ?? (await resolveAnyActiveSchoolUser());
-
-  if (!actor) {
+  if (!user || user.userRole === 'platform_admin' || !user.schoolId || !user.schoolName || !user.schoolStatus) {
     return null;
   }
 
   return {
-    sessionRole,
-    userId: actor.userId,
-    userName: actor.userName,
-    userEmail: actor.userEmail,
-    userRole: actor.userRole,
-    schoolId: actor.schoolId,
-    schoolName: actor.schoolName,
-    schoolStatus: actor.schoolStatus,
+    sessionRole: user.userRole,
+    userId: user.userId,
+    userName: user.userName,
+    userEmail: user.userEmail,
+    userRole: user.userRole,
+    schoolId: user.schoolId,
+    schoolName: user.schoolName,
+    schoolStatus: user.schoolStatus,
   };
 }
 
 export function canManageSchoolWallet(actor: LocalActor | LocalSchoolActor | null): actor is LocalSchoolActor {
-  return Boolean(actor && (actor.sessionRole === 'school_owner' || actor.sessionRole === 'school_admin'));
+  return Boolean(actor && actor.schoolStatus === 'active' && (actor.sessionRole === 'school_owner' || actor.sessionRole === 'school_admin'));
 }
 
 export function isPlatformAdminActor(actor: LocalActor | null) {
@@ -86,52 +59,24 @@ export function canVerifyPaymentForSchool(actor: LocalActor | null, schoolId: st
 }
 
 export async function resolveOptionalLocalActor(): Promise<LocalActor | null> {
-  const role = await getLocalSessionRole();
+  const user = await getAuthenticatedUser();
 
-  if (!role) {
+  if (!user) {
     return null;
   }
 
-  if (role !== 'platform_admin') {
-    return resolveLocalSchoolActor();
+  if (user.userRole === 'platform_admin') {
+    return {
+      sessionRole: user.userRole,
+      userId: user.userId,
+      userName: user.userName,
+      userEmail: user.userEmail,
+      userRole: user.userRole,
+      schoolId: null,
+      schoolName: null,
+      schoolStatus: null,
+    };
   }
 
-  const [admin] = await db
-    .select({
-      userId: users.id,
-      userName: users.name,
-      userEmail: users.email,
-      userRole: users.role,
-    })
-    .from(users)
-    .where(eq(users.role, 'platform_admin'))
-    .orderBy(asc(users.createdAt))
-    .limit(1);
-
-  if (!admin) {
-    return null;
-  }
-
-  return {
-    sessionRole: role,
-    userId: admin.userId,
-    userName: admin.userName,
-    userEmail: admin.userEmail,
-    userRole: admin.userRole,
-    schoolId: null,
-    schoolName: null,
-    schoolStatus: null,
-  };
-}
-
-async function resolveAnyActiveSchoolUser() {
-  const [actor] = await db
-    .select(actorSelection)
-    .from(users)
-    .innerJoin(schools, eq(users.schoolId, schools.id))
-    .where(and(inArray(users.role, [...schoolSessionRoles]), eq(schools.status, 'active')))
-    .orderBy(asc(schools.createdAt), asc(users.createdAt))
-    .limit(1);
-
-  return actor ?? null;
+  return resolveLocalSchoolActor();
 }

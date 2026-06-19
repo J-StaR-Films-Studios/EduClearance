@@ -17,7 +17,7 @@ const formContent = {
       description: 'Verify transfer clearances, manage issue reports, and monitor wallet activity.',
       buttonLabel: 'Sign In',
       pendingLabel: 'Opening workspace...',
-      destination: '/auth/local-access?role=school_admin&redirect=%2Fdashboard',
+      destination: '/dashboard',
       emailLabel: 'Official School Email',
     },
     admin: {
@@ -25,7 +25,7 @@ const formContent = {
       description: 'Review school claims, wallet operations, clearance cases, and disputes.',
       buttonLabel: 'Sign In',
       pendingLabel: 'Opening admin workspace...',
-      destination: '/auth/local-access?role=platform_admin&redirect=%2Fadmin',
+      destination: '/admin',
       emailLabel: 'Platform Admin Email',
     },
   },
@@ -41,6 +41,7 @@ const formContent = {
 export function AuthAccessForm({ mode, audience = 'school', destination }: AuthAccessFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const loginContent = {
     ...formContent.login[audience],
     destination: destination ?? formContent.login[audience].destination,
@@ -50,7 +51,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
     destination: destination ?? formContent.register.destination,
   };
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
@@ -59,7 +60,40 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
     }
 
     setIsSubmitting(true);
-    router.push(mode === 'login' ? loginContent.destination : registerContent.destination);
+    setErrorMessage('');
+
+    const formData = new FormData(form);
+    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const payload =
+      mode === 'login'
+        ? {
+            email: String(formData.get('email') ?? ''),
+            password: String(formData.get('password') ?? ''),
+            audience,
+            redirect: loginContent.destination,
+          }
+        : {
+            name: String(formData.get('name') ?? ''),
+            email: String(formData.get('email') ?? ''),
+            phone: String(formData.get('phone') ?? ''),
+            password: String(formData.get('password') ?? ''),
+            redirect: registerContent.destination,
+          };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; redirectTo?: string; message?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setErrorMessage(result?.message ?? 'Unable to complete sign-in. Please check the details and try again.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push(result.redirectTo ?? (mode === 'login' ? loginContent.destination : registerContent.destination));
   }
 
   return (
@@ -81,6 +115,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
@@ -98,12 +133,17 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </div>
               <input
                 id="password"
+                name="password"
                 type="password"
                 required
                 placeholder="••••••••"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
             </div>
+
+            {errorMessage ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+            ) : null}
 
             <button
               type="submit"
@@ -159,6 +199,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 required
                 placeholder="e.g. Chief Mrs. Alabi"
@@ -171,6 +212,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </label>
               <input
                 id="register-email"
+                name="email"
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
@@ -183,6 +225,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </label>
               <input
                 id="phone"
+                name="phone"
                 type="tel"
                 required
                 placeholder="e.g. +234 803 123 4567"
@@ -195,6 +238,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
               </label>
               <input
                 id="register-password"
+                name="password"
                 type="password"
                 required
                 placeholder="Minimum 8 characters"
@@ -213,6 +257,10 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 I agree to the privacy statement and terms of school-to-school cluster network compliance.
               </label>
             </div>
+
+            {errorMessage ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+            ) : null}
 
             <button
               type="submit"

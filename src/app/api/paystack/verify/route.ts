@@ -32,6 +32,17 @@ function toJsonRecord(value: unknown): JsonRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
 }
 
+function isLocalAppUrl(appUrl: string) {
+  const { hostname } = new URL(appUrl);
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function isLocalRequest(request: Request) {
+  const host = request.headers.get('host') ?? new URL(request.url).host;
+  const hostname = host.split(':')[0];
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 export async function POST(request: Request) {
   const payload = paystackVerifySchema.safeParse(await request.json().catch(() => null));
 
@@ -51,6 +62,11 @@ export async function POST(request: Request) {
 
   const reference = payload.data.reference;
   const env = getServerEnv();
+
+  if (!env.PAYSTACK_SECRET_KEY && !(isLocalAppUrl(env.NEXT_PUBLIC_APP_URL) && isLocalRequest(request))) {
+    return NextResponse.json({ ok: false, message: 'Paystack secret key is required outside local development.' }, { status: 503 });
+  }
+
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
 
   const [paymentBeforeVerify] = await db

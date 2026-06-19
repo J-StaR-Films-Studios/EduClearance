@@ -1,16 +1,14 @@
 import { cookies } from 'next/headers';
 
-export const LOCAL_SESSION_COOKIE = 'ec_local_role';
+import { AUTH_SESSION_COOKIE, getAuthCookieOptions, getAuthenticatedUser } from '@/lib/auth-session';
+
+export const LEGACY_LOCAL_SESSION_COOKIE = 'ec_local_role';
 
 export const sessionRoles = ['school_owner', 'school_admin', 'school_staff', 'platform_admin'] as const;
 export const schoolSessionRoles = ['school_owner', 'school_admin', 'school_staff'] as const;
 
 export type SessionRole = (typeof sessionRoles)[number];
 export type SchoolSessionRole = (typeof schoolSessionRoles)[number];
-
-function isSessionRole(value: string | null | undefined): value is SessionRole {
-  return sessionRoles.includes(value as SessionRole);
-}
 
 function isSchoolSessionRole(value: string | null | undefined): value is SchoolSessionRole {
   return schoolSessionRoles.includes(value as SchoolSessionRole);
@@ -24,11 +22,18 @@ export function getSafeInternalPath(redirect: string | null | undefined, fallbac
   return fallback;
 }
 
-export function buildLocalAccessHref(role: SessionRole, redirect = '/dashboard') {
-  const redirectPath = getSafeInternalPath(redirect);
-  const params = new URLSearchParams({ role, redirect: redirectPath });
-  return `/auth/local-access?${params.toString()}`;
+export function buildLoginHref(role: SessionRole = 'school_admin', redirect = '/dashboard') {
+  const redirectPath = getSafeInternalPath(redirect, role === 'platform_admin' ? '/admin' : '/dashboard');
+  const params = new URLSearchParams({ redirect: redirectPath });
+
+  if (role === 'platform_admin') {
+    params.set('role', 'admin');
+  }
+
+  return `/login?${params.toString()}`;
 }
+
+export const buildLocalAccessHref = buildLoginHref;
 
 export function buildSchoolLoginPageHref(redirect = '/dashboard') {
   const redirectPath = getSafeInternalPath(redirect);
@@ -37,10 +42,8 @@ export function buildSchoolLoginPageHref(redirect = '/dashboard') {
 }
 
 export async function getLocalSessionRole() {
-  const cookieStore = await cookies();
-  const value = cookieStore.get(LOCAL_SESSION_COOKIE)?.value;
-
-  return isSessionRole(value) ? value : null;
+  const user = await getAuthenticatedUser();
+  return user?.userRole ?? null;
 }
 
 export async function getSchoolSessionRole() {
@@ -51,3 +54,11 @@ export async function getSchoolSessionRole() {
 export async function isPlatformAdminSession() {
   return (await getLocalSessionRole()) === 'platform_admin';
 }
+
+export async function clearAuthCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_SESSION_COOKIE);
+  cookieStore.delete(LEGACY_LOCAL_SESSION_COOKIE);
+}
+
+export { AUTH_SESSION_COOKIE, getAuthCookieOptions };

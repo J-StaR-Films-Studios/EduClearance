@@ -4,6 +4,7 @@ import { config as loadEnv } from 'dotenv';
 import { sql } from 'drizzle-orm';
 
 import { auditLogs, clearanceIssues, clearanceRequests, disputes, payments, schools, users, walletTransactions, wallets } from './schema';
+import { hashPassword } from '@/lib/auth-password';
 import { normalizeSearchText } from '@/lib/text';
 import { PROMOTIONAL_WALLET_KOBO } from '@/lib/money';
 
@@ -27,6 +28,7 @@ async function seed() {
           "wallets",
           "clearance_issues",
           "clearance_requests",
+          "user_sessions",
           "users",
           "schools"
         RESTART IDENTITY CASCADE
@@ -43,6 +45,8 @@ async function seed() {
       const whiteplainsBritishSchoolId = makeId();
       const glistenInternationalAcademyId = makeId();
       const premierInternationalSchoolId = makeId();
+
+      const passwordHash = await hashPassword('EduClearance!2026');
 
       const platformAdminUserId = makeId();
       const wuseOwnerId = makeId();
@@ -205,6 +209,7 @@ async function seed() {
           email: 'admin@educlearance.local',
           phone: '+2348000000001',
           role: 'platform_admin',
+          passwordHash,
         },
         {
           id: wuseOwnerId,
@@ -213,6 +218,7 @@ async function seed() {
           email: 'owner+wuse-local-academy@educlearance.local',
           phone: '+2348000000111',
           role: 'school_owner',
+          passwordHash,
         },
         {
           id: wuseAdminId,
@@ -221,6 +227,7 @@ async function seed() {
           email: 'admin+wuse-local-academy@educlearance.local',
           phone: '+2348000000112',
           role: 'school_admin',
+          passwordHash,
         },
         {
           id: wuseStaffId,
@@ -229,6 +236,7 @@ async function seed() {
           email: 'staff+wuse-local-academy@educlearance.local',
           phone: '+2348000000113',
           role: 'school_staff',
+          passwordHash,
         },
         {
           id: garkiOwnerId,
@@ -237,6 +245,7 @@ async function seed() {
           email: 'owner+garki-local-college@educlearance.local',
           phone: '+2348000000211',
           role: 'school_owner',
+          passwordHash,
         },
         {
           id: lugbeStaffId,
@@ -245,6 +254,7 @@ async function seed() {
           email: 'verification+lugbe-local-preparatory-school@educlearance.local',
           phone: '+2348000000311',
           role: 'school_staff',
+          passwordHash,
         },
       ]);
 

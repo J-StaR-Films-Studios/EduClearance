@@ -9,6 +9,7 @@ export const privateRouteMatchers = [
   '/register',
   '/claim-school',
   '/auth/:path*',
+  '/api/:path*',
   '/dashboard',
   '/clearance',
   '/clearance/:path*',

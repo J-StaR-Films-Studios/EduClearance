@@ -26,6 +26,17 @@ type PaystackInitializeResponse = {
   };
 };
 
+function isLocalAppUrl(appUrl: string) {
+  const { hostname } = new URL(appUrl);
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function isLocalRequest(request: Request) {
+  const host = request.headers.get('host') ?? new URL(request.url).host;
+  const hostname = host.split(':')[0];
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 function getSafeCallbackUrl(appUrl: string, providedCallbackUrl: string | undefined, reference: string) {
   const fallback = new URL('/wallet', appUrl);
   const candidate = providedCallbackUrl ? new URL(providedCallbackUrl) : fallback;
@@ -66,6 +77,12 @@ export async function POST(request: Request) {
     customerEmail,
     mode: env.PAYSTACK_SECRET_KEY ? 'paystack' : 'local_pending',
   };
+
+  const allowLocalPaymentFallback = isLocalAppUrl(env.NEXT_PUBLIC_APP_URL) && isLocalRequest(request);
+
+  if (!env.PAYSTACK_SECRET_KEY && !allowLocalPaymentFallback) {
+    return NextResponse.json({ ok: false, message: 'Paystack secret key is required outside local development.' }, { status: 503 });
+  }
 
   try {
     await db.transaction(async (tx) => {
@@ -127,6 +144,30 @@ export async function POST(request: Request) {
     const paystackJson = (await paystackResponse.json().catch(() => null)) as PaystackInitializeResponse | null;
 
     if (!paystackResponse.ok || !paystackJson?.status || !paystackJson.data?.authorization_url) {
+      if (allowLocalPaymentFallback) {
+        await db
+          .update(payments)
+          .set({
+            metadataJson: {
+              ...metadata,
+              mode: 'local_pending',
+              providerStatus: paystackResponse.status,
+              providerMessage: paystackJson?.message ?? 'Provider initialization unavailable in local test environment',
+            },
+          })
+          .where(eq(payments.id, paymentId));
+
+        return NextResponse.json({
+          ok: true,
+          paymentId,
+          reference,
+          status: 'initialized',
+          authorizationUrl: `${env.NEXT_PUBLIC_APP_URL}/wallet?payment_reference=${encodeURIComponent(reference)}`,
+          requiresVerification: true,
+          providerUnavailable: true,
+        });
+      }
+
       await db.update(payments).set({ status: 'failed', metadataJson: { ...metadata, providerMessage: paystackJson?.message ?? 'Initialization failed' } }).where(eq(payments.id, paymentId));
 
       return NextResponse.json({ ok: false, message: 'Payment initialization failed.' }, { status: 502 });

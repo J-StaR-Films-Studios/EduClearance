@@ -1,5 +1,5 @@
 import { AuthAccessForm } from '@/components/public/auth-access-form';
-import { buildLocalAccessHref, type SessionRole } from '@/lib/local-session';
+import { type SessionRole } from '@/lib/local-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 
@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <AuthAccessForm
         mode="login"
         audience={isAdmin ? 'admin' : 'school'}
-        destination={buildLocalAccessHref(requestedRole, redirect ?? defaultRedirect)}
+        destination={redirect ?? defaultRedirect}
       />
     </main>
   );

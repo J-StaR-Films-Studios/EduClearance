@@ -77,12 +77,32 @@ export const users = pgTable(
     email: text('email').notNull(),
     phone: text('phone'),
     role: userRoleEnum('role').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     emailIdx: uniqueIndex('users_email_unique').on(table.email),
     schoolIdx: index('users_school_id_idx').on(table.schoolId),
     roleIdx: index('users_role_idx').on(table.role),
+  }),
+);
+
+export const userSessions = pgTable(
+  'user_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('user_sessions_user_id_idx').on(table.userId),
+    tokenHashIdx: uniqueIndex('user_sessions_token_hash_unique').on(table.tokenHash),
+    expiresAtIdx: index('user_sessions_expires_at_idx').on(table.expiresAt),
   }),
 );
 
