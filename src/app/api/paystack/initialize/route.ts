@@ -47,6 +47,38 @@ function getSafeCallbackUrl(appUrl: string, providedCallbackUrl: string | undefi
   return safeUrl.toString();
 }
 
+function isPublicEmailAddress(email: string) {
+  const domain = email.split('@')[1]?.toLowerCase();
+
+  if (!domain || domain === 'localhost' || domain.endsWith('.localhost') || domain.endsWith('.local')) {
+    return false;
+  }
+
+  return domain.includes('.') && /^[a-z0-9.-]+$/.test(domain);
+}
+
+function getFallbackBillingEmail(appUrl: string) {
+  const hostname = new URL(appUrl).hostname.toLowerCase();
+
+  if (!isLocalAppUrl(appUrl) && hostname.includes('.')) {
+    return `billing@${hostname}`;
+  }
+
+  return 'billing@educlearance.app';
+}
+
+function getCheckoutCustomerEmail(providedEmail: string | undefined, actorEmail: string, appUrl: string) {
+  if (providedEmail && isPublicEmailAddress(providedEmail)) {
+    return providedEmail;
+  }
+
+  if (isPublicEmailAddress(actorEmail)) {
+    return actorEmail;
+  }
+
+  return getFallbackBillingEmail(appUrl);
+}
+
 export async function POST(request: Request) {
   const actor = await resolveLocalSchoolActor();
 
@@ -68,13 +100,15 @@ export async function POST(request: Request) {
   const reference = makePaymentReference();
   const paymentId = makeEntityId('payment');
   const callbackUrl = getSafeCallbackUrl(env.NEXT_PUBLIC_APP_URL, payload.data.callbackUrl, reference);
-  const customerEmail = payload.data.email ?? actor.userEmail;
+  const customerEmail = getCheckoutCustomerEmail(payload.data.email, actor.userEmail, env.NEXT_PUBLIC_APP_URL);
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
   const metadata = {
     schoolId: actor.schoolId,
     actorUserId: actor.userId,
     callbackUrl,
     customerEmail,
+    signedInEmail: actor.userEmail,
+    requestedEmail: payload.data.email ?? null,
     mode: env.PAYSTACK_SECRET_KEY ? 'paystack' : 'local_pending',
   };
 
