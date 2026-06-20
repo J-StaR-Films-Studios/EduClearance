@@ -143,6 +143,12 @@ function canViewDatabaseClearance(actor: LocalActor, detail: DatabaseClearanceDe
   );
 }
 
+function applyMessageOverrides(message: string, clearance: OutboundClearance, studentName: string, previousSchoolName: string) {
+  return message
+    .replaceAll(clearance.studentName, studentName)
+    .replaceAll(clearance.previousSchoolName, previousSchoolName);
+}
+
 export default async function ClearanceDetailPage({ params, searchParams }: ClearanceDetailPageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const actor = await resolveOptionalLocalActor();
@@ -172,12 +178,15 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const notificationHref = actor.sessionRole === 'platform_admin' ? '/admin/clearance' : withRoleQuery('/clearance', currentRole);
   const chargedThisFlow = query.charged === '1';
 
-  const noRecordMessage = `Hello ${previousSchoolName}, this is the Admitting Office at Grace Academy. We are processing the admission transfer for student ${studentName}. Please let us know if there are any outstanding clearances or issues to resolve. Thank you.`;
+  const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
     ? buildWhatsAppHref(clearance.previousSchoolPhone, noRecordMessage)
     : undefined;
-  const matchWhatsappHref = clearance.issue
-    ? buildWhatsAppHref(clearance.issue.phone, `Hello ${clearance.issue.reportingSchool}, this is Grace Academy Admissions. We are reviewing the unresolved balance reported for ${studentName}. Kindly advise on the current status or update the record if it has been settled. Thank you.`)
+  const issueWhatsappMessage = clearance.issue
+    ? applyMessageOverrides(clearance.issue.whatsappMessage, clearance, studentName, previousSchoolName)
+    : undefined;
+  const matchWhatsappHref = clearance.issue && issueWhatsappMessage
+    ? buildWhatsAppHref(clearance.issue.phone, issueWhatsappMessage)
     : undefined;
 
   return (

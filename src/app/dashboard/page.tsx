@@ -8,22 +8,27 @@ import {
   outboundClearances,
   withRoleQuery,
 } from '@/lib/local-school-data';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
+import { getSchoolWalletBalanceKobo } from '@/lib/school-wallet';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = noIndexMetadata(`Dashboard | ${APP_NAME}`, 'Private school dashboard for EduClearance workflows.');
 
 export default async function DashboardPage() {
   const currentRole = await requireSchoolSession('/dashboard');
+  const actor = await resolveLocalSchoolActor();
+  const walletBalanceKobo = actor ? await getSchoolWalletBalanceKobo(actor.schoolId) : 0;
+  const schoolName = actor?.schoolName ?? 'School Dashboard';
 
   return (
     <SchoolAppShell activeKey="dashboard" role={currentRole}>
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <header className="flex flex-col items-start justify-between gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-navy-900">{schoolProfile.name}</h1>
+            <h1 className="text-2xl font-bold text-navy-900">{schoolName}</h1>
             <p className="text-xs text-slate-500">Cluster: {schoolProfile.cluster}</p>
           </div>
 
@@ -44,9 +49,9 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Wallet Balance</p>
                 <p className="text-sm font-semibold text-navy-900">
-                  {formatNairaFromKobo(schoolProfile.walletBalanceKobo)}{' '}
+                  {formatNairaFromKobo(walletBalanceKobo)}{' '}
                   <span className="text-xs font-normal text-slate-500">
-                    ({formatChecksFromKobo(schoolProfile.walletBalanceKobo)} checks left)
+                    ({formatChecksFromKobo(walletBalanceKobo)} checks left)
                   </span>
                 </p>
               </div>

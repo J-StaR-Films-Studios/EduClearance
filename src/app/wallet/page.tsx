@@ -6,7 +6,7 @@ import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { WalletTopUpPanel } from '@/components/workflows/wallet-top-up-panel';
 import { db } from '@/db/client';
 import { walletTransactions, wallets } from '@/db/schema';
-import { type WalletTransactionView, schoolProfile, withRoleQuery } from '@/lib/local-school-data';
+import { type WalletTransactionView, withRoleQuery } from '@/lib/local-school-data';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
@@ -35,7 +35,7 @@ async function getWalletViewData(): Promise<{ balanceKobo: number; transactions:
   const actor = await resolveLocalSchoolActor();
 
   if (!actor) {
-    return { balanceKobo: schoolProfile.walletBalanceKobo, transactions: [] };
+    return { balanceKobo: 0, transactions: [] };
   }
 
   const [[wallet], transactionRows] = await Promise.all([

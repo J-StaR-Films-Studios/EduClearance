@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
-  schoolProfile,
   getPreviousSchoolSelection,
   previousSchoolOptions,
   type SchoolUserRole,
@@ -14,15 +13,16 @@ import { CHECK_PRICE_KOBO, formatChecksFromKobo, formatNairaFromKobo } from '@/l
 
 type ClearanceRequestFormProps = {
   role: SchoolUserRole;
+  walletBalanceKobo: number;
 };
 
-export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
+export function ClearanceRequestForm({ role, walletBalanceKobo }: ClearanceRequestFormProps) {
   const router = useRouter();
   const [selectedSchool, setSelectedSchool] = useState<string>(previousSchoolOptions[0].value);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const remainingBalanceKobo = useMemo(() => Math.max(schoolProfile.walletBalanceKobo - CHECK_PRICE_KOBO, 0), []);
+  const remainingBalanceKobo = useMemo(() => Math.max(walletBalanceKobo - CHECK_PRICE_KOBO, 0), [walletBalanceKobo]);
 
   async function handleSubmit() {
     const form = document.getElementById('clearance-request-form');
@@ -213,7 +213,7 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
         <div className="text-right">
           <p className="font-bold text-navy-900">₦100</p>
           <p className="text-xs text-emerald-600">
-            Balance: {formatNairaFromKobo(schoolProfile.walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
+            Balance: {formatNairaFromKobo(walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
           </p>
         </div>
       </div>
