@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const autoConfirmReference = useRef<string | null>(null);
 
   const paymentReference = searchParams.get('payment_reference');
   const numericAmount = Number(amount);
@@ -75,49 +76,95 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
     }
   }
 
-  async function verifyPayment() {
-    if (!paymentReference) {
+  const verifyPayment = useCallback(
+    async ({ automatic = false }: { automatic?: boolean } = {}) => {
+      if (!paymentReference) {
+        return { ok: false, retryable: false };
+      }
+
+      setErrorMessage('');
+      setStatusMessage(automatic ? 'Checking your payment automatically…' : 'Checking your payment…');
+      setIsVerifying(true);
+
+      try {
+        const response = await fetch('/api/paystack/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference: paymentReference }),
+        });
+        const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; credited?: boolean; retryable?: boolean } | null;
+
+        if (!response.ok || !result?.ok) {
+          setStatusMessage('');
+          setErrorMessage(result?.message ?? 'We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
+          return { ok: false, retryable: result?.retryable !== false };
+        }
+
+        setErrorMessage('');
+        setStatusMessage(result.credited ? 'Payment confirmed. Your wallet balance has been updated.' : 'This payment has already been added to your wallet.');
+        router.refresh();
+        return { ok: true, retryable: false };
+      } catch {
+        setStatusMessage('');
+        setErrorMessage('We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
+        return { ok: false, retryable: true };
+      } finally {
+        setIsVerifying(false);
+      }
+    },
+    [paymentReference, router],
+  );
+
+  useEffect(() => {
+    if (!paymentReference || autoConfirmReference.current === paymentReference) {
       return;
     }
 
-    setErrorMessage('');
-    setStatusMessage('');
-    setIsVerifying(true);
+    autoConfirmReference.current = paymentReference;
+    let cancelled = false;
+    const retryDelaysMs = [0, 3000, 7000, 12000];
 
-    try {
-      const response = await fetch('/api/paystack/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: paymentReference }),
-      });
-      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; credited?: boolean } | null;
+    async function autoConfirmPayment() {
+      for (const delayMs of retryDelaysMs) {
+        if (cancelled) {
+          return;
+        }
 
-      if (!response.ok || !result?.ok) {
-        setErrorMessage(result?.message ?? 'We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
-        return;
+        if (delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        const result = await verifyPayment({ automatic: true });
+
+        if (result.ok || !result.retryable) {
+          return;
+        }
       }
-
-      setStatusMessage(result.credited ? 'Payment confirmed. Your wallet balance has been updated.' : 'This payment has already been added to your wallet.');
-      router.refresh();
-    } catch {
-      setErrorMessage('We could not confirm this payment yet. If you completed checkout, wait a moment and try again.');
-    } finally {
-      setIsVerifying(false);
     }
-  }
+
+    void autoConfirmPayment();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentReference, verifyPayment]);
 
   return (
     <>
       {paymentReference ? (
         <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-900">
-          <p>Welcome back. If your payment was completed, confirm it now and your wallet balance will update automatically.</p>
+          <p>Welcome back. We are checking your payment automatically. If it does not update after a moment, you can try again.</p>
           <button
             type="button"
-            onClick={verifyPayment}
+            onClick={() => void verifyPayment()}
             disabled={isVerifying}
             className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {isVerifying ? 'Confirming…' : 'Confirm payment'}
+            {isVerifying ? 'Checking…' : 'Try again'}
           </button>
         </div>
       ) : null}
