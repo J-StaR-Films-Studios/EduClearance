@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { desc, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { APP_NAME } from '@/lib/site';
+import { db } from '@/db/client';
+import { clearanceRequests } from '@/db/schema';
 import {
   schoolProfile,
-  outboundClearances,
   withRoleQuery,
 } from '@/lib/local-school-data';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
@@ -20,7 +22,23 @@ export const metadata: Metadata = noIndexMetadata(`Dashboard | ${APP_NAME}`, 'Pr
 export default async function DashboardPage() {
   const currentRole = await requireSchoolSession('/dashboard');
   const actor = await resolveLocalSchoolActor();
-  const walletBalanceKobo = actor ? await getSchoolWalletBalanceKobo(actor.schoolId) : 0;
+  const [walletBalanceKobo, recentClearances] = actor
+    ? await Promise.all([
+        getSchoolWalletBalanceKobo(actor.schoolId),
+        db
+          .select({
+            id: clearanceRequests.id,
+            studentName: clearanceRequests.studentName,
+            previousSchoolName: clearanceRequests.previousSchoolNameSnapshot,
+            createdAt: clearanceRequests.createdAt,
+            searchResult: clearanceRequests.searchResult,
+          })
+          .from(clearanceRequests)
+          .where(eq(clearanceRequests.incomingSchoolId, actor.schoolId))
+          .orderBy(desc(clearanceRequests.createdAt))
+          .limit(10),
+      ])
+    : [0, []];
   const schoolName = actor?.schoolName ?? 'School Dashboard';
 
   return (
@@ -140,19 +158,25 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-background-secondary">
-                {outboundClearances.map((clearance) => (
+                {recentClearances.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                      No clearance checks have been started yet.
+                    </td>
+                  </tr>
+                ) : recentClearances.map((clearance) => (
                   <tr key={clearance.id}>
                     <td className="px-6 py-4 font-semibold text-navy-900">{clearance.studentName}</td>
                     <td className="px-6 py-4 text-slate-600">{clearance.previousSchoolName}</td>
-                    <td className="px-6 py-4 text-slate-500">{clearance.createdAt}</td>
+                    <td className="px-6 py-4 text-slate-500">{clearance.createdAt.toISOString().slice(0, 10)}</td>
                     <td className="px-6 py-4">
                       <span
                         className={cn(
                           'inline-flex items-center rounded-md border border-background-secondary border-l-4 bg-white py-1 pl-2.5 pr-3.5 text-[10px] font-bold uppercase tracking-wider text-navy-900 shadow-sm',
-                          clearance.resultState === 'match' ? 'border-l-terracotta-600' : 'border-l-emerald-600',
+                          clearance.searchResult === 'confirmed_match' ? 'border-l-terracotta-600' : clearance.searchResult === 'possible_match' ? 'border-l-amber-600' : 'border-l-emerald-600',
                         )}
                       >
-                        {clearance.resultState === 'match' ? 'Owed Balance' : 'No Record'}
+                        {clearance.searchResult === 'confirmed_match' ? 'Owed Balance' : clearance.searchResult === 'possible_match' ? 'Review Needed' : 'No Record'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -160,7 +184,7 @@ export default async function DashboardPage() {
                         href={withRoleQuery(`/clearance/${clearance.id}`, currentRole)}
                         className="text-xs font-semibold text-navy-900 hover:underline"
                       >
-                        {clearance.resultState === 'match' ? 'Review Issue' : 'View Details'}
+                        {clearance.searchResult === 'confirmed_match' ? 'Review Issue' : 'View Details'}
                       </Link>
                     </td>
                   </tr>

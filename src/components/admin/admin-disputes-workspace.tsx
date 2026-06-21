@@ -7,8 +7,12 @@ import { cn } from '@/lib/utils';
 
 type DisputeFilter = 'open' | 'all' | AdminDisputeRecord['status'];
 
-export function AdminDisputesWorkspace() {
-  const [records, setRecords] = useState(adminDisputes);
+type AdminDisputesWorkspaceProps = {
+  initialRecords?: AdminDisputeRecord[];
+};
+
+export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: AdminDisputesWorkspaceProps) {
+  const [records, setRecords] = useState(initialRecords);
   const [filter, setFilter] = useState<DisputeFilter>('open');
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
@@ -35,7 +39,19 @@ export function AdminDisputesWorkspace() {
     });
   }, [filter, records, search]);
 
-  function resolveDispute(record: AdminDisputeRecord, action: 'resolved' | 'rejected') {
+  async function resolveDispute(record: AdminDisputeRecord, action: 'resolved' | 'rejected') {
+    const response = await fetch('/api/admin/disputes/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ disputeId: record.id, action }),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; adminNote?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setNotice(result?.message ?? 'Unable to update dispute.');
+      return;
+    }
+
     setRecords((currentRecords) =>
       currentRecords.map((entry) =>
         entry.id === record.id
@@ -44,8 +60,8 @@ export function AdminDisputesWorkspace() {
               status: action,
               adminNote:
                 action === 'resolved'
-                  ? 'Record cleared after evidence review. Refund review noted for the admitting school wallet.'
-                  : 'Dispute rejected after evidence review. Existing issue record remains active.',
+                  ? result.adminNote ?? 'Record cleared after evidence review. Refund review noted for the admitting school wallet.'
+                  : result.adminNote ?? 'Dispute rejected after evidence review. Existing issue record remains active.',
             }
           : entry,
       ),
@@ -157,14 +173,14 @@ export function AdminDisputesWorkspace() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          onClick={() => resolveDispute(record, 'resolved')}
+                          onClick={() => void resolveDispute(record, 'resolved')}
                           className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700"
                         >
                           Clear Record (Resolve)
                         </button>
                         <button
                           type="button"
-                          onClick={() => resolveDispute(record, 'rejected')}
+                          onClick={() => void resolveDispute(record, 'rejected')}
                           className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-background-secondary"
                         >
                           Keep Record (Decline)

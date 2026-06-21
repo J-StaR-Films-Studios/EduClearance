@@ -21,12 +21,16 @@ function getRowActions(status: AdminClaimSchool['status']) {
   return ['reactivate'] as const;
 }
 
-export function AdminSchoolsWorkspace() {
-  const [schools, setSchools] = useState(adminClaimSchools);
+type AdminSchoolsWorkspaceProps = {
+  initialSchools?: AdminClaimSchool[];
+};
+
+export function AdminSchoolsWorkspace({ initialSchools = adminClaimSchools }: AdminSchoolsWorkspaceProps) {
+  const [schools, setSchools] = useState(initialSchools);
   const [activeTab, setActiveTab] = useState<SchoolStatusFilter>('pending');
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
-  const [selectedId, setSelectedId] = useState(adminClaimSchools[0]?.id ?? '');
+  const [selectedId, setSelectedId] = useState(initialSchools[0]?.id ?? '');
 
   const filteredSchools = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -55,7 +59,7 @@ export function AdminSchoolsWorkspace() {
     setNotice(message);
   }
 
-  function runLifecycleAction(school: AdminClaimSchool, action: 'approve' | 'decline' | 'suspend' | 'reactivate') {
+  async function runLifecycleAction(school: AdminClaimSchool, action: 'approve' | 'decline' | 'suspend' | 'reactivate') {
     const nextStatus =
       action === 'approve' || action === 'reactivate'
         ? 'active'
@@ -68,6 +72,18 @@ export function AdminSchoolsWorkspace() {
         ? 'Claim declined. Follow-up documentation requested before approval can continue.'
         : school.adminNote;
 
+    const response = await fetch('/api/admin/schools/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schoolId: school.id, status: nextStatus, adminNote: nextNote }),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setNotice(result?.message ?? 'Unable to update school profile.');
+      return;
+    }
+
     updateSchool(
       school.id,
       { status: nextStatus, adminNote: nextNote },
@@ -79,7 +95,7 @@ export function AdminSchoolsWorkspace() {
     }
   }
 
-  function saveProfileEdits(event: React.FormEvent<HTMLFormElement>) {
+  async function saveProfileEdits(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!selectedSchool) {
@@ -93,6 +109,24 @@ export function AdminSchoolsWorkspace() {
       contactPerson: String(formData.get('contactPerson') ?? ''),
       adminNote: String(formData.get('adminNote') ?? ''),
     };
+
+    const response = await fetch('/api/admin/schools/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schoolId: selectedSchool.id,
+        clearancePhone: updates.officialContact,
+        contactEmail: updates.contactEmail,
+        contactPerson: updates.contactPerson,
+        adminNote: updates.adminNote,
+      }),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setNotice(result?.message ?? 'Unable to update school profile.');
+      return;
+    }
 
     updateSchool(selectedSchool.id, updates, `${selectedSchool.name}: official contact details updated.`);
   }
@@ -189,7 +223,7 @@ export function AdminSchoolsWorkspace() {
                           <button
                             key={action}
                             type="button"
-                            onClick={() => runLifecycleAction(school, action)}
+                            onClick={() => void runLifecycleAction(school, action)}
                             className={cn(
                               'rounded-lg px-3 py-1.5 font-semibold transition',
                               action === 'approve' || action === 'reactivate'

@@ -10,7 +10,6 @@ import { db } from '@/db/client';
 import { clearanceIssues, clearanceRequests, schools } from '@/db/schema';
 import {
   buildWhatsAppHref,
-  getOutboundClearance,
   NO_RECORD_DISCLAIMER,
   type OutboundClearance,
   type SchoolUserRole,
@@ -163,12 +162,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
     notFound();
   }
 
-  const currentRole: SchoolUserRole = actor.sessionRole === 'platform_admin' ? 'school_admin' : actor.sessionRole;
-  const clearance = databaseDetail?.clearance ?? getOutboundClearance(id);
-
-  if (!clearance) {
+  if (!databaseDetail) {
     notFound();
   }
+
+  const currentRole: SchoolUserRole = actor.sessionRole === 'platform_admin' ? 'school_admin' : actor.sessionRole;
+  const clearance = databaseDetail.clearance;
 
   const studentName = query.student?.trim() || clearance.studentName;
   const parentName = query.parent?.trim() || clearance.parentName;
@@ -423,7 +422,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                       Message Previous School on WhatsApp
                     </a>
                   ) : null}
-                  <DisputeModal />
+                  <DisputeModal clearanceRequestId={clearance.id} />
                 </div>
               </div>
             )}

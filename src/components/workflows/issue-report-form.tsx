@@ -4,8 +4,10 @@ import { useState, type FormEvent } from 'react';
 
 export function IssueReportForm({ fromInboundRequest = false }: { fromInboundRequest?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
@@ -13,8 +15,42 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
       return;
     }
 
-    setSubmitted(true);
-    form.reset();
+    const formData = new FormData(form);
+    setSubmitted(false);
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/issues/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: String(formData.get('studentName') ?? '').trim(),
+          lastClass: String(formData.get('lastClass') ?? '').trim(),
+          issueType: String(formData.get('issueType') ?? 'other'),
+          amountNaira: Number(formData.get('amountNaira') ?? 0),
+          academicSession: String(formData.get('academicSession') ?? '').trim(),
+          term: String(formData.get('term') ?? '').trim(),
+          parentName: String(formData.get('parentName') ?? '').trim(),
+          parentPhone: String(formData.get('parentPhone') ?? '').trim(),
+          note: String(formData.get('note') ?? '').trim(),
+          source: fromInboundRequest ? 'inbound' : 'direct',
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+      if (!response.ok || !result?.ok) {
+        setErrorMessage(result?.message ?? 'Unable to save issue report. Please try again.');
+        return;
+      }
+
+      setSubmitted(true);
+      form.reset();
+    } catch {
+      setErrorMessage('Unable to save issue report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -34,6 +70,12 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
         </div>
       ) : null}
 
+      {errorMessage ? (
+        <div className="mb-4 rounded-xl border border-terracotta-100 bg-terracotta-50 p-4 text-xs leading-relaxed text-terracotta-700">
+          {errorMessage}
+        </div>
+      ) : null}
+
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-1">
           <label htmlFor="issueStudentName" className="block text-xs font-semibold text-navy-800">
@@ -41,6 +83,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           </label>
           <input
             id="issueStudentName"
+            name="studentName"
             type="text"
             required
             placeholder="e.g. Aisha Bello"
@@ -55,6 +98,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <select
               id="issueClass"
+              name="lastClass"
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               defaultValue="JSS 3"
             >
@@ -69,13 +113,15 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <select
               id="issueCategory"
+              name="issueType"
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              defaultValue="Outstanding School Fees"
+              defaultValue="school_fees"
             >
-              <option>Outstanding School Fees</option>
-              <option>Unreturned Books / Library</option>
-              <option>Unpaid Uniform / Materials</option>
-              <option>Other Obligation</option>
+              <option value="school_fees">Outstanding School Fees</option>
+              <option value="books">Unreturned Books / Library</option>
+              <option value="uniform">Unpaid Uniform / Materials</option>
+              <option value="transport">Transport</option>
+              <option value="other">Other Obligation</option>
             </select>
           </div>
         </div>
@@ -86,6 +132,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           </label>
           <input
             id="issueAmount"
+            name="amountNaira"
             type="number"
             required
             min="1"
@@ -101,6 +148,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <select
               id="academicSession"
+              name="academicSession"
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               defaultValue="2025/2026"
             >
@@ -114,6 +162,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <select
               id="academicTerm"
+              name="term"
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               defaultValue="2nd Term"
             >
@@ -131,6 +180,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <input
               id="issueParentName"
+              name="parentName"
               type="text"
               required
               placeholder="e.g. Mr. Bello"
@@ -143,6 +193,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             </label>
             <input
               id="issuePhone"
+              name="parentPhone"
               type="tel"
               required
               placeholder="e.g. +234 802 111 2222"
@@ -157,6 +208,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           </label>
           <textarea
             id="issueNote"
+            name="note"
             required
             rows={3}
             placeholder="Outline tuition balances, contact attempts, and settlement milestones..."
@@ -187,8 +239,8 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           </label>
         </div>
 
-        <button type="submit" className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800">
-          Save Unresolved Issue
+        <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400">
+          {isSubmitting ? 'Saving Issue…' : 'Save Unresolved Issue'}
         </button>
       </form>
     </div>

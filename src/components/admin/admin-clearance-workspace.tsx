@@ -7,6 +7,7 @@ import {
   recentIssueSummaries,
   walletWatchSchools,
   type AdminClearanceRecord,
+  type WalletWatchSchool,
 } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,11 @@ function statusChip(status: AdminClearanceRecord['status']) {
   }
 }
 
-export function AdminClearanceWorkspace() {
+type AdminClearanceWorkspaceProps = {
+  initialWalletWatchSchools?: WalletWatchSchool[];
+};
+
+export function AdminClearanceWorkspace({ initialWalletWatchSchools = walletWatchSchools }: AdminClearanceWorkspaceProps) {
   const [records] = useState(adminClearanceRecords);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClearanceStatusFilter>('all');
@@ -49,18 +54,31 @@ export function AdminClearanceWorkspace() {
     });
   }, [records, search, statusFilter]);
 
-  function adjustWallet(event: FormEvent<HTMLFormElement>) {
+  async function adjustWallet(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const schoolName = String(formData.get('school') ?? 'Selected school');
-    const adjustmentType = String(formData.get('type') ?? 'Credit');
-    const amount = String(formData.get('amount') ?? '0');
+    const schoolId = String(formData.get('schoolId') ?? '');
+    const schoolName = initialWalletWatchSchools.find((school) => school.id === schoolId)?.schoolName ?? 'Selected school';
+    const adjustmentType = String(formData.get('type') ?? 'credit') as 'credit' | 'debit';
+    const amount = Number(formData.get('amount') ?? 0);
     const reason = String(formData.get('reason') ?? 'No reason provided');
 
+    const response = await fetch('/api/admin/wallet-adjustment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schoolId, type: adjustmentType, amountNaira: amount, reason }),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setNotice(result?.message ?? 'Unable to record wallet adjustment.');
+      return;
+    }
+
     setNotice(
-      `${schoolName}: ${adjustmentType.toLowerCase()} of ₦${Number(amount).toLocaleString('en-NG')} recorded as a manual adjustment. Reason: ${reason}`,
+      `${schoolName}: ${adjustmentType} of ₦${amount.toLocaleString('en-NG')} recorded as a manual adjustment. Reason: ${reason}`,
     );
     form.reset();
   }
@@ -178,10 +196,10 @@ export function AdminClearanceWorkspace() {
             <label className="block text-xs font-semibold text-navy-800" htmlFor="wallet-school">
               Select Target School
             </label>
-            <select id="wallet-school" name="school" required className="w-full rounded-lg border border-background-secondary bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
-              <option>Grace Academy (Ikeja)</option>
-              <option>Hilltop Preparatory (Gbagada)</option>
-              <option>Brightway College (Alimosho)</option>
+            <select id="wallet-school" name="schoolId" required className="w-full rounded-lg border border-background-secondary bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
+              {initialWalletWatchSchools.map((school) => (
+                <option key={school.id} value={school.id}>{school.schoolName}</option>
+              ))}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -190,8 +208,8 @@ export function AdminClearanceWorkspace() {
                 Type
               </label>
               <select id="wallet-type" name="type" className="w-full rounded-lg border border-background-secondary bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
-                <option>Credit</option>
-                <option>Debit</option>
+                <option value="credit">Credit</option>
+                <option value="debit">Debit</option>
               </select>
             </div>
             <div className="space-y-1">
@@ -234,7 +252,7 @@ export function AdminClearanceWorkspace() {
 
         <div className="space-y-3 border-t border-background-secondary pt-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">Wallet watchlist</h4>
-          {walletWatchSchools.map((school) => (
+          {initialWalletWatchSchools.map((school) => (
             <div key={school.id} className="rounded-xl border border-background-secondary bg-background p-3 text-xs">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-navy-900">{school.schoolName}</p>
