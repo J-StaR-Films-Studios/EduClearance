@@ -1,21 +1,39 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type FormEvent, useMemo, useState } from 'react';
 
 type SchoolStatus = 'unclaimed' | 'pending' | 'active' | 'suspended';
-type ClaimFlowState = 'search' | 'claim' | 'new-school' | 'pending';
+type ClaimFlowState = 'search' | 'claim' | 'new-school' | 'auth-required' | 'pending';
+type ClaimType = 'existing_school' | 'new_school';
 
 type DirectorySchool = {
   id: string;
   name: string;
   location: string;
+  area: string | null;
+  address: string | null;
   status: SchoolStatus;
 };
 
+type CurrentUser = {
+  name: string;
+  email: string;
+  role: string;
+};
+
 type PendingSubmission = {
+  claimType: ClaimType;
   schoolName: string;
-  type: 'existing-school' | 'new-school';
+  location: string;
+  applicantName: string;
+  applicantEmail: string;
+  officialContactName: string;
+  officialEmail: string;
+  officialPhone: string;
+  proofFileName: string;
+  proofNote: string;
 };
 
 const statusStyles: Record<SchoolStatus, string> = {
@@ -35,22 +53,35 @@ const statusLabels: Record<SchoolStatus, string> = {
 function StepLabel({ currentStep, step, label }: { currentStep: number; step: number; label: string }) {
   const isActive = currentStep === step;
 
-  return (
-    <div className={isActive ? 'font-bold text-navy-900' : 'text-slate-500'}>
-      {step}. {label}
-    </div>
-  );
+  return <div className={isActive ? 'font-bold text-navy-900' : 'text-slate-500'}>{step}. {label}</div>;
 }
 
 type ClaimSchoolFlowProps = {
   directorySchools: DirectorySchool[];
+  currentUser: CurrentUser | null;
 };
 
-export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
+function readFileName(form: HTMLFormElement, name: string) {
+  const input = form.elements.namedItem(name);
+
+  if (!(input instanceof HTMLInputElement) || input.type !== 'file') {
+    return '';
+  }
+
+  return input.files?.[0]?.name ?? '';
+}
+
+export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFlowProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [flowState, setFlowState] = useState<ClaimFlowState>('search');
   const [selectedSchool, setSelectedSchool] = useState<DirectorySchool | null>(null);
   const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission | null>(null);
+  const [claimProofFileName, setClaimProofFileName] = useState('');
+  const [newSchoolProofFileName, setNewSchoolProofFileName] = useState('');
+  const [submissionError, setSubmissionError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const filteredSchools = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -62,45 +93,66 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
   }, [directorySchools, searchQuery]);
 
   const currentStep = flowState === 'pending' ? 3 : flowState === 'search' ? 1 : 2;
+  const canSubmitClaims = Boolean(currentUser && currentUser.role !== 'platform_admin');
+  const applicantUser = canSubmitClaims ? currentUser : null;
+
+  function resetFlow() {
+    setSearchQuery('');
+    setSelectedSchool(null);
+    setPendingSubmission(null);
+    setClaimProofFileName('');
+    setNewSchoolProofFileName('');
+    setSubmissionError('');
+    setFlowState('search');
+  }
+
+  function promptAuth(school: DirectorySchool | null = null) {
+    setSelectedSchool(school);
+    setSubmissionError('');
+    setFlowState('auth-required');
+  }
 
   function handleSchoolSelect(school: DirectorySchool) {
     if (school.status !== 'unclaimed') {
       return;
     }
 
+    if (!canSubmitClaims) {
+      promptAuth(school);
+      return;
+    }
+
     setSelectedSchool(school);
+    setSubmissionError('');
     setFlowState('claim');
   }
 
   function handleNewSchoolRequest() {
-    setSelectedSchool(null);
-    setFlowState('new-school');
-  }
-
-  function resetFlow() {
-    setSearchQuery('');
-    setSelectedSchool(null);
-    setPendingSubmission(null);
-    setFlowState('search');
-  }
-
-  function submitClaimForm(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    if (!form.reportValidity() || !selectedSchool) {
+    if (!canSubmitClaims) {
+      promptAuth();
       return;
     }
 
-    setPendingSubmission({
-      schoolName: selectedSchool.name,
-      type: 'existing-school',
-    });
-    setFlowState('pending');
+    setSelectedSchool(null);
+    setSubmissionError('');
+    setFlowState('new-school');
   }
 
-  function submitNewSchoolForm(event: FormEvent<HTMLFormElement>) {
+  async function handleSignOut() {
+    setIsSigningOut(true);
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setIsSigningOut(false);
+    resetFlow();
+    router.refresh();
+  }
+
+  async function submitClaimForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!selectedSchool || !currentUser) {
+      promptAuth(selectedSchool);
+      return;
+    }
 
     const form = event.currentTarget;
     if (!form.reportValidity()) {
@@ -108,38 +160,161 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
     }
 
     const formData = new FormData(form);
-    const schoolName = formData.get('schoolName');
+    const proofFileName = readFileName(form, 'proofFile');
+
+    if (!proofFileName) {
+      setSubmissionError('Select a proof document before submitting.');
+      return;
+    }
+
+    const payload = {
+      claimType: 'existing_school' as const,
+      schoolId: selectedSchool.id,
+      requestedSchoolName: selectedSchool.name,
+      requestedArea: selectedSchool.area ?? selectedSchool.location,
+      requestedAddress: selectedSchool.address ?? selectedSchool.location,
+      officialContactName: String(formData.get('officialContactName') ?? '').trim(),
+      officialEmail: String(formData.get('officialEmail') ?? '').trim(),
+      officialPhone: String(formData.get('officialPhone') ?? '').trim(),
+      proofFileName,
+      proofNote: String(formData.get('proofNote') ?? '').trim(),
+    };
+
+    setIsSubmitting(true);
+    setSubmissionError('');
+
+    const response = await fetch('/api/school-claims', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+    setIsSubmitting(false);
+
+    if (!response.ok || !result?.ok) {
+      setSubmissionError(result?.message ?? 'Unable to submit the claim right now.');
+      return;
+    }
 
     setPendingSubmission({
-      schoolName: typeof schoolName === 'string' && schoolName.trim() ? schoolName.trim() : 'Your school',
-      type: 'new-school',
+      claimType: 'existing_school',
+      schoolName: selectedSchool.name,
+      location: selectedSchool.location,
+      applicantName: currentUser.name,
+      applicantEmail: currentUser.email,
+      officialContactName: payload.officialContactName,
+      officialEmail: payload.officialEmail,
+      officialPhone: payload.officialPhone,
+      proofFileName,
+      proofNote: payload.proofNote,
+    });
+    setFlowState('pending');
+  }
+
+  async function submitNewSchoolForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!currentUser) {
+      promptAuth();
+      return;
+    }
+
+    const form = event.currentTarget;
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    const formData = new FormData(form);
+    const proofFileName = readFileName(form, 'proofFile');
+
+    if (!proofFileName) {
+      setSubmissionError('Select a proof document before submitting.');
+      return;
+    }
+
+    const payload = {
+      claimType: 'new_school' as const,
+      requestedSchoolName: String(formData.get('schoolName') ?? '').trim(),
+      requestedArea: String(formData.get('schoolArea') ?? '').trim(),
+      requestedAddress: String(formData.get('schoolAddress') ?? '').trim(),
+      officialContactName: String(formData.get('officialContactName') ?? '').trim(),
+      officialEmail: String(formData.get('officialEmail') ?? '').trim(),
+      officialPhone: String(formData.get('officialPhone') ?? '').trim(),
+      proofFileName,
+      proofNote: String(formData.get('proofNote') ?? '').trim(),
+    };
+
+    setIsSubmitting(true);
+    setSubmissionError('');
+
+    const response = await fetch('/api/school-claims', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+    setIsSubmitting(false);
+
+    if (!response.ok || !result?.ok) {
+      setSubmissionError(result?.message ?? 'Unable to submit the request right now.');
+      return;
+    }
+
+    setPendingSubmission({
+      claimType: 'new_school',
+      schoolName: payload.requestedSchoolName,
+      location: `${payload.requestedArea} · ${payload.requestedAddress}`,
+      applicantName: currentUser.name,
+      applicantEmail: currentUser.email,
+      officialContactName: payload.officialContactName,
+      officialEmail: payload.officialEmail,
+      officialPhone: payload.officialPhone,
+      proofFileName,
+      proofNote: payload.proofNote,
     });
     setFlowState('pending');
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-center justify-between border-b border-background-secondary pb-4">
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-navy-900 px-2.5 py-1 font-display font-bold text-white">EC</div>
           <span className="font-display text-lg font-bold text-navy-900">EduClearance</span>
         </div>
-        <Link href="/login" className="text-xs text-slate-500 hover:text-navy-900">
-          Sign Out
-        </Link>
+        {currentUser ? (
+          <div className="flex items-center gap-3 text-xs">
+            <span className="hidden text-slate-500 sm:inline">{currentUser.name}</span>
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              disabled={isSigningOut}
+              className="font-medium text-navy-900 hover:underline disabled:cursor-wait disabled:text-slate-400"
+            >
+              {isSigningOut ? 'Signing out…' : 'Sign out'}
+            </button>
+          </div>
+        ) : (
+          <Link href="/login?redirect=/claim-school" className="text-xs font-medium text-navy-900 hover:underline">
+            Sign in
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-3 border-b border-background-secondary pb-4 text-center text-xs font-semibold uppercase tracking-wider">
         <StepLabel currentStep={currentStep} step={1} label="Find School" />
         <StepLabel currentStep={currentStep} step={2} label="Submit Proof" />
-        <StepLabel currentStep={currentStep} step={3} label="Verification" />
+        <StepLabel currentStep={currentStep} step={3} label="Review" />
       </div>
 
       {flowState === 'search' ? (
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="step-1">
           <h1 className="text-2xl font-bold text-navy-900">Search the School Directory</h1>
           <p className="text-sm leading-relaxed text-slate-500">
-            Select your school from the school directory. If your school is not yet listed, you can request a new profile.
+            Find your school in the directory. Only schools with an <strong>Unclaimed</strong> status can be claimed here.
+            If your school is not listed, you can request a new profile instead.
           </p>
 
           <div className="space-y-3">
@@ -198,7 +373,7 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
                 </div>
               ) : (
                 <div className="rounded-lg border border-background-secondary bg-background px-4 py-3 text-sm text-slate-500">
-                  No school match found yet. You can register a new school profile below.
+                  No school match found yet. You can request a new school profile below.
                 </div>
               )
             ) : null}
@@ -206,13 +381,44 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
 
           <div className="border-t border-background-secondary pt-4 text-center">
             <button type="button" onClick={handleNewSchoolRequest} className="text-sm font-semibold text-navy-900 hover:underline">
-              Can&apos;t find your school? Register as a new school profile
+              Can&apos;t find your school? Request a new school profile
             </button>
           </div>
         </div>
       ) : null}
 
-      {flowState === 'claim' && selectedSchool ? (
+      {flowState === 'auth-required' ? (
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-navy-900">Sign in to continue</h2>
+            <p className="text-sm leading-relaxed text-slate-500">
+              Your signed-in account stays as the applicant. Platform admin accounts cannot submit claims here, and school users still need a verified login before submitting a claim or new-school request.
+            </p>
+          </div>
+
+          {selectedSchool ? (
+            <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
+              <p className="font-semibold text-navy-900">Claiming: {selectedSchool.name}</p>
+              <p className="mt-1 text-xs text-slate-500">{selectedSchool.location}</p>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/login?redirect=/claim-school" className="flex-1 rounded-lg bg-navy-900 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-navy-800">
+              Sign in
+            </Link>
+            <Link href="/register?redirect=/claim-school" className="flex-1 rounded-lg border border-background-secondary bg-white px-4 py-3 text-center text-sm font-medium text-navy-900 transition hover:bg-background-secondary">
+              Create account
+            </Link>
+          </div>
+
+          <button type="button" onClick={resetFlow} className="text-sm font-medium text-slate-500 hover:text-navy-900">
+            ← Back to search
+          </button>
+        </div>
+      ) : null}
+
+      {flowState === 'claim' && selectedSchool && applicantUser ? (
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="claim-form">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-2xl font-bold text-navy-900">Claim School Profile</h2>
@@ -220,59 +426,107 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
               ← Back
             </button>
           </div>
+
           <p className="text-sm text-slate-600">
-            You are claiming: <strong className="text-navy-900">{selectedSchool.name}, {selectedSchool.location}</strong>
+            You are submitting this claim as <strong className="text-navy-900">{applicantUser.name}</strong> ({applicantUser.email}).
           </p>
 
+          <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
+            <p className="font-semibold text-navy-900">School being claimed</p>
+            <p className="mt-1">{selectedSchool.name}</p>
+            <p className="text-xs text-slate-500">{selectedSchool.location}</p>
+          </div>
+
           <form className="space-y-4" onSubmit={submitClaimForm}>
-            <div className="space-y-1">
-              <label htmlFor="proprietor-name" className="block text-xs font-semibold text-navy-800">
-                Proprietor / Admin Name
-              </label>
-              <input
-                id="proprietor-name"
-                type="text"
-                required
-                placeholder="e.g. Chief Mrs. Alabi"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label htmlFor="official-contact-name" className="block text-xs font-semibold text-navy-800">
+                  Official Contact Name
+                </label>
+                <input
+                  id="official-contact-name"
+                  name="officialContactName"
+                  type="text"
+                  required
+                  placeholder="e.g. Chief Mrs. Alabi"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="official-email" className="block text-xs font-semibold text-navy-800">
+                  Official School Email
+                </label>
+                <input
+                  id="official-email"
+                  name="officialEmail"
+                  type="email"
+                  required
+                  placeholder="clearance@yourschool.edu.ng"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
             </div>
             <div className="space-y-1">
-              <label htmlFor="clearance-phone" className="block text-xs font-semibold text-navy-800">
-                School Official Clearance Phone Number
+              <label htmlFor="official-phone" className="block text-xs font-semibold text-navy-800">
+                Official Clearance Phone
               </label>
               <input
-                id="clearance-phone"
+                id="official-phone"
+                name="officialPhone"
                 type="tel"
                 required
                 placeholder="e.g. +234 803 123 4567"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
-              <span className="block text-xs text-slate-500">
-                This phone number will be displayed to other schools when verifying transfer records.
-              </span>
             </div>
             <div className="space-y-1">
-              <label htmlFor="verification-proof" className="block text-xs font-semibold text-navy-800">
-                Upload Verification Proof (CAC, MOE Approval, or Letterhead)
+              <label htmlFor="claim-proof-note" className="block text-xs font-semibold text-navy-800">
+                Proof Note
               </label>
-              <input
-                id="verification-proof"
-                type="file"
+              <textarea
+                id="claim-proof-note"
+                name="proofNote"
                 required
+                rows={3}
+                placeholder="Briefly explain what this document proves and who can verify it."
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
-              <span className="block text-xs text-slate-500">Supported formats: PDF, PNG, JPG. Max 5MB.</span>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="claim-proof-file" className="block text-xs font-semibold text-navy-800">
+                Proof Document
+              </label>
+              <input
+                id="claim-proof-file"
+                name="proofFile"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                required
+                onChange={(event) => setClaimProofFileName(event.currentTarget.files?.[0]?.name ?? '')}
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              />
+              <p className="text-xs text-slate-500">
+                We store the selected filename for review. File storage/download is not enabled yet.
+              </p>
+              {claimProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {claimProofFileName}</p> : null}
             </div>
 
-            <button type="submit" className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800">
-              Submit Claim Verification
+            {submissionError ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{submissionError}</div>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-90"
+            >
+              {isSubmitting ? 'Submitting claim…' : 'Submit Claim for Review'}
             </button>
           </form>
         </div>
       ) : null}
 
-      {flowState === 'new-school' ? (
+      {flowState === 'new-school' && applicantUser ? (
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="new-school-form">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-2xl font-bold text-navy-900">Register New School Profile</h2>
@@ -280,7 +534,10 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
               ← Back
             </button>
           </div>
-          <p className="text-sm text-slate-500">Submit your school details to add it to the clearance directory.</p>
+
+          <p className="text-sm text-slate-500">
+            Your account stays the applicant. Add the school&apos;s official contact details so the admin team can review the request.
+          </p>
 
           <form className="space-y-4" onSubmit={submitNewSchoolForm}>
             <div className="space-y-1">
@@ -303,6 +560,7 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
                 </label>
                 <input
                   id="school-area"
+                  name="schoolArea"
                   type="text"
                   required
                   placeholder="e.g. Alimosho"
@@ -310,36 +568,54 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="school-state" className="block text-xs font-semibold text-navy-800">
-                  State
+                <label htmlFor="school-address" className="block text-xs font-semibold text-navy-800">
+                  School Physical Address
                 </label>
                 <input
-                  id="school-state"
+                  id="school-address"
+                  name="schoolAddress"
                   type="text"
                   required
-                  placeholder="e.g. Lagos"
+                  placeholder="e.g. 15, Airport Road"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label htmlFor="new-official-contact-name" className="block text-xs font-semibold text-navy-800">
+                  Official Contact Name
+                </label>
+                <input
+                  id="new-official-contact-name"
+                  name="officialContactName"
+                  type="text"
+                  required
+                  placeholder="e.g. Mrs. Alabi"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="new-official-email" className="block text-xs font-semibold text-navy-800">
+                  Official School Email
+                </label>
+                <input
+                  id="new-official-email"
+                  name="officialEmail"
+                  type="email"
+                  required
+                  placeholder="records@yourschool.edu.ng"
                   className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <label htmlFor="school-address" className="block text-xs font-semibold text-navy-800">
-                School Physical Address
+              <label htmlFor="new-official-phone" className="block text-xs font-semibold text-navy-800">
+                Official Clearance Phone
               </label>
               <input
-                id="school-address"
-                type="text"
-                required
-                placeholder="e.g. 15, Airport Road"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="new-clearance-phone" className="block text-xs font-semibold text-navy-800">
-                School Official Clearance Phone Number
-              </label>
-              <input
-                id="new-clearance-phone"
+                id="new-official-phone"
+                name="officialPhone"
                 type="tel"
                 required
                 placeholder="e.g. +234 803 123 4567"
@@ -347,19 +623,45 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="new-verification-proof" className="block text-xs font-semibold text-navy-800">
-                Upload MOE License / CAC Proof
+              <label htmlFor="new-proof-note" className="block text-xs font-semibold text-navy-800">
+                Proof Note
               </label>
-              <input
-                id="new-verification-proof"
-                type="file"
+              <textarea
+                id="new-proof-note"
+                name="proofNote"
                 required
+                rows={3}
+                placeholder="Summarize the licence, incorporation, or letterhead included."
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
             </div>
+            <div className="space-y-1">
+              <label htmlFor="new-proof-file" className="block text-xs font-semibold text-navy-800">
+                Proof Document
+              </label>
+              <input
+                id="new-proof-file"
+                name="proofFile"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                required
+                onChange={(event) => setNewSchoolProofFileName(event.currentTarget.files?.[0]?.name ?? '')}
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              />
+              <p className="text-xs text-slate-500">We store the selected filename for review. File storage/download is not enabled yet.</p>
+              {newSchoolProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {newSchoolProofFileName}</p> : null}
+            </div>
 
-            <button type="submit" className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800">
-              Submit New Profile Request
+            {submissionError ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{submissionError}</div>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-90"
+            >
+              {isSubmitting ? 'Submitting request…' : 'Submit New Profile Request'}
             </button>
           </form>
         </div>
@@ -369,33 +671,33 @@ export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-8 text-center shadow-sm" id="pending-page">
           <div className="inline-flex rounded-full border border-amber-100 bg-amber-50 p-4 text-amber-600">
             <svg className="h-12 w-12 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0l-3-3m3 3l3-3m6-2a9 9 0 11-12.728 0" />
             </svg>
           </div>
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-navy-900">Registration Proof Under Review</h2>
-            <p className="mx-auto max-w-md text-sm leading-relaxed text-slate-600">
-              Our verification officers are reviewing your submission for <strong>{pendingSubmission.schoolName}</strong>. We will
-              call you or email your proprietor account to confirm access within 24 hours.
+            <h2 className="text-2xl font-bold text-navy-900">Request submitted for review</h2>
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-600">
+              The admin team will review your proof document metadata and official contact details for <strong>{pendingSubmission.schoolName}</strong>.
+              If anything is unclear, they may follow up using the applicant account or the official school contact details you provided.
             </p>
           </div>
-          <div className="mx-auto max-w-sm rounded-lg border border-background-secondary bg-background p-4 text-left text-xs">
-            <span className="mb-1 block font-semibold uppercase tracking-widest text-navy-900">What happens next?</span>
-            <p className="text-slate-500">1. Verification email is sent to double-check school credentials.</p>
-            <p className="mt-2 text-slate-500">
-              2. Active school wallet will be initialized with a ₦5,000 promotional credit (50 free student checks).
-            </p>
-            <p className="mt-2 text-slate-500">
-              3. To protect student privacy, your dashboard remains locked until your claim is approved.
-            </p>
+          <div className="mx-auto max-w-xl rounded-lg border border-background-secondary bg-background p-4 text-left text-xs text-slate-500">
+            <span className="mb-1 block font-semibold uppercase tracking-widest text-navy-900">Submission summary</span>
+            <p className="text-slate-600">Applicant: {pendingSubmission.applicantName} ({pendingSubmission.applicantEmail})</p>
+            <p className="mt-2 text-slate-600">Official contact: {pendingSubmission.officialContactName}</p>
+            <p className="mt-2 text-slate-600">Official email: {pendingSubmission.officialEmail}</p>
+            <p className="mt-2 text-slate-600">Clearance phone: {pendingSubmission.officialPhone}</p>
+            <p className="mt-2 text-slate-600">Proof document selected: {pendingSubmission.proofFileName}</p>
+            <p className="mt-2 text-slate-600">Proof note: {pendingSubmission.proofNote}</p>
+            <p className="mt-3 text-slate-500">Wallet/top-up/payment setup may still be required before clearance checks are enabled.</p>
           </div>
           <div className="pt-4">
-            <Link href="/login" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
-              Return to Sign In
+            <Link href="/dashboard" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
+              Go to Dashboard
             </Link>
           </div>
           <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900">
-            Submit another {pendingSubmission.type === 'existing-school' ? 'claim' : 'school request'}
+            Submit another {pendingSubmission.claimType === 'existing_school' ? 'claim' : 'school request'}
           </button>
         </div>
       ) : null}

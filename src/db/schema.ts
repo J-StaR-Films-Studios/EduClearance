@@ -11,6 +11,8 @@ import {
 
 export const schoolStatusValues = ['unclaimed', 'pending', 'active', 'suspended'] as const;
 export const userRoleValues = ['platform_admin', 'school_owner', 'school_admin', 'school_staff'] as const;
+export const schoolClaimTypeValues = ['existing_school', 'new_school'] as const;
+export const schoolClaimStatusValues = ['pending', 'approved', 'rejected'] as const;
 export const clearanceRequestStatusValues = [
   'pending_verification',
   'no_platform_record_found',
@@ -34,6 +36,8 @@ export const disputeStatusValues = ['open', 'under_review', 'resolved', 'rejecte
 
 export const schoolStatusEnum = pgEnum('school_status', schoolStatusValues);
 export const userRoleEnum = pgEnum('user_role', userRoleValues);
+export const schoolClaimTypeEnum = pgEnum('school_claim_type', schoolClaimTypeValues);
+export const schoolClaimStatusEnum = pgEnum('school_claim_status', schoolClaimStatusValues);
 export const clearanceRequestStatusEnum = pgEnum('clearance_request_status', clearanceRequestStatusValues);
 export const searchResultEnum = pgEnum('search_result', searchResultValues);
 export const notificationStatusEnum = pgEnum('notification_status', notificationStatusValues);
@@ -85,6 +89,36 @@ export const users = pgTable(
     emailIdx: uniqueIndex('users_email_unique').on(table.email),
     schoolIdx: index('users_school_id_idx').on(table.schoolId),
     roleIdx: index('users_role_idx').on(table.role),
+  }),
+);
+
+export const schoolClaims = pgTable(
+  'school_claims',
+  {
+    id: text('id').primaryKey(),
+    schoolId: text('school_id').references(() => schools.id, { onDelete: 'set null' }),
+    requestedSchoolName: text('requested_school_name').notNull(),
+    requestedArea: text('requested_area').notNull(),
+    requestedAddress: text('requested_address').notNull(),
+    applicantUserId: text('applicant_user_id').references(() => users.id, { onDelete: 'set null' }),
+    applicantName: text('applicant_name').notNull(),
+    applicantEmail: text('applicant_email').notNull(),
+    officialContactName: text('official_contact_name').notNull(),
+    officialEmail: text('official_email').notNull(),
+    officialPhone: text('official_phone').notNull(),
+    proofFileName: text('proof_file_name').notNull(),
+    proofNote: text('proof_note').notNull(),
+    type: schoolClaimTypeEnum('type').notNull(),
+    status: schoolClaimStatusEnum('status').notNull(),
+    adminNote: text('admin_note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  },
+  (table) => ({
+    schoolIdx: index('school_claims_school_id_idx').on(table.schoolId),
+    applicantIdx: index('school_claims_applicant_user_id_idx').on(table.applicantUserId),
+    statusIdx: index('school_claims_status_idx').on(table.status),
+    typeIdx: index('school_claims_type_idx').on(table.type),
   }),
 );
 

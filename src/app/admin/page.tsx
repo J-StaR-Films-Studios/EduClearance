@@ -5,7 +5,7 @@ import { count, desc, eq } from 'drizzle-orm';
 import { AdminAccessRequired } from '@/components/admin/admin-access-required';
 import { AdminAppShell } from '@/components/app/admin-app-shell';
 import { db } from '@/db/client';
-import { clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
+import { clearanceIssues, clearanceRequests, disputes, schoolClaims, schools } from '@/db/schema';
 import { APP_NAME } from '@/lib/site';
 import { isPlatformAdminSession } from '@/lib/local-session';
 import { formatNairaFromKobo } from '@/lib/money';
@@ -21,18 +21,18 @@ export default async function AdminOverviewPage() {
     return <AdminAccessRequired />;
   }
 
-  const [[activeSchools], [pendingSchools], [reviewDisputes], [totalChecks], recentIssues, pendingClaims] = await Promise.all([
+  const [[activeSchools], [pendingClaims], [reviewDisputes], [totalChecks], recentIssues, recentPendingClaims] = await Promise.all([
     db.select({ value: count() }).from(schools).where(eq(schools.status, 'active')),
-    db.select({ value: count() }).from(schools).where(eq(schools.status, 'pending')),
+    db.select({ value: count() }).from(schoolClaims).where(eq(schoolClaims.status, 'pending')),
     db.select({ value: count() }).from(disputes).where(eq(disputes.status, 'under_review')),
     db.select({ value: count() }).from(clearanceRequests),
     db.select().from(clearanceIssues).orderBy(desc(clearanceIssues.createdAt)).limit(3),
-    db.select().from(schools).where(eq(schools.status, 'pending')).orderBy(desc(schools.createdAt)).limit(3),
+    db.select().from(schoolClaims).where(eq(schoolClaims.status, 'pending')).orderBy(desc(schoolClaims.createdAt)).limit(3),
   ]);
 
   const metrics = [
     { label: 'Total Active Schools', value: String(activeSchools?.value ?? 0) },
-    { label: 'Pending school approvals', value: String(pendingSchools?.value ?? 0), tone: 'warning' as const },
+    { label: 'Pending claims', value: String(pendingClaims?.value ?? 0), tone: 'warning' as const },
     { label: 'Disputes Under Review', value: String(reviewDisputes?.value ?? 0), tone: 'danger' as const },
     { label: 'Total Checks Run', value: String(totalChecks?.value ?? 0) },
   ];
@@ -89,15 +89,18 @@ export default async function AdminOverviewPage() {
         <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
           <h3 className="text-sm font-bold text-navy-900">Recent Pending Claims</h3>
           <div className="space-y-3">
-            {pendingClaims.length === 0 ? (
+            {recentPendingClaims.length === 0 ? (
               <p className="rounded-lg border border-background-secondary bg-background p-3 text-xs text-slate-500">No school claims are pending review.</p>
-            ) : pendingClaims.map((school) => (
-              <div key={school.id} className="space-y-2 rounded-lg border border-background-secondary bg-background p-3 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-navy-900">{school.name}</span>
-                  <span className="font-mono text-slate-500">{school.createdAt.toISOString().slice(0, 10)}</span>
+            ) : recentPendingClaims.map((claim) => (
+              <div key={claim.id} className="space-y-2 rounded-lg border border-background-secondary bg-background p-3 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-navy-900">{claim.requestedSchoolName}</span>
+                  <span className="font-mono text-slate-500">{claim.createdAt.toISOString().slice(0, 10)}</span>
                 </div>
-                <p className="text-slate-600">{school.contactPerson ?? 'School contact'} submitted or awaits verification.</p>
+                <p className="text-slate-600">
+                  {claim.type === 'new_school' ? 'New school request' : 'Directory school claim'} · {claim.applicantName}
+                </p>
+                <p className="text-slate-500">Proof file: {claim.proofFileName}</p>
                 <Link href="/admin/schools" className="inline-block font-bold text-navy-900 hover:underline">
                   Review Claim →
                 </Link>
