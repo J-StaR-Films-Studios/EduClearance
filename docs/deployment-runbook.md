@@ -36,9 +36,12 @@ Optional:
 
 ```env
 PAYSTACK_WEBHOOK_SECRET=
+CRON_SECRET=
 ```
 
 Only set `PAYSTACK_WEBHOOK_SECRET` if it matches the secret Paystack uses to sign webhook payloads. If it is absent, the app falls back to `PAYSTACK_SECRET_KEY` for webhook signature verification.
+
+Set `CRON_SECRET` in Vercel Production if scheduled payment reconciliation is enabled. Vercel sends it as `Authorization: Bearer <CRON_SECRET>` for cron requests.
 
 ## Automatic migrations on Vercel
 
@@ -74,19 +77,15 @@ In Vercel project settings:
 
 Drizzle migrations are intended to be idempotent: already-applied migration files are tracked by Drizzle and should not rerun on every deployment.
 
-## Paystack webhook
+## Paystack payment confirmation
 
-In Paystack dashboard, configure webhook URL:
+EduClearance does not require changing the Paystack dashboard webhook setting when this Paystack account is shared by multiple projects.
 
-```txt
-https://educlearance.meloschool.com/api/paystack/webhook
-```
+Payment confirmation has three layers:
 
-Required event:
-
-```txt
-charge.success
-```
+1. Browser return verification: Paystack redirects back to `/wallet?payment_reference=...`, and the app verifies the payment directly through Paystack's transaction verify API.
+2. Scheduled reconciliation: Vercel cron calls `/api/cron/paystack-reconcile`, which checks initialized Paystack payments and credits successful ones even if the browser return failed.
+3. Optional webhook receiver: `/api/paystack/webhook` still exists for future use, but do not replace an existing Paystack account-level webhook URL if other products depend on it.
 
 For staging/test mode, Paystack test keys can be used, but remember test payments can still mutate whichever database the deployed app is connected to.
 
@@ -97,8 +96,9 @@ Before merging a PR into `master`:
 1. Confirm Vercel Production env vars are present.
 2. Confirm Build Command is `pnpm vercel-build`.
 3. Confirm `RUN_DB_MIGRATIONS=true` is enabled only for the intended environment.
-4. Confirm the production DB is backed up or disposable enough for the migration.
-5. Run locally on the branch:
+4. Confirm `CRON_SECRET` is set for scheduled payment reconciliation.
+5. Confirm the production DB is backed up or disposable enough for the migration.
+6. Run locally on the branch:
 
    ```bash
    pnpm typecheck
@@ -106,16 +106,16 @@ Before merging a PR into `master`:
    pnpm build
    ```
 
-6. Merge PR.
-7. Wait for Vercel deployment to finish.
-8. Smoke test:
+7. Merge PR.
+8. Wait for Vercel deployment to finish.
+9. Smoke test:
    - home page loads
    - login/register
    - admin login
    - school approval/edit
    - wallet top-up initialize
    - Paystack return verification
-   - Paystack webhook delivery
+   - scheduled Paystack reconciliation
    - clearance debit
    - issue report
    - dispute/admin resolution
@@ -129,7 +129,14 @@ If a deployment fails during migration:
 3. Check whether the target `DATABASE_URL` is correct.
 4. Run/repair migration manually only after identifying the failed migration point.
 
-If webhook verification fails:
+If scheduled reconciliation fails:
+
+1. Check `CRON_SECRET` is set in Vercel Production.
+2. Check Vercel cron logs for `/api/cron/paystack-reconcile`.
+3. Check that `PAYSTACK_SECRET_KEY` matches the Paystack mode used for checkout.
+4. Confirm initialized payments are still in the `initialized` status before reconciliation runs.
+
+If optional webhook verification is later enabled and fails:
 
 1. Check that `PAYSTACK_WEBHOOK_SECRET` is absent or exactly matches the signing secret.
 2. Check that `PAYSTACK_SECRET_KEY` is the key for the same Paystack mode as the dashboard webhook.

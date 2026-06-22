@@ -1,36 +1,16 @@
 import { NextResponse } from 'next/server';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, payments, walletTransactions, wallets } from '@/db/schema';
+import { payments } from '@/db/schema';
 import { getServerEnv } from '@/lib/env';
-import { makeEntityId } from '@/lib/ids';
 import { canManageSchoolWallet, canVerifyPaymentForSchool, resolveOptionalLocalActor } from '@/lib/local-actor';
+import { creditSuccessfulPaystackPayment, markPaystackPaymentTerminal, verifyPaystackReference } from '@/lib/paystack-payments';
 
 const paystackVerifySchema = z.object({
   reference: z.string().trim().min(1),
 });
-
-const terminalProviderStatuses = new Set(['failed', 'abandoned']);
-
-type JsonRecord = Record<string, unknown>;
-
-type PaystackVerifyResponse = {
-  status: boolean;
-  message: string;
-  data?: {
-    status?: string;
-    reference?: string;
-    amount?: number;
-    paid_at?: string | null;
-    channel?: string | null;
-  };
-};
-
-function toJsonRecord(value: unknown): JsonRecord {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
-}
 
 function isLocalAppUrl(appUrl: string) {
   const { hostname } = new URL(appUrl);
@@ -73,9 +53,7 @@ export async function POST(request: Request) {
     .select({
       id: payments.id,
       schoolId: payments.schoolId,
-      amountKobo: payments.amountKobo,
       status: payments.status,
-      metadataJson: payments.metadataJson,
     })
     .from(payments)
     .where(eq(payments.providerReference, reference))
@@ -93,191 +71,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'This payment can no longer be added to a wallet.' }, { status: 409 });
   }
 
-  let providerVerification: PaystackVerifyResponse['data'] | null = null;
+  const source = env.PAYSTACK_SECRET_KEY ? 'browser_verify' : 'local_pending';
+  let providerVerification = null;
 
   if (env.PAYSTACK_SECRET_KEY) {
-    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-      headers: {
-        Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`,
-      },
-    });
+    const verification = await verifyPaystackReference(reference, env.PAYSTACK_SECRET_KEY);
 
-    const paystackJson = (await paystackResponse.json().catch(() => null)) as PaystackVerifyResponse | null;
-    const providerData = paystackJson?.data;
-    const providerStatus = providerData?.status;
-
-    if (!paystackResponse.ok || !paystackJson?.status || !providerStatus) {
+    if (verification.kind === 'unavailable') {
       return NextResponse.json(
         { ok: false, message: 'We could not confirm this payment yet. If you completed checkout, wait a moment and try again.', retryable: true },
         { status: 400 },
       );
     }
 
-    if (providerStatus !== 'success') {
-      if (terminalProviderStatuses.has(providerStatus)) {
-        await db
-          .update(payments)
-          .set({
-            status: providerStatus === 'abandoned' ? 'abandoned' : 'failed',
-            metadataJson: {
-              ...toJsonRecord(paymentBeforeVerify.metadataJson),
-              providerVerification: {
-                status: providerStatus,
-                reference: providerData?.reference ?? reference,
-                message: paystackJson.message,
-              },
-            },
-          })
-          .where(eq(payments.id, paymentBeforeVerify.id));
-
-        return NextResponse.json({ ok: false, message: 'This payment was not successful. Please try checkout again.', retryable: false }, { status: 400 });
-      }
-
+    if (verification.kind === 'pending') {
       return NextResponse.json(
         { ok: false, message: 'This payment is still being processed. Please wait a moment and try again.', retryable: true },
         { status: 400 },
       );
     }
 
-    if (providerData?.amount !== paymentBeforeVerify.amountKobo) {
-      return NextResponse.json({ ok: false, message: 'The payment amount does not match this checkout. Please contact support before trying again.', retryable: true }, { status: 409 });
+    if (verification.kind === 'terminal') {
+      await markPaystackPaymentTerminal(reference, verification.providerStatus, verification.data, verification.message);
+      return NextResponse.json({ ok: false, message: 'This payment was not successful. Please try checkout again.', retryable: false }, { status: 400 });
     }
 
-    providerVerification = providerData;
+    providerVerification = verification.data;
   }
 
   try {
-    const result = await db.transaction(async (tx) => {
-      const [payment] = await tx
-        .select({
-          id: payments.id,
-          schoolId: payments.schoolId,
-          amountKobo: payments.amountKobo,
-          status: payments.status,
-          metadataJson: payments.metadataJson,
-        })
-        .from(payments)
-        .where(eq(payments.providerReference, reference))
-        .limit(1);
-
-      if (!payment) {
-        return { kind: 'not_found' as const };
-      }
-
-      if (payment.status === 'failed' || payment.status === 'abandoned') {
-        return { kind: 'not_creditable' as const };
-      }
-
-      if (!canVerifyPaymentForSchool(actor, payment.schoolId)) {
-        return { kind: 'forbidden' as const };
-      }
-
-      const creditReference = `paystack-credit:${reference}`;
-      const transactionId = makeEntityId('wallet_tx');
-      const insertedTransactions = await tx
-        .insert(walletTransactions)
-        .values({
-          id: transactionId,
-          schoolId: payment.schoolId,
-          type: 'credit',
-          amountKobo: payment.amountKobo,
-          description: 'Wallet top-up',
-          reference: creditReference,
-          provider: 'paystack',
-          createdByUserId: actor.userId,
-        })
-        .onConflictDoNothing({ target: walletTransactions.reference })
-        .returning({ id: walletTransactions.id });
-
-      let credited = false;
-      let balanceKobo: number | null = null;
-
-      if (insertedTransactions.length > 0) {
-        await tx
-          .insert(wallets)
-          .values({
-            id: makeEntityId('wallet'),
-            schoolId: payment.schoolId,
-            balanceKobo: 0,
-          })
-          .onConflictDoNothing({ target: wallets.schoolId });
-
-        const [updatedWallet] = await tx
-          .update(wallets)
-          .set({
-            balanceKobo: sql`${wallets.balanceKobo} + ${payment.amountKobo}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(wallets.schoolId, payment.schoolId))
-          .returning({ balanceKobo: wallets.balanceKobo });
-
-        credited = true;
-        balanceKobo = updatedWallet?.balanceKobo ?? null;
-
-        await tx.insert(auditLogs).values({
-          id: makeEntityId('audit'),
-          actorUserId: actor.userId,
-          actorSchoolId: actor.sessionRole === 'platform_admin' ? null : actor.schoolId,
-          action: 'wallet_credit_posted',
-          entityType: 'wallet_transaction',
-          entityId: transactionId,
-          metadataJson: {
-            paymentId: payment.id,
-            reference,
-            amountKobo: payment.amountKobo,
-            balanceAfterKobo: balanceKobo,
-          },
-          ipAddress,
-        });
-      } else {
-        const [currentWallet] = await tx
-          .select({ balanceKobo: wallets.balanceKobo })
-          .from(wallets)
-          .where(eq(wallets.schoolId, payment.schoolId))
-          .limit(1);
-        balanceKobo = currentWallet?.balanceKobo ?? null;
-      }
-
-      await tx
-        .update(payments)
-        .set({
-          status: 'successful',
-          verifiedAt: new Date(),
-          metadataJson: {
-            ...toJsonRecord(payment.metadataJson),
-            providerVerification: {
-              verifiedReference: providerVerification?.reference ?? reference,
-              channel: providerVerification?.channel ?? (env.PAYSTACK_SECRET_KEY ? 'paystack' : 'local_pending'),
-              paidAt: providerVerification?.paid_at ?? null,
-              status: providerVerification?.status ?? 'success',
-            },
-          },
-        })
-        .where(eq(payments.id, payment.id));
-
-      await tx.insert(auditLogs).values({
-        id: makeEntityId('audit'),
-        actorUserId: actor.userId,
-        actorSchoolId: actor.sessionRole === 'platform_admin' ? null : actor.schoolId,
-        action: 'paystack_payment_verified',
-        entityType: 'payment',
-        entityId: payment.id,
-        metadataJson: {
-          reference,
-          amountKobo: payment.amountKobo,
-          credited,
-        },
-        ipAddress,
-      });
-
-      return {
-        kind: 'success' as const,
-        paymentId: payment.id,
-        credited,
-        walletBalanceKobo: balanceKobo,
-        amountKobo: payment.amountKobo,
-        status: 'successful' as const,
-      };
+    const result = await creditSuccessfulPaystackPayment({
+      reference,
+      providerVerification,
+      actorUserId: actor.userId,
+      actorSchoolId: actor.sessionRole === 'platform_admin' ? null : actor.schoolId,
+      ipAddress,
+      paymentAuditAction: 'paystack_payment_verified',
+      source,
     });
 
     if (result.kind === 'not_found') {
@@ -288,8 +118,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: 'This payment can no longer be added to a wallet.' }, { status: 409 });
     }
 
-    if (result.kind === 'forbidden') {
-      return NextResponse.json({ ok: false, message: 'This payment is not available for your school account.' }, { status: 403 });
+    if (result.kind === 'amount_mismatch') {
+      return NextResponse.json({ ok: false, message: 'The payment amount does not match this checkout. Please contact support before trying again.', retryable: true }, { status: 409 });
     }
 
     return NextResponse.json({
