@@ -18,39 +18,6 @@ type PendingSubmission = {
   type: 'existing-school' | 'new-school';
 };
 
-const directorySchools: DirectorySchool[] = [
-  {
-    id: 'grace-academy',
-    name: 'Grace Academy',
-    location: 'Ikeja, Lagos State',
-    status: 'unclaimed',
-  },
-  {
-    id: 'grace-prep-school',
-    name: 'Grace Prep School',
-    location: 'Garki, FCT Abuja',
-    status: 'unclaimed',
-  },
-  {
-    id: 'springfield-international',
-    name: 'Springfield International',
-    location: 'Wuse II, FCT Abuja',
-    status: 'pending',
-  },
-  {
-    id: 'hilltop-preparatory',
-    name: 'Hilltop Preparatory',
-    location: 'Lekki, Lagos State',
-    status: 'active',
-  },
-  {
-    id: 'excel-college',
-    name: 'Excel College',
-    location: 'Surulere, Lagos State',
-    status: 'suspended',
-  },
-];
-
 const statusStyles: Record<SchoolStatus, string> = {
   unclaimed: 'border border-amber-100 bg-amber-50 text-amber-600',
   pending: 'border border-amber-100 bg-amber-50 text-amber-600',
@@ -75,7 +42,11 @@ function StepLabel({ currentStep, step, label }: { currentStep: number; step: nu
   );
 }
 
-export function ClaimSchoolFlow() {
+type ClaimSchoolFlowProps = {
+  directorySchools: DirectorySchool[];
+};
+
+export function ClaimSchoolFlow({ directorySchools }: ClaimSchoolFlowProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [flowState, setFlowState] = useState<ClaimFlowState>('search');
   const [selectedSchool, setSelectedSchool] = useState<DirectorySchool | null>(null);
@@ -88,7 +59,7 @@ export function ClaimSchoolFlow() {
     }
 
     return directorySchools.filter((school) => `${school.name} ${school.location}`.toLowerCase().includes(query));
-  }, [searchQuery]);
+  }, [directorySchools, searchQuery]);
 
   const currentStep = flowState === 'pending' ? 3 : flowState === 'search' ? 1 : 2;
 
@@ -181,7 +152,7 @@ export function ClaimSchoolFlow() {
                 type="text"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Type school name or location (e.g. Grace)"
+                placeholder="Type school name or location (e.g. American, Garki, Abuja)"
                 className="w-full rounded-lg border border-background-secondary bg-background py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
               <svg
@@ -321,7 +292,7 @@ export function ClaimSchoolFlow() {
                 name="schoolName"
                 type="text"
                 required
-                placeholder="e.g. Springfield International School"
+                placeholder="e.g. New Abuja Model School"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
             </div>
