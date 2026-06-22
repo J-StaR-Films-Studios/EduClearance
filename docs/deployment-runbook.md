@@ -36,12 +36,9 @@ Optional:
 
 ```env
 PAYSTACK_WEBHOOK_SECRET=
-CRON_SECRET=
 ```
 
-Only set `PAYSTACK_WEBHOOK_SECRET` if it matches the secret Paystack uses to sign webhook payloads. If it is absent, the app falls back to `PAYSTACK_SECRET_KEY` for webhook signature verification.
-
-Set `CRON_SECRET` in Vercel Production if scheduled payment reconciliation is enabled. Vercel sends it as `Authorization: Bearer <CRON_SECRET>` for cron requests.
+Only set `PAYSTACK_WEBHOOK_SECRET` if it matches the secret Paystack uses to sign webhook payloads. If it is absent, the app falls back to `PAYSTACK_SECRET_KEY` for optional webhook signature verification.
 
 ## Automatic migrations on Vercel
 
@@ -81,11 +78,15 @@ Drizzle migrations are intended to be idempotent: already-applied migration file
 
 EduClearance does not require changing the Paystack dashboard webhook setting when this Paystack account is shared by multiple projects.
 
-Payment confirmation has three layers:
+Payment confirmation uses the code-controlled callback flow:
 
-1. Browser return verification: Paystack redirects back to `/wallet?payment_reference=...`, and the app verifies the payment directly through Paystack's transaction verify API.
-2. Scheduled reconciliation: Vercel cron calls `/api/cron/paystack-reconcile`, which checks initialized Paystack payments and credits successful ones even if the browser return failed.
-3. Optional webhook receiver: `/api/paystack/webhook` still exists for future use, but do not replace an existing Paystack account-level webhook URL if other products depend on it.
+1. The app creates a local payment row with a unique reference.
+2. The app initializes Paystack with a dynamic `callback_url` for this deployment.
+3. Paystack redirects the browser back to `/wallet?payment_reference=...`.
+4. The app verifies the reference server-side through Paystack's transaction verify API.
+5. The wallet is credited only after the backend confirms status, amount, local record, and ownership.
+
+The optional receiver `/api/paystack/webhook` still exists for future use, but do not replace an existing Paystack account-level webhook URL if other products depend on it.
 
 For staging/test mode, Paystack test keys can be used, but remember test payments can still mutate whichever database the deployed app is connected to.
 
@@ -96,9 +97,8 @@ Before merging a PR into `master`:
 1. Confirm Vercel Production env vars are present.
 2. Confirm Build Command is `pnpm vercel-build`.
 3. Confirm `RUN_DB_MIGRATIONS=true` is enabled only for the intended environment.
-4. Confirm `CRON_SECRET` is set for scheduled payment reconciliation.
-5. Confirm the production DB is backed up or disposable enough for the migration.
-6. Run locally on the branch:
+4. Confirm the production DB is backed up or disposable enough for the migration.
+5. Run locally on the branch:
 
    ```bash
    pnpm typecheck
@@ -106,16 +106,15 @@ Before merging a PR into `master`:
    pnpm build
    ```
 
-7. Merge PR.
-8. Wait for Vercel deployment to finish.
-9. Smoke test:
+6. Merge PR.
+7. Wait for Vercel deployment to finish.
+8. Smoke test:
    - home page loads
    - login/register
    - admin login
    - school approval/edit
    - wallet top-up initialize
    - Paystack return verification
-   - scheduled Paystack reconciliation
    - clearance debit
    - issue report
    - dispute/admin resolution
@@ -129,12 +128,12 @@ If a deployment fails during migration:
 3. Check whether the target `DATABASE_URL` is correct.
 4. Run/repair migration manually only after identifying the failed migration point.
 
-If scheduled reconciliation fails:
+If Paystack return verification fails:
 
-1. Check `CRON_SECRET` is set in Vercel Production.
-2. Check Vercel cron logs for `/api/cron/paystack-reconcile`.
-3. Check that `PAYSTACK_SECRET_KEY` matches the Paystack mode used for checkout.
-4. Confirm initialized payments are still in the `initialized` status before reconciliation runs.
+1. Check that `NEXT_PUBLIC_APP_URL` matches the deployed app URL.
+2. Check that `PAYSTACK_SECRET_KEY` matches the Paystack mode used for checkout.
+3. Confirm the returned `payment_reference` exists in the local `payments` table.
+4. Confirm the Paystack transaction amount matches the local payment amount.
 
 If optional webhook verification is later enabled and fails:
 

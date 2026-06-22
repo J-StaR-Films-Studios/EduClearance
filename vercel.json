@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/paystack-reconcile",
-      "schedule": "*/10 * * * *"
-    }
-  ]
-}
