@@ -3,10 +3,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 
 import {
-  adminClearanceRecords,
-  recentIssueSummaries,
-  walletWatchSchools,
   type AdminClearanceRecord,
+  type AdminIssueSummary,
   type WalletWatchSchool,
 } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
@@ -27,11 +25,17 @@ function statusChip(status: AdminClearanceRecord['status']) {
 }
 
 type AdminClearanceWorkspaceProps = {
-  initialWalletWatchSchools?: WalletWatchSchool[];
+  initialClearanceRecords: AdminClearanceRecord[];
+  initialIssueSummaries: AdminIssueSummary[];
+  initialWalletWatchSchools: WalletWatchSchool[];
 };
 
-export function AdminClearanceWorkspace({ initialWalletWatchSchools = walletWatchSchools }: AdminClearanceWorkspaceProps) {
-  const [records] = useState(adminClearanceRecords);
+export function AdminClearanceWorkspace({
+  initialClearanceRecords,
+  initialIssueSummaries,
+  initialWalletWatchSchools,
+}: AdminClearanceWorkspaceProps) {
+  const [records] = useState(initialClearanceRecords);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClearanceStatusFilter>('all');
   const [notice, setNotice] = useState('');
@@ -162,7 +166,9 @@ export function AdminClearanceWorkspace({ initialWalletWatchSchools = walletWatc
           <div className="space-y-3 rounded-xl border border-background-secondary bg-background p-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">Recent unresolved issue reports</h4>
             <div className="space-y-3 text-xs">
-              {recentIssueSummaries.map((issue) => (
+              {initialIssueSummaries.length === 0 ? (
+                <p className="text-slate-500">No unresolved issue reports yet.</p>
+              ) : initialIssueSummaries.map((issue) => (
                 <div key={issue.id} className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-navy-900">{issue.studentName}</p>

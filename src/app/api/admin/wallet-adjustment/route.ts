@@ -39,6 +39,16 @@ export async function POST(request: Request) {
       .values({ id: makeEntityId('wallet'), schoolId: payload.data.schoolId, balanceKobo: 0 })
       .onConflictDoNothing({ target: wallets.schoolId });
 
+    const [currentWallet] = await tx
+      .select({ balanceKobo: wallets.balanceKobo })
+      .from(wallets)
+      .where(eq(wallets.schoolId, payload.data.schoolId))
+      .limit(1);
+
+    if (payload.data.type === 'debit' && (currentWallet?.balanceKobo ?? 0) < amountKobo) {
+      return { kind: 'insufficient_funds' as const, balanceKobo: currentWallet?.balanceKobo ?? 0 };
+    }
+
     const [wallet] = await tx
       .update(wallets)
       .set({ balanceKobo: sql`${wallets.balanceKobo} + ${signedAmountKobo}`, updatedAt: new Date() })
@@ -74,8 +84,12 @@ export async function POST(request: Request) {
       ipAddress,
     });
 
-    return { transactionId, balanceKobo: wallet?.balanceKobo ?? null };
+    return { kind: 'success' as const, transactionId, balanceKobo: wallet?.balanceKobo ?? null };
   });
 
-  return NextResponse.json({ ok: true, ...result });
+  if (result.kind === 'insufficient_funds') {
+    return NextResponse.json({ ok: false, message: 'Manual debit exceeds the school wallet balance.', balanceKobo: result.balanceKobo }, { status: 409 });
+  }
+
+  return NextResponse.json({ ok: true, transactionId: result.transactionId, balanceKobo: result.balanceKobo });
 }
