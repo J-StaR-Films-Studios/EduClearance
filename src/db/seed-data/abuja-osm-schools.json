@@ -1,0 +1,706 @@
+{
+  "description": "Abuja/FCT school directory candidates for EduClearance seed data. Records are unverified directory candidates, not active school accounts.",
+  "generatedAt": "2026-06-22",
+  "sources": [
+    "OpenStreetMap Overpass amenity=school within Abuja/FCT bounding boxes",
+    "Manual Abuja candidate list pending operator verification"
+  ],
+  "licenseNote": "OpenStreetMap data is available under the Open Database License (ODbL). Use with attribution and verification before production activation.",
+  "count": 48,
+  "errors": [
+    {
+      "bbox": [
+        9.05,
+        6.8,
+        9.35,
+        7.25
+      ],
+      "error": "HTTPError: HTTP Error 429: Too Many Requests"
+    },
+    {
+      "bbox": [
+        9.05,
+        7.25,
+        9.35,
+        7.75
+      ],
+      "error": "HTTPError: HTTP Error 429: Too Many Requests"
+    }
+  ],
+  "schools": [
+    {
+      "name": "American International School Abuja",
+      "slug": "american-international-school-abuja",
+      "area": "Abuja",
+      "address": "Plot 346, Cadastral Zone B 02, Durumi District, Abuja",
+      "latitude": 9.022538,
+      "longitude": 7.457403,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9268272535"
+      ],
+      "sourceTags": {
+        "website": "https://www.aisabuja.org/",
+        "phone": "+234 7032153798",
+        "addr:city": "Abuja",
+        "addr:street": "Plot 346, Cadastral Zone B 02, Durumi District"
+      }
+    },
+    {
+      "name": "Air Force Girls Comprehensive School",
+      "slug": "air-force-girls-comprehensive-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.978407,
+      "longitude": 7.263732,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1242528089"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Aura Primary School",
+      "slug": "aura-primary-school",
+      "area": "Abuja/FCT",
+      "address": "Along chief palace",
+      "latitude": 8.828391,
+      "longitude": 7.579725,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1075137049"
+      ],
+      "sourceTags": {
+        "addr:street": "Along chief palace"
+      }
+    },
+    {
+      "name": "Destiny Christian Academy",
+      "slug": "destiny-christian-academy",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.990057,
+      "longitude": 7.426367,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/928357623"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Divine Heritage Nursery and Primary School",
+      "slug": "divine-heritage-nursery-and-primary-school",
+      "area": "Abuja/FCT",
+      "address": "Divine Heritage, Back of Jimal Garden",
+      "latitude": 9.018865,
+      "longitude": 7.423311,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10741877789"
+      ],
+      "sourceTags": {
+        "addr:street": "Divine Heritage, Back of Jimal Garden"
+      }
+    },
+    {
+      "name": "Divine Mercy Secondary School",
+      "slug": "divine-mercy-secondary-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 9.049184,
+      "longitude": 7.510493,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/564766890"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "ECWA Virtue Academy",
+      "slug": "ecwa-virtue-academy",
+      "area": "Abuja/FCT",
+      "address": "Top floor, ECWA goodness opposite police station, Galadimawa",
+      "latitude": 8.992287,
+      "longitude": 7.423129,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9280686928"
+      ],
+      "sourceTags": {
+        "addr:street": "Top floor, ECWA goodness opposite police station, Galadimawa"
+      }
+    },
+    {
+      "name": "Eternal Love School",
+      "slug": "eternal-love-school",
+      "area": "Abuja/FCT",
+      "address": "Pasali Kabusa",
+      "latitude": 8.95714,
+      "longitude": 7.440468,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1156359644"
+      ],
+      "sourceTags": {
+        "addr:street": "Pasali Kabusa"
+      }
+    },
+    {
+      "name": "Excel Christabel Nursery and Primary School",
+      "slug": "excel-christabel-nursery-and-primary-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.993378,
+      "longitude": 7.427737,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/996855108"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Faith Field Academy",
+      "slug": "faith-field-academy",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.988689,
+      "longitude": 7.426607,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1005809157"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Faithful International Academy, Creche, Nursery & Primary",
+      "slug": "faithful-international-academy-creche-nursery-and-primary",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.993056,
+      "longitude": 7.427874,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/996840379"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Government Secondary School",
+      "slug": "government-secondary-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.816428,
+      "longitude": 7.556047,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1156068200",
+        "osm:way/1356463014"
+      ],
+      "sourceTags": {
+        "operator": "government"
+      }
+    },
+    {
+      "name": "Government Secondary School Kabusa",
+      "slug": "government-secondary-school-kabusa",
+      "area": "Abuja/FCT",
+      "address": "Beside Kabusa Market",
+      "latitude": 8.950438,
+      "longitude": 7.444818,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10753848031"
+      ],
+      "sourceTags": {
+        "addr:street": "Beside Kabusa Market"
+      }
+    },
+    {
+      "name": "Harvase International School",
+      "slug": "harvase-international-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.994816,
+      "longitude": 7.424255,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9280686918"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Islamic Moral International School",
+      "slug": "islamic-moral-international-school",
+      "area": "Abuja/FCT",
+      "address": "Angwan madaki along chief palace road",
+      "latitude": 8.82871,
+      "longitude": 7.576249,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1075133218"
+      ],
+      "sourceTags": {
+        "addr:street": "Angwan madaki along chief palace road"
+      }
+    },
+    {
+      "name": "Junior Secondary School Galadimawa",
+      "slug": "junior-secondary-school-galadimawa",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.986083,
+      "longitude": 7.425356,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/993054550"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Kabusa Community Secondary School",
+      "slug": "kabusa-community-secondary-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.949777,
+      "longitude": 7.439482,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1156367917"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "LEA Primary School Galadimawa",
+      "slug": "lea-primary-school-galadimawa",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.994501,
+      "longitude": 7.425585,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/993487091"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "LEA Primary School Kabusa",
+      "slug": "lea-primary-school-kabusa",
+      "area": "Abuja/FCT",
+      "address": "Beside Kabusa Market",
+      "latitude": 8.950393,
+      "longitude": 7.444904,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10753848032"
+      ],
+      "sourceTags": {
+        "addr:street": "Beside Kabusa Market"
+      }
+    },
+    {
+      "name": "MJ Salasi International School",
+      "slug": "mj-salasi-international-school",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 9.020096,
+      "longitude": 7.417757,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1154998433"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Madaratsul tafuzal quran",
+      "slug": "madaratsul-tafuzal-quran",
+      "area": "Abuja/FCT",
+      "address": "Opposite AEDC office",
+      "latitude": 9.016867,
+      "longitude": 7.422165,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10741831725"
+      ],
+      "sourceTags": {
+        "addr:street": "Opposite AEDC office"
+      }
+    },
+    {
+      "name": "Mighty Mercy International School",
+      "slug": "mighty-mercy-international-school",
+      "area": "Abuja/FCT",
+      "address": "After Tiper Garage Sheretti",
+      "latitude": 8.939528,
+      "longitude": 7.429351,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10759247192"
+      ],
+      "sourceTags": {
+        "addr:street": "After Tiper Garage Sheretti"
+      }
+    },
+    {
+      "name": "Nabel International College",
+      "slug": "nabel-international-college",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.986969,
+      "longitude": 7.426151,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1005807029"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Page Schools",
+      "slug": "page-schools",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.982167,
+      "longitude": 7.492151,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/13137997726"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Rosy Premium Success Academy Nursery and Primary School Kuchigoro",
+      "slug": "rosy-premium-success-academy-nursery-and-primary-school-kuchigoro",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 9.017517,
+      "longitude": 7.419634,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10741907018"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Royal Step Academy",
+      "slug": "royal-step-academy",
+      "area": "Abuja/FCT",
+      "address": "Royal Step Academy after chief palace",
+      "latitude": 9.018685,
+      "longitude": 7.420742,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10741887952"
+      ],
+      "sourceTags": {
+        "addr:street": "Royal Step Academy after chief palace"
+      }
+    },
+    {
+      "name": "Sarmbridge Academy",
+      "slug": "sarmbridge-academy",
+      "area": "Abuja/FCT",
+      "address": "Along police station road, opposite living faith, Galadimawa Abuja",
+      "latitude": 8.99358,
+      "longitude": 7.421978,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9280686925"
+      ],
+      "sourceTags": {
+        "addr:street": "Along police station road, opposite living faith, Galadimawa Abuja"
+      }
+    },
+    {
+      "name": "Secondary School Sheretti",
+      "slug": "secondary-school-sheretti",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.941877,
+      "longitude": 7.438494,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1156980477"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Star Hope Nursery and Primary School",
+      "slug": "star-hope-nursery-and-primary-school",
+      "area": "Abuja/FCT",
+      "address": "Sheretti Kabusa",
+      "latitude": 8.941772,
+      "longitude": 7.433287,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/10759228916"
+      ],
+      "sourceTags": {
+        "addr:street": "Sheretti Kabusa"
+      }
+    },
+    {
+      "name": "Victory Academy",
+      "slug": "victory-academy",
+      "area": "Abuja/FCT",
+      "address": "OSM mapped school candidate near Abuja/FCT",
+      "latitude": 8.949946,
+      "longitude": 7.442841,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1156366030"
+      ],
+      "sourceTags": {}
+    },
+    {
+      "name": "Sheikh Dahiru Usman Bauchi Foundation",
+      "slug": "sheikh-dahiru-usman-bauchi-foundation",
+      "area": "FCT, Abuja, Karshi",
+      "address": "Anguwan kuturoko karshi, FCT, Abuja, Karshi",
+      "latitude": 8.831406,
+      "longitude": 7.571229,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9860796768"
+      ],
+      "sourceTags": {
+        "addr:city": "FCT, Abuja, Karshi",
+        "addr:street": "Anguwan kuturoko karshi"
+      }
+    },
+    {
+      "name": "ECWA Bethel School",
+      "slug": "ecwa-bethel-school",
+      "area": "Garki, Federal Capital Territory",
+      "address": "Off umaru musa yaradua express way, Garki, Federal Capital Territory",
+      "latitude": 9.018241,
+      "longitude": 7.419665,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1155006286"
+      ],
+      "sourceTags": {
+        "addr:city": "Garki, Federal Capital Territory",
+        "addr:street": "Off umaru musa yaradua express way"
+      }
+    },
+    {
+      "name": "Loyola Jesuit College",
+      "slug": "loyola-jesuit-college-abuja",
+      "area": "Gidan Mangoro",
+      "address": "Area hint: Gidan Mangoro / Abuja-Keffi Road corridor; operator must verify exact campus address before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Anglican Girls Grammar School",
+      "slug": "anglican-girls-grammar-school",
+      "area": "Gudu district",
+      "address": "Abdulsalami Abubakar Road, Gudu district, Abuja",
+      "latitude": 9.009696,
+      "longitude": 7.474123,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1239690061"
+      ],
+      "sourceTags": {
+        "addr:city": "Abuja",
+        "addr:street": "Abdulsalami Abubakar Road"
+      }
+    },
+    {
+      "name": "Lead British International School",
+      "slug": "lead-british-international-school-abuja",
+      "area": "Gwarinpa",
+      "address": "Area hint: Gwarinpa, Abuja; operator must verify exact campus address before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Whiteplains British School",
+      "slug": "whiteplains-british-school-abuja",
+      "area": "Jabi",
+      "address": "Area hint: Jabi, Abuja; operator must verify exact campus address and ownership claim before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Glisten International Academy",
+      "slug": "glisten-international-academy-abuja",
+      "area": "Jahi",
+      "address": "Area hint: Jahi, Abuja; operator must verify location and official contacts before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Karshi Junior Secondary School",
+      "slug": "karshi-junior-secondary-school",
+      "area": "Karshi",
+      "address": "Old Garage, Karshi",
+      "latitude": 8.829663,
+      "longitude": 7.566928,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9860799536"
+      ],
+      "sourceTags": {
+        "addr:city": "Karshi",
+        "addr:street": "Old Garage"
+      }
+    },
+    {
+      "name": "Pilot Science Primary School, Karshi",
+      "slug": "pilot-science-primary-school-karshi",
+      "area": "Karshi",
+      "address": "Old Garage, Karshi",
+      "latitude": 8.829345,
+      "longitude": 7.567856,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/9860799535"
+      ],
+      "sourceTags": {
+        "addr:city": "Karshi",
+        "addr:street": "Old Garage"
+      }
+    },
+    {
+      "name": "Mitchell School",
+      "slug": "mitchell-school",
+      "area": "Karshi Abuja",
+      "address": "Karshi Abuja",
+      "latitude": 8.828651,
+      "longitude": 7.576548,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1075154600"
+      ],
+      "sourceTags": {
+        "addr:city": "Karshi Abuja"
+      }
+    },
+    {
+      "name": "NOWA Educational centre",
+      "slug": "nowa-educational-centre",
+      "area": "Karshi Development area, karu Karshi express way",
+      "address": "Ishaya Iko Ibrahim Road, Karshi Development area, karu Karshi express way",
+      "latitude": 8.886609,
+      "longitude": 7.605805,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/303985706"
+      ],
+      "sourceTags": {
+        "addr:city": "Karshi Development area, karu Karshi express way",
+        "addr:street": "Ishaya Iko Ibrahim Road"
+      }
+    },
+    {
+      "name": "Awwaliyya Nursery and Primary School Annex 2",
+      "slug": "awwaliyya-nursery-and-primary-school-annex-2",
+      "area": "Karu",
+      "address": "Aliyu Lamu Yola Street, Mararaba, Karu",
+      "latitude": 9.009395,
+      "longitude": 7.601823,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1248097436"
+      ],
+      "sourceTags": {
+        "addr:city": "Karu",
+        "addr:street": "Aliyu Lamu Yola Street, Mararaba"
+      }
+    },
+    {
+      "name": "LEA Primary, Junior and Senior Secondary School Kuchigoro",
+      "slug": "lea-primary-junior-and-senior-secondary-school-kuchigoro",
+      "area": "Kuchingoro",
+      "address": "Kuchingoro",
+      "latitude": 9.01372,
+      "longitude": 7.420017,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/1154804437"
+      ],
+      "sourceTags": {
+        "addr:city": "Kuchingoro"
+      }
+    },
+    {
+      "name": "Capital Science Academy",
+      "slug": "capital-science-academy-abuja",
+      "area": "Kuje",
+      "address": "Area hint: Kuje, Abuja; operator must verify exact campus address before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Premiere Academy (School Number 1)",
+      "slug": "premiere-academy-school-number-1",
+      "area": "Lugbe, Abuja",
+      "address": "Premiere Academy Street, Lugbe, Abuja",
+      "latitude": 8.986907,
+      "longitude": 7.35491,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:way/520160191"
+      ],
+      "sourceTags": {
+        "website": "https://www.premiereacademyng.org/4/",
+        "addr:city": "Lugbe, Abuja",
+        "addr:street": "Premiere Academy Street"
+      }
+    },
+    {
+      "name": "The Regent School",
+      "slug": "the-regent-school-abuja",
+      "area": "Maitama",
+      "address": "Area hint: Maitama, Abuja; operator must verify exact campus address before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    },
+    {
+      "name": "Rahinna Model School",
+      "slug": "rahinna-model-school",
+      "area": "New Karu",
+      "address": "Jikwoyi Phase II ,Nyanya-Karshi Road, New Karu",
+      "latitude": 8.977335,
+      "longitude": 7.55845,
+      "source": "OpenStreetMap Overpass amenity=school",
+      "sourceIds": [
+        "osm:node/8845801541"
+      ],
+      "sourceTags": {
+        "addr:city": "New Karu",
+        "addr:street": "Jikwoyi Phase II ,Nyanya-Karshi Road"
+      }
+    },
+    {
+      "name": "Premier International School",
+      "slug": "premier-international-school-abuja",
+      "area": "Wuse II",
+      "address": "Area hint: Wuse II, Abuja; operator must verify exact campus address before activation",
+      "latitude": null,
+      "longitude": null,
+      "source": "Manual Abuja candidate pending operator verification",
+      "sourceIds": [],
+      "sourceTags": {}
+    }
+  ]
+}

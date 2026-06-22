@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 import { config as loadEnv } from 'dotenv';
 import { sql } from 'drizzle-orm';
@@ -13,6 +14,26 @@ loadEnv();
 
 const makeId = () => randomUUID();
 const verificationEmail = (slug: string) => `verification+${slug}@educlearance.local`;
+
+type AbujaDirectorySeed = {
+  schools: Array<{
+    name: string;
+    slug: string;
+    area: string;
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+    source: string;
+    sourceIds: string[];
+  }>;
+};
+
+function loadAbujaDirectorySchools() {
+  const seedFile = readFileSync('src/db/seed-data/abuja-osm-schools.json', 'utf8');
+  const parsed = JSON.parse(seedFile) as AbujaDirectorySeed;
+
+  return parsed.schools.filter((school) => !['wuse-local-academy', 'garki-local-college', 'lugbe-local-preparatory-school'].includes(school.slug));
+}
 
 async function seed() {
   const { connection, db } = await import('./client');
@@ -37,14 +58,9 @@ async function seed() {
       const wuseLocalSchoolId = makeId();
       const garkiLocalSchoolId = makeId();
       const lugbeLocalSchoolId = makeId();
-      const americanInternationalAbujaId = makeId();
-      const loyolaJesuitCollegeId = makeId();
-      const regentSchoolId = makeId();
-      const capitalScienceAcademyId = makeId();
-      const leadBritishInternationalSchoolId = makeId();
-      const whiteplainsBritishSchoolId = makeId();
-      const glistenInternationalAcademyId = makeId();
-      const premierInternationalSchoolId = makeId();
+      const directoryCandidates = loadAbujaDirectorySchools();
+      const directorySchoolIds = new Map(directoryCandidates.map((school) => [school.slug, makeId()]));
+      const americanInternationalAbujaId = directorySchoolIds.get('american-international-school-abuja') ?? directorySchoolIds.values().next().value ?? makeId();
 
       const passwordHash = await hashPassword('EduClearance!2026');
 
@@ -95,118 +111,29 @@ async function seed() {
           logoUrl: null,
           status: 'pending',
         },
-        {
-          id: americanInternationalAbujaId,
-          name: 'American International School of Abuja',
-          slug: 'american-international-school-of-abuja',
-          address: 'Area hint: Durumi, Abuja; operator must verify exact campus address before activation',
-          area: 'Durumi',
+        ...directoryCandidates.map((school) => ({
+          id: directorySchoolIds.get(school.slug) ?? makeId(),
+          name: school.name,
+          slug: school.slug,
+          address: school.latitude && school.longitude
+            ? `${school.address}; source: ${school.source}; coordinates: ${school.latitude}, ${school.longitude}`
+            : `${school.address}; source: ${school.source}`,
+          area: school.area,
           mainPhone: null,
           clearancePhone: null,
-          contactEmail: verificationEmail('american-international-school-of-abuja'),
+          contactEmail: verificationEmail(school.slug),
           contactPerson: null,
           logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: loyolaJesuitCollegeId,
-          name: 'Loyola Jesuit College',
-          slug: 'loyola-jesuit-college-abuja',
-          address: 'Area hint: Gidan Mangoro / Abuja-Keffi Road corridor; operator must verify exact campus address before activation',
-          area: 'Gidan Mangoro',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('loyola-jesuit-college-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: regentSchoolId,
-          name: 'The Regent School',
-          slug: 'the-regent-school-abuja',
-          address: 'Area hint: Maitama, Abuja; operator must verify exact campus address before activation',
-          area: 'Maitama',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('the-regent-school-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: capitalScienceAcademyId,
-          name: 'Capital Science Academy',
-          slug: 'capital-science-academy-abuja',
-          address: 'Area hint: Kuje, Abuja; operator must verify exact campus address before activation',
-          area: 'Kuje',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('capital-science-academy-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: leadBritishInternationalSchoolId,
-          name: 'Lead British International School',
-          slug: 'lead-british-international-school-abuja',
-          address: 'Area hint: Gwarinpa, Abuja; operator must verify exact campus address before activation',
-          area: 'Gwarinpa',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('lead-british-international-school-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: whiteplainsBritishSchoolId,
-          name: 'Whiteplains British School',
-          slug: 'whiteplains-british-school-abuja',
-          address: 'Area hint: Jabi, Abuja; operator must verify exact campus address and ownership claim before activation',
-          area: 'Jabi',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('whiteplains-british-school-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'pending',
-        },
-        {
-          id: glistenInternationalAcademyId,
-          name: 'Glisten International Academy',
-          slug: 'glisten-international-academy-abuja',
-          address: 'Area hint: Jahi, Abuja; operator must verify exact campus address before activation',
-          area: 'Jahi',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('glisten-international-academy-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
-        {
-          id: premierInternationalSchoolId,
-          name: 'Premier International School',
-          slug: 'premier-international-school-abuja',
-          address: 'Area hint: Wuse II, Abuja; operator must verify exact campus address before activation',
-          area: 'Wuse II',
-          mainPhone: null,
-          clearancePhone: null,
-          contactEmail: verificationEmail('premier-international-school-abuja'),
-          contactPerson: null,
-          logoUrl: null,
-          status: 'unclaimed',
-        },
+          status: school.slug === 'whiteplains-british-school-abuja' ? 'pending' as const : 'unclaimed' as const,
+        })),
       ]);
 
       await tx.insert(users).values([
         {
           id: platformAdminUserId,
           schoolId: null,
-          name: 'Amina Bello',
-          email: 'admin@educlearance.local',
+          name: 'John Oke',
+          email: 'john@jstarstudios.com',
           phone: '+2348000000001',
           role: 'platform_admin',
           passwordHash,
@@ -357,7 +284,7 @@ async function seed() {
           id: noRecordRequestId,
           incomingSchoolId: wuseLocalSchoolId,
           previousSchoolId: americanInternationalAbujaId,
-          previousSchoolNameSnapshot: 'American International School of Abuja',
+          previousSchoolNameSnapshot: 'American International School Abuja',
           studentName: 'Ibrahim Sani',
           studentNameNormalized: normalizeSearchText('Ibrahim Sani'),
           gender: 'Male',
