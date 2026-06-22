@@ -168,8 +168,7 @@ export function ClaimSchoolFlow() {
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="step-1">
           <h1 className="text-2xl font-bold text-navy-900">Search the School Directory</h1>
           <p className="text-sm leading-relaxed text-slate-500">
-            Select your school from our pre-seeded local school cluster directory. If your school is not yet listed, you can
-            request a new profile.
+            Select your school from the school directory. If your school is not yet listed, you can request a new profile.
           </p>
 
           <div className="space-y-3">
@@ -420,8 +419,8 @@ export function ClaimSchoolFlow() {
             </p>
           </div>
           <div className="pt-4">
-            <Link href="/dashboard" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
-              Go to Dashboard Demo (Simulate Approval)
+            <Link href="/login" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
+              Return to Sign In
             </Link>
           </div>
           <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900">

@@ -4,31 +4,27 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
-  demoSchoolProfile,
   getPreviousSchoolSelection,
   previousSchoolOptions,
-  type DemoUserRole,
+  type SchoolUserRole,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
 import { CHECK_PRICE_KOBO, formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
 
 type ClearanceRequestFormProps = {
-  role: DemoUserRole;
+  role: SchoolUserRole;
+  walletBalanceKobo: number;
 };
 
-type ResultTarget = 'no-record' | 'match';
-
-export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
+export function ClearanceRequestForm({ role, walletBalanceKobo }: ClearanceRequestFormProps) {
   const router = useRouter();
   const [selectedSchool, setSelectedSchool] = useState<string>(previousSchoolOptions[0].value);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const remainingBalanceKobo = useMemo(
-    () => Math.max(demoSchoolProfile.walletBalanceKobo - CHECK_PRICE_KOBO, 0),
-    [],
-  );
+  const remainingBalanceKobo = useMemo(() => Math.max(walletBalanceKobo - CHECK_PRICE_KOBO, 0), [walletBalanceKobo]);
 
-  function handleSubmit(target: ResultTarget) {
+  async function handleSubmit() {
     const form = document.getElementById('clearance-request-form');
     if (!(form instanceof HTMLFormElement)) {
       return;
@@ -40,36 +36,56 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
       return;
     }
 
-    if (demoSchoolProfile.walletBalanceKobo < CHECK_PRICE_KOBO) {
-      setErrorMessage('Your wallet balance is below ₦100. Please top up before starting a clearance request.');
-      return;
-    }
-
     const formData = new FormData(form);
     const studentName = String(formData.get('studentName') ?? '').trim();
     const parentName = String(formData.get('parentName') ?? '').trim();
     const parentPhone = String(formData.get('parentPhone') ?? '').trim();
     const previousSchoolValue = String(formData.get('previousSchool') ?? '');
     const manualSchoolName = String(formData.get('manualSchoolName') ?? '').trim();
+    const selectedDirectorySchool = getPreviousSchoolSelection(previousSchoolValue);
     const previousSchoolLabel =
       previousSchoolValue === 'manual'
         ? manualSchoolName
-        : getPreviousSchoolSelection(previousSchoolValue)?.label.replace(/\s*\([^)]*\)$/, '') ?? '';
-    const detailId = target === 'match' ? 'aisha-bello' : 'chinedu-alao';
-    const query = new URLSearchParams({
-      student: studentName,
-      parent: parentName,
-      phone: parentPhone,
-      previousSchool: previousSchoolLabel,
-      listed: previousSchoolValue === 'manual' ? '0' : '1',
-      charged: '1',
-    });
+        : selectedDirectorySchool?.label.replace(/\s*\([^)]*\)$/, '') ?? '';
 
-    router.push(`/clearance/${detailId}?${query.toString()}`);
+    try {
+      setIsSubmitting(true);
+      const response = await fetch('/api/clearance/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName,
+          parentName,
+          parentPhone,
+          previousSchoolName: previousSchoolLabel,
+          gender: String(formData.get('gender') ?? '').trim(),
+          lastClass: String(formData.get('lastClass') ?? '').trim(),
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; routeUrl?: string } | null;
+
+      if (!response.ok || !result?.ok || !result.routeUrl) {
+        setErrorMessage(result?.message ?? 'Unable to start clearance request. Please try again.');
+        return;
+      }
+
+      router.push(result.routeUrl);
+    } catch {
+      setErrorMessage('Unable to start clearance request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <form id="clearance-request-form" className="space-y-4">
+    <form
+      id="clearance-request-form"
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit();
+      }}
+    >
       <div className="space-y-1">
         <label htmlFor="studentName" className="block text-xs font-semibold text-navy-800">
           Student&apos;s Full Name
@@ -197,7 +213,7 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
         <div className="text-right">
           <p className="font-bold text-navy-900">₦100</p>
           <p className="text-xs text-emerald-600">
-            Balance: {formatNairaFromKobo(demoSchoolProfile.walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
+            Balance: {formatNairaFromKobo(walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge
           </p>
         </div>
       </div>
@@ -212,27 +228,13 @@ export function ClearanceRequestForm({ role }: ClearanceRequestFormProps) {
         </div>
       ) : null}
 
-      <div className="space-y-2 pt-2">
-        <p className="text-center text-xs font-medium text-slate-400">
-          Select a result state below to simulate the server-side search outcome after the ₦100 charge.
-        </p>
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => handleSubmit('no-record')}
-            className="rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800"
-          >
-            Simulate No Record
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('match')}
-            className="rounded-lg bg-terracotta-600 py-3 text-sm font-medium text-white transition hover:bg-terracotta-700"
-          >
-            Simulate Match
-          </button>
-        </div>
-      </div>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+      >
+        {isSubmitting ? 'Starting Clearance Check…' : 'Run Clearance Check'}
+      </button>
     </form>
   );
 }

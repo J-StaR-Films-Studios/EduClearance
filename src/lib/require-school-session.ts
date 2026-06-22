@@ -1,13 +1,18 @@
 import { redirect } from 'next/navigation';
 
-import { buildSchoolLoginPageHref, getSchoolSessionRole } from '@/lib/demo-session';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
+import { buildSchoolLoginPageHref } from '@/lib/local-session';
 
 export async function requireSchoolSession(redirectPath: string) {
-  const role = await getSchoolSessionRole();
+  const actor = await resolveLocalSchoolActor();
 
-  if (!role) {
+  if (!actor) {
     redirect(buildSchoolLoginPageHref(redirectPath));
   }
 
-  return role;
+  if (actor.schoolStatus !== 'active') {
+    redirect('/claim-school');
+  }
+
+  return actor.sessionRole;
 }

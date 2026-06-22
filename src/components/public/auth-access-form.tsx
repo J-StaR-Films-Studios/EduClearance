@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 
-type AuthDemoFormProps = {
+type AuthAccessFormProps = {
   mode: 'login' | 'register';
   audience?: 'school' | 'admin';
   destination?: string;
@@ -14,33 +14,34 @@ const formContent = {
   login: {
     school: {
       title: 'Sign In to EduClearance',
-      description: 'Verify clearances and manage unresolved student obligations',
+      description: 'Verify transfer clearances, manage issue reports, and monitor wallet activity.',
       buttonLabel: 'Sign In',
-      pendingLabel: 'Opening dashboard...',
-      destination: '/auth/demo-login?role=school_admin&redirect=%2Fdashboard',
+      pendingLabel: 'Opening workspace...',
+      destination: '/dashboard',
       emailLabel: 'Official School Email',
     },
     admin: {
       title: 'Platform Admin Sign In',
-      description: 'Review schools, wallet operations, clearance cases, and disputes',
-      buttonLabel: 'Open Admin Workspace',
+      description: 'Review school claims, wallet operations, clearance cases, and disputes.',
+      buttonLabel: 'Sign In',
       pendingLabel: 'Opening admin workspace...',
-      destination: '/auth/demo-login?role=platform_admin&redirect=%2Fadmin',
+      destination: '/admin',
       emailLabel: 'Platform Admin Email',
     },
   },
   register: {
-    title: 'Create Proprietor Account',
-    description: 'Register to claim and verify clearances',
+    title: 'Create School Account',
+    description: 'Register a proprietor account to claim your school and manage clearance operations.',
     buttonLabel: 'Register Account',
     pendingLabel: 'Opening claim flow...',
     destination: '/claim-school',
   },
 } as const;
 
-export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDemoFormProps) {
+export function AuthAccessForm({ mode, audience = 'school', destination }: AuthAccessFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const loginContent = {
     ...formContent.login[audience],
     destination: destination ?? formContent.login[audience].destination,
@@ -50,7 +51,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
     destination: destination ?? formContent.register.destination,
   };
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
@@ -59,7 +60,40 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
     }
 
     setIsSubmitting(true);
-    router.push(mode === 'login' ? loginContent.destination : registerContent.destination);
+    setErrorMessage('');
+
+    const formData = new FormData(form);
+    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const payload =
+      mode === 'login'
+        ? {
+            email: String(formData.get('email') ?? ''),
+            password: String(formData.get('password') ?? ''),
+            audience,
+            redirect: loginContent.destination,
+          }
+        : {
+            name: String(formData.get('name') ?? ''),
+            email: String(formData.get('email') ?? ''),
+            phone: String(formData.get('phone') ?? ''),
+            password: String(formData.get('password') ?? ''),
+            redirect: registerContent.destination,
+          };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; redirectTo?: string; message?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setErrorMessage(result?.message ?? 'Unable to complete sign-in. Please check the details and try again.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push(result.redirectTo ?? (mode === 'login' ? loginContent.destination : registerContent.destination));
   }
 
   return (
@@ -81,6 +115,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
@@ -98,12 +133,17 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </div>
               <input
                 id="password"
+                name="password"
                 type="password"
                 required
                 placeholder="••••••••"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
             </div>
+
+            {errorMessage ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+            ) : null}
 
             <button
               type="submit"
@@ -126,10 +166,10 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
                 <p className="text-slate-500">
                   Need to claim your school?{' '}
                   <Link href="/claim-school" className="font-semibold text-navy-900 hover:underline">
-                    Claim pre-seeded profile
+                    Claim existing school profile
                   </Link>
                 </p>
-                <p className="text-slate-400">Demo school sign-in sets a server-readable school session cookie for protected private routes.</p>
+                <p className="text-slate-400">Access is limited to verified school accounts and approved school profiles.</p>
                 <p className="text-slate-400">
                   Are you a Platform Admin?{' '}
                   <Link href="/login?role=admin" className="font-semibold text-slate-500 hover:underline">
@@ -145,7 +185,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
                     Go to School Sign In
                   </Link>
                 </p>
-                <p className="text-slate-400">Demo admin access sets a platform_admin session cookie for protected admin routes.</p>
+                <p className="text-slate-400">Platform administration is restricted to authorized EduClearance operators.</p>
               </>
             )}
           </div>
@@ -159,6 +199,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 required
                 placeholder="e.g. Chief Mrs. Alabi"
@@ -171,6 +212,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </label>
               <input
                 id="register-email"
+                name="email"
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
@@ -183,6 +225,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </label>
               <input
                 id="phone"
+                name="phone"
                 type="tel"
                 required
                 placeholder="e.g. +234 803 123 4567"
@@ -195,6 +238,7 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
               </label>
               <input
                 id="register-password"
+                name="password"
                 type="password"
                 required
                 placeholder="Minimum 8 characters"
@@ -213,6 +257,10 @@ export function AuthDemoForm({ mode, audience = 'school', destination }: AuthDem
                 I agree to the privacy statement and terms of school-to-school cluster network compliance.
               </label>
             </div>
+
+            {errorMessage ? (
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+            ) : null}
 
             <button
               type="submit"

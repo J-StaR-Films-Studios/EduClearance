@@ -2,7 +2,7 @@ import { ClaimSchoolFlow } from '@/components/public/claim-school-flow';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 
-export const metadata = noIndexMetadata(`Claim / Register School | ${APP_NAME}`, 'Claim or request access to a seeded school profile.');
+export const metadata = noIndexMetadata(`Claim / Register School | ${APP_NAME}`, 'Claim an existing school directory profile or request a new school listing.');
 
 export default function ClaimSchoolPage() {
   return (

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
-import { demoSchoolProfile, type DemoUserRole, withRoleQuery } from '@/lib/demo-school-data';
+import { schoolProfile, type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 
 export type SchoolAppShellNavKey = 'dashboard' | 'clearance-new' | 'clearance' | 'issues-new' | 'wallet';
 export type SchoolAppShellMobileMode = 'default' | 'history' | 'detail';
@@ -19,7 +19,7 @@ type NavItem = {
 type SchoolAppShellProps = {
   activeKey: SchoolAppShellNavKey;
   mobileMode?: SchoolAppShellMobileMode;
-  role?: DemoUserRole;
+  role?: SchoolUserRole;
   children: ReactNode;
 };
 
@@ -66,7 +66,7 @@ function iconForNav(key: SchoolAppShellNavKey) {
   }
 }
 
-function getDesktopNavItems(role: DemoUserRole) {
+function getDesktopNavItems(role: SchoolUserRole) {
   return baseNavItems.filter((item) => {
     if (item.key === 'clearance') {
       return true;
@@ -82,7 +82,7 @@ function getDesktopNavItems(role: DemoUserRole) {
   });
 }
 
-function getMobileNavItems(mode: SchoolAppShellMobileMode, role: DemoUserRole) {
+function getMobileNavItems(mode: SchoolAppShellMobileMode, role: SchoolUserRole) {
   if (mode === 'detail') {
     return baseNavItems.filter((item) => item.key === 'dashboard');
   }
@@ -144,9 +144,9 @@ export function SchoolAppShell({ activeKey, mobileMode = 'default', role = 'scho
         </nav>
 
         <div className="border-t border-background-secondary pt-4 text-xs text-slate-400">
-          <p>{demoSchoolProfile.name}, {demoSchoolProfile.area}</p>
+          <p>{schoolProfile.name}, {schoolProfile.area}</p>
           <p className="mt-1 font-semibold text-navy-800">
-            {role === 'school_staff' ? 'Role: School Staff' : `Status: ${demoSchoolProfile.status}`}
+            {role === 'school_staff' ? 'Role: School Staff' : `Status: ${schoolProfile.status}`}
           </p>
         </div>
       </aside>

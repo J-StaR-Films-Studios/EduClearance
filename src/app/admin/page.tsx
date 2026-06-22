@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { count, desc, eq } from 'drizzle-orm';
 
 import { AdminAccessRequired } from '@/components/admin/admin-access-required';
 import { AdminAppShell } from '@/components/app/admin-app-shell';
-import {
-  adminOverviewMetrics,
-  recentIssueSummaries,
-  suspiciousAlerts,
-} from '@/lib/demo-admin-data';
+import { db } from '@/db/client';
+import { clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import { APP_NAME } from '@/lib/site';
-import { isPlatformAdminSession } from '@/lib/demo-session';
+import { isPlatformAdminSession } from '@/lib/local-session';
+import { formatNairaFromKobo } from '@/lib/money';
 import { noIndexMetadata } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +21,36 @@ export default async function AdminOverviewPage() {
     return <AdminAccessRequired />;
   }
 
+  const [[activeSchools], [pendingSchools], [reviewDisputes], [totalChecks], recentIssues, pendingClaims] = await Promise.all([
+    db.select({ value: count() }).from(schools).where(eq(schools.status, 'active')),
+    db.select({ value: count() }).from(schools).where(eq(schools.status, 'pending')),
+    db.select({ value: count() }).from(disputes).where(eq(disputes.status, 'under_review')),
+    db.select({ value: count() }).from(clearanceRequests),
+    db.select().from(clearanceIssues).orderBy(desc(clearanceIssues.createdAt)).limit(3),
+    db.select().from(schools).where(eq(schools.status, 'pending')).orderBy(desc(schools.createdAt)).limit(3),
+  ]);
+
+  const metrics = [
+    { label: 'Total Active Schools', value: String(activeSchools?.value ?? 0) },
+    { label: 'Pending school approvals', value: String(pendingSchools?.value ?? 0), tone: 'warning' as const },
+    { label: 'Disputes Under Review', value: String(reviewDisputes?.value ?? 0), tone: 'danger' as const },
+    { label: 'Total Checks Run', value: String(totalChecks?.value ?? 0) },
+  ];
+
+  const recentIssueCards = await Promise.all(
+    recentIssues.map(async (issue) => {
+      const [reportingSchool] = await db.select({ name: schools.name }).from(schools).where(eq(schools.id, issue.reportingSchoolId)).limit(1);
+
+      return {
+        id: issue.id,
+        studentName: issue.studentName,
+        reportingSchool: reportingSchool?.name ?? 'Reporting school',
+        amountLabel: formatNairaFromKobo(issue.amountOwed),
+        updatedAt: issue.createdAt.toISOString().slice(0, 10),
+      };
+    }),
+  );
+
   return (
     <AdminAppShell activeKey="overview">
       <header className="border-b border-background-secondary pb-4">
@@ -30,7 +59,7 @@ export default async function AdminOverviewPage() {
       </header>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {adminOverviewMetrics.map((metric) => (
+        {metrics.map((metric) => (
           <div key={metric.label} className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
             <p className="text-[10px] font-semibold uppercase text-slate-500">{metric.label}</p>
             <p
@@ -51,42 +80,29 @@ export default async function AdminOverviewPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm lg:col-span-2">
-          <h3 className="text-sm font-bold text-navy-900">Suspicious Activity Alerts</h3>
-          <div className="divide-y divide-background-secondary">
-            {suspiciousAlerts.map((alert) => (
-              <div key={alert.id} className="flex items-start gap-3 py-3 text-xs">
-                <span
-                  className={cn(
-                    'rounded-full border px-2 py-0.5 font-bold',
-                    alert.tone === 'danger'
-                      ? 'border-terracotta-100 bg-terracotta-50 text-terracotta-700'
-                      : 'border-amber-100 bg-amber-50 text-amber-700',
-                  )}
-                >
-                  {alert.type}
-                </span>
-                <div>
-                  <p className="font-semibold text-navy-900">{alert.title}</p>
-                  <p className="mt-0.5 text-slate-400">{alert.detail}</p>
-                </div>
-              </div>
-            ))}
+          <h3 className="text-sm font-bold text-navy-900">Operational Alerts</h3>
+          <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs leading-relaxed text-slate-500">
+            Automated anomaly alerts are not enabled yet. Review clearance logs, disputes, and wallet activity from the operational workspaces.
           </div>
         </div>
 
         <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
           <h3 className="text-sm font-bold text-navy-900">Recent Pending Claims</h3>
           <div className="space-y-3">
-            <div className="space-y-2 rounded-lg border border-background-secondary bg-background p-3 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-navy-900">Brightway College</span>
-                <span className="font-mono text-slate-500">1 hour ago</span>
+            {pendingClaims.length === 0 ? (
+              <p className="rounded-lg border border-background-secondary bg-background p-3 text-xs text-slate-500">No school claims are pending review.</p>
+            ) : pendingClaims.map((school) => (
+              <div key={school.id} className="space-y-2 rounded-lg border border-background-secondary bg-background p-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-navy-900">{school.name}</span>
+                  <span className="font-mono text-slate-500">{school.createdAt.toISOString().slice(0, 10)}</span>
+                </div>
+                <p className="text-slate-600">{school.contactPerson ?? 'School contact'} submitted or awaits verification.</p>
+                <Link href="/admin/schools" className="inline-block font-bold text-navy-900 hover:underline">
+                  Review Claim →
+                </Link>
               </div>
-              <p className="text-slate-600">Claimed pre-seeded profile. CAC document uploaded.</p>
-              <Link href="/admin/schools" className="inline-block font-bold text-navy-900 hover:underline">
-                Review Claim →
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -103,7 +119,9 @@ export default async function AdminOverviewPage() {
             </Link>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {recentIssueSummaries.map((issue) => (
+            {recentIssueCards.length === 0 ? (
+              <p className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 sm:col-span-3">No issue reports have been saved yet.</p>
+            ) : recentIssueCards.map((issue) => (
               <div key={issue.id} className="rounded-xl border border-background-secondary bg-background p-4 text-xs">
                 <p className="font-semibold text-navy-900">{issue.studentName}</p>
                 <p className="mt-1 text-slate-500">{issue.reportingSchool}</p>

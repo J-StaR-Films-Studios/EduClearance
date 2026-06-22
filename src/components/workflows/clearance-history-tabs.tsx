@@ -3,37 +3,75 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import {
-  inboundRequests,
-  outboundClearances,
-  type DemoUserRole,
-  withRoleQuery,
-} from '@/lib/demo-school-data';
+import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { formatNairaFromKobo } from '@/lib/money';
 import { cn } from '@/lib/utils';
 
-type ClearanceHistoryTabsProps = {
-  initialTab?: 'outbound' | 'inbound';
-  role: DemoUserRole;
+export type ClearanceHistoryOutbound = {
+  id: string;
+  studentName: string;
+  previousSchoolName: string;
+  resultState: 'no_record' | 'possible_match' | 'match';
+  statusLabel: string;
+  amountChargedKobo: number;
 };
 
-export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: ClearanceHistoryTabsProps) {
+export type ClearanceHistoryInbound = {
+  id: string;
+  studentName: string;
+  requestingSchool: string;
+  requestedAt: string;
+  status: 'response_needed' | 'resolved';
+};
+
+type ClearanceHistoryTabsProps = {
+  initialTab?: 'outbound' | 'inbound';
+  role: SchoolUserRole;
+  outboundClearances: ClearanceHistoryOutbound[];
+  inboundRequests: ClearanceHistoryInbound[];
+};
+
+export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundClearances, inboundRequests }: ClearanceHistoryTabsProps) {
   const [activeTab, setActiveTab] = useState<'outbound' | 'inbound'>(initialTab);
   const [requests, setRequests] = useState(inboundRequests);
   const [notice, setNotice] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const activeInboundCount = useMemo(
     () => requests.filter((request) => request.status === 'response_needed').length,
     [requests],
   );
 
-  function markNoIssue(requestId: string) {
-    setRequests((currentRequests) =>
-      currentRequests.map((request) =>
-        request.id === requestId ? { ...request, status: 'resolved', requestedAt: `${request.requestedAt} · Responded` } : request,
-      ),
-    );
-    setNotice('Inbound clearance request updated to “No Outstanding Issue”. In production, this will be audit logged server-side.');
+  async function markNoIssue(requestId: string) {
+    setNotice('');
+    setErrorMessage('');
+    setUpdatingId(requestId);
+
+    try {
+      const response = await fetch('/api/clearance/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clearanceRequestId: requestId, response: 'no_outstanding_issue' }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+      if (!response.ok || !result?.ok) {
+        setErrorMessage(result?.message ?? 'Unable to record this response. Please try again.');
+        return;
+      }
+
+      setRequests((currentRequests) =>
+        currentRequests.map((request) =>
+          request.id === requestId ? { ...request, status: 'resolved', requestedAt: `${request.requestedAt} · Responded` } : request,
+        ),
+      );
+      setNotice('Inbound clearance request updated to “No Outstanding Issue”.');
+    } catch {
+      setErrorMessage('Unable to record this response. Please try again.');
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
   return (
@@ -65,6 +103,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
           Inbound requests must be answered carefully. Confirm only whether there is an unresolved issue; do not expose unnecessary student data.
         </p>
         {notice ? <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-700">{notice}</div> : null}
+        {errorMessage ? <div className="rounded-xl border border-terracotta-100 bg-terracotta-50 p-3 text-xs text-terracotta-700">{errorMessage}</div> : null}
       </div>
 
       {activeTab === 'outbound' ? (
@@ -80,7 +119,13 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
               </tr>
             </thead>
             <tbody className="divide-y divide-background-secondary text-slate-600">
-              {outboundClearances.map((clearance) => (
+              {outboundClearances.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                    No clearance checks have been started yet.
+                  </td>
+                </tr>
+              ) : outboundClearances.map((clearance) => (
                 <tr key={clearance.id}>
                   <td className="px-6 py-4 font-semibold text-navy-900">{clearance.studentName}</td>
                   <td className="px-6 py-4">{clearance.previousSchoolName}</td>
@@ -90,7 +135,9 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
                         'rounded-full border px-2 py-0.5 font-semibold',
                         clearance.resultState === 'match'
                           ? 'border-terracotta-100 bg-terracotta-50 text-terracotta-600'
-                          : 'border-amber-100 bg-amber-50 text-amber-700',
+                          : clearance.resultState === 'no_record'
+                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                            : 'border-amber-100 bg-amber-50 text-amber-700',
                       )}
                     >
                       {clearance.statusLabel}
@@ -129,7 +176,13 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
                 </tr>
               </thead>
               <tbody className="divide-y divide-background-secondary text-slate-600">
-                {requests.map((request) => (
+                {requests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                      No inbound clearance requests are assigned to your school.
+                    </td>
+                  </tr>
+                ) : requests.map((request) => (
                   <tr key={request.id}>
                     <td className="px-6 py-4 font-semibold text-navy-900">{request.studentName}</td>
                     <td className="px-6 py-4">{request.requestingSchool}</td>
@@ -153,10 +206,11 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role }: Clearanc
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => markNoIssue(request.id)}
-                            className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white"
+                            onClick={() => void markNoIssue(request.id)}
+                            disabled={updatingId === request.id}
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
                           >
-                            No Outstanding Issue
+                            {updatingId === request.id ? 'Recording…' : 'No Outstanding Issue'}
                           </button>
                           <Link
                             href={withRoleQuery('/issues/new?source=inbound', role)}

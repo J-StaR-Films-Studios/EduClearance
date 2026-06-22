@@ -1,5 +1,5 @@
-import { AuthDemoForm } from '@/components/public/auth-demo-form';
-import { buildDemoLoginHref, type DemoSessionRole } from '@/lib/demo-session';
+import { AuthAccessForm } from '@/components/public/auth-access-form';
+import { type SessionRole } from '@/lib/local-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 
@@ -9,7 +9,7 @@ type LoginPageProps = {
   searchParams: Promise<{ role?: string; redirect?: string }>;
 };
 
-function resolveRequestedRole(role?: string): DemoSessionRole {
+function resolveRequestedRole(role?: string): SessionRole {
   if (role === 'admin') {
     return 'platform_admin';
   }
@@ -29,10 +29,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
-      <AuthDemoForm
+      <AuthAccessForm
         mode="login"
         audience={isAdmin ? 'admin' : 'school'}
-        destination={buildDemoLoginHref(requestedRole, redirect ?? defaultRedirect)}
+        destination={redirect ?? defaultRedirect}
       />
     </main>
   );

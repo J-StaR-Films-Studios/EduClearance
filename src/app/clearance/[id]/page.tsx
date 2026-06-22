@@ -1,51 +1,191 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CopyMessageButton } from '@/components/workflows/copy-message-button';
 import { DisputeModal } from '@/components/workflows/dispute-modal';
-import { APP_NAME } from '@/lib/site';
+import { db } from '@/db/client';
+import { clearanceIssues, clearanceRequests, schools } from '@/db/schema';
 import {
   buildWhatsAppHref,
-  getOutboundClearance,
   NO_RECORD_DISCLAIMER,
+  type OutboundClearance,
+  type SchoolUserRole,
   withRoleQuery,
-} from '@/lib/demo-school-data';
+} from '@/lib/local-school-data';
+import { resolveOptionalLocalActor, type LocalActor } from '@/lib/local-actor';
 import { formatNairaFromKobo } from '@/lib/money';
-import { requireSchoolSession } from '@/lib/require-school-session';
 import { noIndexMetadata } from '@/lib/seo';
+import { APP_NAME } from '@/lib/site';
 
 type ClearanceDetailPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ student?: string; parent?: string; phone?: string; previousSchool?: string; listed?: string; charged?: string }>;
 };
 
+type DatabaseClearanceDetail = {
+  clearance: OutboundClearance;
+  incomingSchoolId: string;
+  previousSchoolId: string | null;
+  reportingSchoolId: string | null;
+};
+
 export const metadata: Metadata = noIndexMetadata(`Clearance Request Result | ${APP_NAME}`, 'Private clearance result view.');
+
+function getIssueCategoryLabel(issueType: string) {
+  const labels: Record<string, string> = {
+    school_fees: 'Outstanding School Fees',
+    books: 'Books / Learning Materials',
+    uniform: 'Uniform / Materials',
+    transport: 'Transport',
+    other: 'Other Obligation',
+  };
+
+  return labels[issueType] ?? 'Outstanding Obligation';
+}
+
+function getRequestStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    pending_verification: 'Pending verification',
+    no_platform_record_found: 'No platform record found',
+    previous_school_notified: 'Previous school notified',
+    cleared_by_previous_school: 'Cleared by previous school',
+    outstanding_balance_reported: 'Outstanding balance reported',
+    disputed: 'Disputed',
+    no_response: 'No response',
+    previous_school_not_on_platform: 'Previous school not on platform',
+    closed: 'Closed',
+  };
+
+  return labels[status] ?? status;
+}
+
+async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearanceDetail | null> {
+  const [request] = await db
+    .select()
+    .from(clearanceRequests)
+    .where(eq(clearanceRequests.id, id))
+    .limit(1);
+
+  if (!request) {
+    return null;
+  }
+
+  const [[incomingSchool], [previousSchool], [issue]] = await Promise.all([
+    db.select().from(schools).where(eq(schools.id, request.incomingSchoolId)).limit(1),
+    request.previousSchoolId ? db.select().from(schools).where(eq(schools.id, request.previousSchoolId)).limit(1) : Promise.resolve([]),
+    db.select().from(clearanceIssues).where(eq(clearanceIssues.clearanceRequestId, request.id)).limit(1),
+  ]);
+
+  const [reportingSchool] = issue
+    ? await db.select().from(schools).where(eq(schools.id, issue.reportingSchoolId)).limit(1)
+    : [null];
+  const incomingSchoolName = incomingSchool?.name ?? 'the admitting school';
+  const previousSchoolName = previousSchool?.name ?? request.previousSchoolNameSnapshot;
+  const resultState = request.searchResult === 'no_match' ? 'no_record' : request.searchResult === 'possible_match' ? 'possible_match' : 'match';
+  const noRecordMessage = `Hello ${previousSchoolName}, this is the Admitting Office at ${incomingSchoolName}. We are processing the admission transfer for student ${request.studentName}. Please let us know if there are any outstanding clearances or issues to resolve. Thank you.`;
+
+  return {
+    incomingSchoolId: request.incomingSchoolId,
+    previousSchoolId: request.previousSchoolId,
+    reportingSchoolId: issue?.reportingSchoolId ?? null,
+    clearance: {
+      id: request.id,
+      studentName: request.studentName,
+      parentName: request.parentName,
+      parentPhone: request.parentPhone,
+      previousSchoolName,
+      previousSchoolPhone: previousSchool?.clearancePhone ?? previousSchool?.mainPhone ?? undefined,
+      previousSchoolEmail: previousSchool?.contactEmail ?? undefined,
+      previousSchoolListed: Boolean(previousSchool),
+      gender: request.gender ?? '',
+      lastClass: request.lastClass ?? '',
+      createdAt: request.createdAt.toISOString().slice(0, 10),
+      resultLabel:
+        request.searchResult === 'no_match'
+          ? 'No Platform Record Found'
+          : request.searchResult === 'possible_match'
+            ? 'Possible Record Requires Review'
+            : 'Unresolved Balance Reported',
+      resultState,
+      statusLabel: getRequestStatusLabel(request.status),
+      searchResult: request.searchResult,
+      amountChargedKobo: request.amountCharged,
+      notificationStatus: request.notificationStatus,
+      whatsappMessage: noRecordMessage,
+      issue: issue
+        ? {
+            reportingSchool: reportingSchool?.name ?? 'Reporting school',
+            amountOwedKobo: issue.amountOwed,
+            category: getIssueCategoryLabel(issue.issueType),
+            sessionTerm: `${issue.academicSession} - ${issue.term}`,
+            note: issue.note,
+            phone: reportingSchool?.clearancePhone ?? reportingSchool?.mainPhone ?? issue.parentPhone,
+            whatsappMessage: `Hello ${reportingSchool?.name ?? previousSchoolName}, this is ${incomingSchoolName}. We are reviewing the unresolved balance reported for ${request.studentName}. Kindly advise on the current status or update the record if it has been settled. Thank you.`,
+          }
+        : undefined,
+    },
+  };
+}
+
+function canViewDatabaseClearance(actor: LocalActor, detail: DatabaseClearanceDetail) {
+  if (actor.sessionRole === 'platform_admin') {
+    return true;
+  }
+
+  return (
+    actor.schoolId === detail.incomingSchoolId ||
+    actor.schoolId === detail.previousSchoolId ||
+    actor.schoolId === detail.reportingSchoolId
+  );
+}
+
+function applyMessageOverrides(message: string, clearance: OutboundClearance, studentName: string, previousSchoolName: string) {
+  return message
+    .replaceAll(clearance.studentName, studentName)
+    .replaceAll(clearance.previousSchoolName, previousSchoolName);
+}
 
 export default async function ClearanceDetailPage({ params, searchParams }: ClearanceDetailPageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const currentRole = await requireSchoolSession(`/clearance/${id}`);
-  const clearance = getOutboundClearance(id);
+  const actor = await resolveOptionalLocalActor();
 
-  if (!clearance) {
+  if (!actor) {
     notFound();
   }
+
+  const databaseDetail = await getDatabaseOutboundClearance(id);
+
+  if (databaseDetail && !canViewDatabaseClearance(actor, databaseDetail)) {
+    notFound();
+  }
+
+  if (!databaseDetail) {
+    notFound();
+  }
+
+  const currentRole: SchoolUserRole = actor.sessionRole === 'platform_admin' ? 'school_admin' : actor.sessionRole;
+  const clearance = databaseDetail.clearance;
 
   const studentName = query.student?.trim() || clearance.studentName;
   const parentName = query.parent?.trim() || clearance.parentName;
   const parentPhone = query.phone?.trim() || clearance.parentPhone;
   const previousSchoolName = query.previousSchool?.trim() || clearance.previousSchoolName;
   const previousSchoolListed = query.listed ? query.listed === '1' : clearance.previousSchoolListed;
-  const notificationHref = withRoleQuery('/clearance', currentRole);
+  const notificationHref = actor.sessionRole === 'platform_admin' ? '/admin/clearance' : withRoleQuery('/clearance', currentRole);
   const chargedThisFlow = query.charged === '1';
 
-  const noRecordMessage = `Hello ${previousSchoolName}, this is the Admitting Office at Grace Academy. We are processing the admission transfer for student ${studentName}. Please let us know if there are any outstanding clearances or issues to resolve. Thank you.`;
+  const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
     ? buildWhatsAppHref(clearance.previousSchoolPhone, noRecordMessage)
     : undefined;
-  const matchWhatsappHref = clearance.issue
-    ? buildWhatsAppHref(clearance.issue.phone, `Hello ${clearance.issue.reportingSchool}, this is Grace Academy Admissions. We are reviewing the unresolved balance reported for ${studentName}. Kindly advise on the current status or update the record if it has been settled. Thank you.`)
+  const issueWhatsappMessage = clearance.issue
+    ? applyMessageOverrides(clearance.issue.whatsappMessage, clearance, studentName, previousSchoolName)
+    : undefined;
+  const matchWhatsappHref = clearance.issue && issueWhatsappMessage
+    ? buildWhatsAppHref(clearance.issue.phone, issueWhatsappMessage)
     : undefined;
 
   return (
@@ -63,7 +203,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
 
         {chargedThisFlow ? (
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
-            ₦100 clearance request charge has been simulated for this workflow. In production, the wallet debit and request creation should happen transactionally on the server.
+            Wallet debit and request creation were posted together for this clearance request.
           </div>
         ) : null}
 
@@ -95,6 +235,25 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   </div>
                   <p className="rounded-lg border border-background-secondary bg-background p-3 text-xs leading-relaxed text-slate-600">
                     {noRecordMessage}
+                  </p>
+                </div>
+              </>
+            ) : clearance.resultState === 'possible_match' ? (
+              <>
+                <div className="flex">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-600/20 bg-amber-50/40 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                    <span className="h-2 w-2 rounded-sm bg-amber-600" />
+                    Possible Record Requires Review
+                  </span>
+                </div>
+
+                <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950">
+                  <h3 className="font-bold text-amber-800">Same-name record found</h3>
+                  <p className="font-medium text-amber-900">
+                    A same-name unresolved issue exists, but the parent phone number did not match exactly. Treat this as a review item, not a confirmed obligation.
+                  </p>
+                  <p className="text-xs text-amber-800">
+                    Contact the previous school through official channels before taking admissions or dispute action on this request.
                   </p>
                 </div>
               </>
@@ -209,6 +368,25 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   </button>
                 </div>
               </div>
+            ) : clearance.resultState === 'possible_match' ? (
+              <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
+                <h3 className="text-base font-bold text-navy-900">Review Required</h3>
+                <p className="text-[11px] text-slate-500">
+                  This request has a same-name possible match. Do not treat it as a confirmed outstanding record until school staff verify the parent details.
+                </p>
+                <div className="space-y-3 border-t border-background-secondary pt-3 text-xs">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Previous School</p>
+                    <p className="font-semibold text-navy-900">{previousSchoolName}</p>
+                  </div>
+                  {clearance.previousSchoolPhone ? (
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase text-slate-400">Clearance Office Phone</p>
+                      <p className="font-semibold text-navy-900">{clearance.previousSchoolPhone}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">Contact &amp; Dispute Paths</h3>
@@ -244,7 +422,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                       Message Previous School on WhatsApp
                     </a>
                   ) : null}
-                  <DisputeModal />
+                  <DisputeModal clearanceRequestId={clearance.id} />
                 </div>
               </div>
             )}

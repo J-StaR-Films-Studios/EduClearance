@@ -2,13 +2,17 @@
 
 import { useMemo, useState } from 'react';
 
-import { adminDisputes, type AdminDisputeRecord } from '@/lib/demo-admin-data';
+import { adminDisputes, type AdminDisputeRecord } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
 
 type DisputeFilter = 'open' | 'all' | AdminDisputeRecord['status'];
 
-export function AdminDisputesWorkspace() {
-  const [records, setRecords] = useState(adminDisputes);
+type AdminDisputesWorkspaceProps = {
+  initialRecords?: AdminDisputeRecord[];
+};
+
+export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: AdminDisputesWorkspaceProps) {
+  const [records, setRecords] = useState(initialRecords);
   const [filter, setFilter] = useState<DisputeFilter>('open');
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
@@ -35,7 +39,19 @@ export function AdminDisputesWorkspace() {
     });
   }, [filter, records, search]);
 
-  function resolveDispute(record: AdminDisputeRecord, action: 'resolved' | 'rejected') {
+  async function resolveDispute(record: AdminDisputeRecord, action: 'resolved' | 'rejected') {
+    const response = await fetch('/api/admin/disputes/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ disputeId: record.id, action }),
+    });
+    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; adminNote?: string } | null;
+
+    if (!response.ok || !result?.ok) {
+      setNotice(result?.message ?? 'Unable to update dispute.');
+      return;
+    }
+
     setRecords((currentRecords) =>
       currentRecords.map((entry) =>
         entry.id === record.id
@@ -44,8 +60,8 @@ export function AdminDisputesWorkspace() {
               status: action,
               adminNote:
                 action === 'resolved'
-                  ? 'Record cleared after evidence review. Admitting school refund helper should create a ₦100 wallet credit.'
-                  : 'Dispute rejected after evidence review. Existing issue record remains active.',
+                  ? result.adminNote ?? 'Record cleared after evidence review. Refund review noted for the admitting school wallet.'
+                  : result.adminNote ?? 'Dispute rejected after evidence review. Existing issue record remains active.',
             }
           : entry,
       ),
@@ -53,8 +69,8 @@ export function AdminDisputesWorkspace() {
 
     setNotice(
       action === 'resolved'
-        ? `${record.studentName}: dispute cleared. Demo notice prepared for dispute audit logging and ₦100 refund transaction.`
-        : `${record.studentName}: dispute declined. Demo notice prepared for dispute audit logging and school notification.`,
+        ? `${record.studentName}: dispute resolved and the refund path has been noted for the admitting school.`
+        : `${record.studentName}: dispute rejected and the existing issue record remains active.`,
     );
   }
 
@@ -150,21 +166,21 @@ export function AdminDisputesWorkspace() {
                   <div className="space-y-2 pt-2">
                     {record.refundReady ? (
                       <p className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-[11px] text-amber-700">
-                        Note: Clearing this record will automatically issue a ₦100 credit refund to the admitting school&apos;s wallet.
+                        Note: Clearing this record marks a ₦100 wallet credit for refund review by an authorized operator.
                       </p>
                     ) : null}
                     {record.status === 'under_review' ? (
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          onClick={() => resolveDispute(record, 'resolved')}
+                          onClick={() => void resolveDispute(record, 'resolved')}
                           className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700"
                         >
                           Clear Record (Resolve)
                         </button>
                         <button
                           type="button"
-                          onClick={() => resolveDispute(record, 'rejected')}
+                          onClick={() => void resolveDispute(record, 'rejected')}
                           className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-background-secondary"
                         >
                           Keep Record (Decline)
@@ -182,8 +198,8 @@ export function AdminDisputesWorkspace() {
           <h3 className="text-sm font-bold text-navy-900">Resolution Standard Protocol</h3>
           <p className="text-slate-500">1. Inspect admitting and reporting school comments before changing any live record.</p>
           <p className="text-slate-500">2. Request parent ledger receipts or bursary proof where necessary.</p>
-          <p className="text-slate-500">3. Clearing an inaccurate record should also prepare the ₦100 refund path for the admitting school.</p>
-          <p className="text-slate-500">4. Production resolution actions should write audit logs and notify both schools.</p>
+          <p className="text-slate-500">3. Clearing an inaccurate record includes refund-review notes for the admitting school.</p>
+          <p className="text-slate-500">4. Confirm audit logs and school notifications before closing the dispute.</p>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { IssueReportForm } from '@/components/workflows/issue-report-form';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 import { requireSchoolSession } from '@/lib/require-school-session';
-import { withRoleQuery } from '@/lib/demo-school-data';
+import { withRoleQuery } from '@/lib/local-school-data';
 
 export const metadata: Metadata = noIndexMetadata(`Report Unresolved Issue | ${APP_NAME}`, 'Private issue reporting form.');
 

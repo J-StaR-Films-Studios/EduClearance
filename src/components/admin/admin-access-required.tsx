@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { buildDemoLoginHref } from '@/lib/demo-session';
+import { buildLocalAccessHref } from '@/lib/local-session';
 
 export function AdminAccessRequired() {
   return (
@@ -18,10 +18,10 @@ export function AdminAccessRequired() {
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href={buildDemoLoginHref('platform_admin', '/admin')}
+            href={buildLocalAccessHref('platform_admin', '/admin')}
             className="flex-1 rounded-lg bg-navy-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-navy-800"
           >
-            Sign In as Demo Admin
+            Sign In as Platform Admin
           </Link>
           <Link
             href="/login"

@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { desc, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
-import { reportedIssues } from '@/lib/demo-school-data';
+import { db } from '@/db/client';
+import { clearanceIssues } from '@/db/schema';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { formatNairaFromKobo } from '@/lib/money';
 import { requireSchoolSession } from '@/lib/require-school-session';
 import { APP_NAME } from '@/lib/site';
@@ -11,11 +14,43 @@ import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = noIndexMetadata(`Reported Issues | ${APP_NAME}`, 'Private reported issues list.');
 
+function getIssueCategoryLabel(issueType: string) {
+  const labels: Record<string, string> = {
+    school_fees: 'Outstanding School Fees',
+    books: 'Books / Learning Materials',
+    uniform: 'Uniform / Materials',
+    transport: 'Transport',
+    other: 'Other Obligation',
+  };
+
+  return labels[issueType] ?? 'Other Obligation';
+}
+
+function getIssueStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    unresolved: 'Unresolved',
+    disputed: 'Under review',
+    resolved: 'Resolved',
+    withdrawn: 'Withdrawn',
+  };
+
+  return labels[status] ?? status;
+}
+
 export default async function IssuesPage() {
   const currentRole = await requireSchoolSession('/issues');
-  const unresolvedCount = reportedIssues.filter((issue) => issue.status === 'unresolved').length;
-  const reviewCount = reportedIssues.filter((issue) => issue.status === 'under_review').length;
-  const resolvedCount = reportedIssues.filter((issue) => issue.status === 'resolved').length;
+  const actor = await resolveLocalSchoolActor();
+  const issues = actor
+    ? await db
+        .select()
+        .from(clearanceIssues)
+        .where(eq(clearanceIssues.reportingSchoolId, actor.schoolId))
+        .orderBy(desc(clearanceIssues.createdAt))
+        .limit(100)
+    : [];
+  const unresolvedCount = issues.filter((issue) => issue.status === 'unresolved').length;
+  const reviewCount = issues.filter((issue) => issue.status === 'disputed').length;
+  const resolvedCount = issues.filter((issue) => issue.status === 'resolved').length;
 
   return (
     <SchoolAppShell activeKey="issues-new" mobileMode="history" role={currentRole}>
@@ -36,7 +71,7 @@ export default async function IssuesPage() {
         </header>
 
         <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Demo list only. Resolve, withdraw, and evidence-review actions should move to server-side handlers with school-scoped authorization and audit logs before production use.
+          Issue resolution, withdrawal, and evidence review are handled through school-scoped review controls with audit logging.
         </div>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -53,7 +88,7 @@ export default async function IssuesPage() {
           <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Resolved</p>
             <p className="mt-1 text-2xl font-bold text-emerald-700">{resolvedCount}</p>
-            <p className="text-xs text-slate-500">Retained in demo history only</p>
+            <p className="text-xs text-slate-500">Retained for audit context</p>
           </div>
         </section>
 
@@ -74,36 +109,44 @@ export default async function IssuesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-background-secondary text-slate-600">
-                {reportedIssues.map((issue) => (
-                  <tr key={issue.id}>
-                    <td className="px-6 py-4 align-top">
-                      <p className="font-semibold text-navy-900">{issue.studentName}</p>
-                      <p className="mt-1 text-[11px] text-slate-500">Parent: {issue.parentName}</p>
-                      <p className="mt-1 text-[11px] text-slate-400">Reported {issue.reportedAt}</p>
+                {issues.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-sm text-slate-500">
+                      No issue reports have been saved yet.
                     </td>
-                    <td className="px-6 py-4 align-top">
-                      <p className="font-medium text-navy-900">{issue.category}</p>
-                      <p className="mt-1 whitespace-normal text-[11px] leading-relaxed text-slate-500">{issue.note}</p>
-                    </td>
-                    <td className="px-6 py-4 align-top">{issue.academicSession}</td>
-                    <td className="px-6 py-4 align-top font-semibold text-navy-900">{formatNairaFromKobo(issue.amountOwedKobo)}</td>
-                    <td className="px-6 py-4 align-top">
-                      <span
-                        className={cn(
-                          'rounded-full border px-2 py-0.5 font-semibold',
-                          issue.status === 'resolved'
-                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                            : issue.status === 'under_review'
-                              ? 'border-amber-100 bg-amber-50 text-amber-700'
-                              : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
-                        )}
-                      >
-                        {issue.status === 'resolved' ? 'Resolved' : issue.status === 'under_review' ? 'Under review' : 'Unresolved'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 align-top">{issue.sourceLabel}</td>
                   </tr>
-                ))}
+                ) : (
+                  issues.map((issue) => (
+                    <tr key={issue.id}>
+                      <td className="px-6 py-4 align-top">
+                        <p className="font-semibold text-navy-900">{issue.studentName}</p>
+                        <p className="mt-1 text-[11px] text-slate-500">Parent: {issue.parentName}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">Reported {issue.createdAt.toISOString().slice(0, 10)}</p>
+                      </td>
+                      <td className="px-6 py-4 align-top">
+                        <p className="font-medium text-navy-900">{getIssueCategoryLabel(issue.issueType)}</p>
+                        <p className="mt-1 whitespace-normal text-[11px] leading-relaxed text-slate-500">{issue.note}</p>
+                      </td>
+                      <td className="px-6 py-4 align-top">{issue.academicSession} · {issue.term}</td>
+                      <td className="px-6 py-4 align-top font-semibold text-navy-900">{formatNairaFromKobo(issue.amountOwed)}</td>
+                      <td className="px-6 py-4 align-top">
+                        <span
+                          className={cn(
+                            'rounded-full border px-2 py-0.5 font-semibold',
+                            issue.status === 'resolved'
+                              ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                              : issue.status === 'disputed'
+                                ? 'border-amber-100 bg-amber-50 text-amber-700'
+                                : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
+                          )}
+                        >
+                          {getIssueStatusLabel(issue.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 align-top">{actor?.schoolName ?? 'Your school'}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
