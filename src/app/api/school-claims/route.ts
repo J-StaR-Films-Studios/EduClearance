@@ -6,9 +6,17 @@ import { db } from '@/db/client';
 import { auditLogs, schoolClaims, schools } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { getAuthenticatedUser } from '@/lib/auth-session';
+import { SUPPORT_EMAIL } from '@/lib/site';
 import { normalizeSearchText } from '@/lib/text';
 
 export const runtime = 'nodejs';
+
+const MAX_SCHOOL_CLAIM_APPEALS = 3;
+
+function supportMessage(schoolName: string) {
+  const subject = encodeURIComponent(`EduClearance school claim support: ${schoolName}`);
+  return `This school has reached the three online claim attempts allowed for this account. If you are the authorized owner, contact support at ${SUPPORT_EMAIL} or mailto:${SUPPORT_EMAIL}?subject=${subject}.`;
+}
 
 const schoolClaimSchema = z.object({
   claimType: z.enum(['existing_school', 'new_school']),
@@ -66,15 +74,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: false, message: 'Only unclaimed directory schools can be claimed from this page.' }, { status: 409 });
       }
 
-      const [existingPendingClaim] = await tx
-        .select({ id: schoolClaims.id, status: schoolClaims.status })
+      const existingSchoolClaims = await tx
+        .select({ id: schoolClaims.id, status: schoolClaims.status, applicantUserId: schoolClaims.applicantUserId })
         .from(schoolClaims)
         .where(eq(schoolClaims.schoolId, school.id))
         .orderBy(desc(schoolClaims.createdAt))
-        .limit(1);
+        .limit(50);
 
-      if (existingPendingClaim && existingPendingClaim.status !== 'rejected') {
-        return NextResponse.json({ ok: false, message: 'That school already has a submitted claim under review.' }, { status: 409 });
+      const blockingClaim = existingSchoolClaims.find((claim) => claim.status !== 'rejected');
+
+      if (blockingClaim) {
+        return NextResponse.json({ ok: false, message: 'That school already has a submitted claim under review or approved.' }, { status: 409 });
+      }
+
+      const applicantAttempts = existingSchoolClaims.filter((claim) => claim.applicantUserId === user.userId).length;
+
+      if (applicantAttempts >= MAX_SCHOOL_CLAIM_APPEALS) {
+        return NextResponse.json({ ok: false, message: supportMessage(school.name) }, { status: 429 });
       }
 
       await tx.insert(schoolClaims).values({
@@ -106,13 +122,14 @@ export async function POST(request: Request) {
         .orderBy(desc(schoolClaims.createdAt))
         .limit(20);
 
-      const duplicatePending = existingClaims.some((claim) => {
-        if (claim.status === 'rejected') {
-          return false;
-        }
+      const normalizedRequestedName = normalizeSearchText(payload.data.requestedSchoolName);
+      const sameSchoolAttempts = existingClaims.filter((claim) => normalizeSearchText(claim.requestedSchoolName) === normalizedRequestedName);
 
-        return normalizeSearchText(claim.requestedSchoolName) === normalizeSearchText(payload.data.requestedSchoolName);
-      });
+      if (sameSchoolAttempts.length >= MAX_SCHOOL_CLAIM_APPEALS) {
+        return NextResponse.json({ ok: false, message: supportMessage(payload.data.requestedSchoolName) }, { status: 429 });
+      }
+
+      const duplicatePending = sameSchoolAttempts.some((claim) => claim.status !== 'rejected');
 
       if (duplicatePending) {
         return NextResponse.json({ ok: false, message: 'You already submitted a request for this school name.' }, { status: 409 });

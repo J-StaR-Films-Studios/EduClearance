@@ -13,6 +13,7 @@ const clearanceStartSchema = z.object({
   studentName: z.string().trim().min(1),
   parentName: z.string().trim().min(1),
   parentPhone: z.string().trim().min(1),
+  previousSchoolId: z.string().trim().min(1).nullable().optional(),
   previousSchoolName: z.string().trim().min(1),
   gender: z.string().trim().min(1).optional(),
   lastClass: z.string().trim().min(1).optional(),
@@ -74,16 +75,17 @@ export async function POST(request: Request) {
       const possibleIssue = confirmedIssue ? null : possibleIssues[0] ?? null;
       const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
 
-      const [previousSchool] = issueSchoolId
+      const lookupSchoolId = issueSchoolId ?? payload.data.previousSchoolId ?? null;
+      const [previousSchool] = lookupSchoolId
         ? await tx
             .select({ id: schools.id, name: schools.name, status: schools.status })
             .from(schools)
-            .where(eq(schools.id, issueSchoolId))
+            .where(eq(schools.id, lookupSchoolId))
             .limit(1)
         : await tx
             .select({ id: schools.id, name: schools.name, status: schools.status })
             .from(schools)
-            .where(ilike(schools.name, payload.data.previousSchoolName))
+            .where(ilike(schools.name, `%${payload.data.previousSchoolName}%`))
             .limit(1);
 
       const requestId = makeEntityId('clearance');

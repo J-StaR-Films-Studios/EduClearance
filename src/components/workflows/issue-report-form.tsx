@@ -2,7 +2,17 @@
 
 import { useState, type FormEvent } from 'react';
 
-export function IssueReportForm({ fromInboundRequest = false }: { fromInboundRequest?: boolean }) {
+type InboundIssueRequest = {
+  id: string;
+  studentName: string;
+  lastClass: string | null;
+  parentName: string;
+  parentPhone: string;
+  requestingSchoolName: string;
+  requestedAt: string;
+};
+
+export function IssueReportForm({ fromInboundRequest = false, inboundRequest = null }: { fromInboundRequest?: boolean; inboundRequest?: InboundIssueRequest | null }) {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +50,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           parentName: String(formData.get('parentName') ?? '').trim(),
           parentPhone: String(formData.get('parentPhone') ?? '').trim(),
           note: String(formData.get('note') ?? '').trim(),
+          clearanceRequestId: inboundRequest?.id ?? null,
           source: fromInboundRequest ? 'inbound' : 'direct',
           certified: isCertified,
         }),
@@ -74,7 +85,15 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
 
       {fromInboundRequest ? (
         <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800">
-          This report will answer an inbound clearance request. Keep the wording factual and upload school evidence where available.
+          {inboundRequest ? (
+            <>
+              <p className="font-semibold text-navy-900">Reporting against inbound request from {inboundRequest.requestingSchoolName}</p>
+              <p className="mt-1">Student: {inboundRequest.studentName} · Parent: {inboundRequest.parentName} · Requested {inboundRequest.requestedAt.slice(0, 10)}</p>
+              <p className="mt-1">This record will be linked to that clearance request, so the student context will not be lost.</p>
+            </>
+          ) : (
+            <p>This report was opened from an inbound flow, but the original request was not found. You can still file a normal issue report.</p>
+          )}
         </div>
       ) : null}
 
@@ -94,6 +113,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             name="studentName"
             type="text"
             required
+            defaultValue={inboundRequest?.studentName ?? ''}
             placeholder="e.g. Aisha Bello"
             className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
           />
@@ -108,8 +128,9 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
               id="issueClass"
               name="lastClass"
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              defaultValue="JSS 3"
+              defaultValue={inboundRequest?.lastClass ?? 'JSS 3'}
             >
+              {inboundRequest?.lastClass ? <option>{inboundRequest.lastClass}</option> : null}
               <option>JSS 3</option>
               <option>Basic 6</option>
               <option>SSS 1</option>
@@ -191,6 +212,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
               name="parentName"
               type="text"
               required
+              defaultValue={inboundRequest?.parentName ?? ''}
               placeholder="e.g. Mr. Bello"
               className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
             />
@@ -204,6 +226,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
               name="parentPhone"
               type="tel"
               required
+              defaultValue={inboundRequest?.parentPhone ?? ''}
               placeholder="e.g. +234 802 111 2222"
               className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
             />

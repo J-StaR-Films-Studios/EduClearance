@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { APP_NAME } from '@/lib/site';
-
 export const metadata: Metadata = {
-  title: `Privacy | ${APP_NAME}`,
+  title: 'Privacy',
   description: 'EduClearance privacy statement for school clearance data.',
 };
 

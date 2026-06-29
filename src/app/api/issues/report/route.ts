@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, clearanceIssues } from '@/db/schema';
+import { auditLogs, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
@@ -18,6 +19,7 @@ const issueReportSchema = z.object({
   parentPhone: z.string().trim().min(7),
   note: z.string().trim().min(10),
   evidenceUrl: z.string().trim().url().optional(),
+  clearanceRequestId: z.string().trim().min(1).nullable().optional(),
   source: z.string().trim().optional(),
   certified: z.literal(true),
 });
@@ -40,9 +42,21 @@ export async function POST(request: Request) {
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
 
   await db.transaction(async (tx) => {
+    let linkedClearanceRequestId = payload.data.clearanceRequestId ?? null;
+
+    if (linkedClearanceRequestId) {
+      const [request] = await tx
+        .select({ id: clearanceRequests.id })
+        .from(clearanceRequests)
+        .where(and(eq(clearanceRequests.id, linkedClearanceRequestId), eq(clearanceRequests.previousSchoolId, actor.schoolId)))
+        .limit(1);
+
+      linkedClearanceRequestId = request?.id ?? null;
+    }
+
     await tx.insert(clearanceIssues).values({
       id: issueId,
-      clearanceRequestId: null,
+      clearanceRequestId: linkedClearanceRequestId,
       reportingSchoolId: actor.schoolId,
       studentName: payload.data.studentName,
       studentNameNormalized: normalizeSearchText(payload.data.studentName),
@@ -57,6 +71,18 @@ export async function POST(request: Request) {
       status: 'unresolved',
     });
 
+    if (linkedClearanceRequestId) {
+      await tx
+        .update(clearanceRequests)
+        .set({
+          status: 'outstanding_balance_reported',
+          searchResult: 'confirmed_match',
+          notificationStatus: 'dashboard',
+          updatedAt: new Date(),
+        })
+        .where(eq(clearanceRequests.id, linkedClearanceRequestId));
+    }
+
     await tx.insert(auditLogs).values({
       id: makeEntityId('audit'),
       actorUserId: actor.userId,
@@ -69,6 +95,7 @@ export async function POST(request: Request) {
         amountOwed,
         issueType: payload.data.issueType,
         source: payload.data.source ?? null,
+        clearanceRequestId: linkedClearanceRequestId,
       },
       ipAddress,
     });

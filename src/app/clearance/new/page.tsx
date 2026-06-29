@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { asc } from 'drizzle-orm';
+
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { ClearanceRequestForm } from '@/components/workflows/clearance-request-form';
+import { db } from '@/db/client';
+import { schools } from '@/db/schema';
 import { withRoleQuery } from '@/lib/local-school-data';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { requireSchoolSession } from '@/lib/require-school-session';
@@ -16,6 +20,17 @@ export default async function ClearanceNewPage() {
   const currentRole = await requireSchoolSession('/clearance/new');
   const actor = await resolveLocalSchoolActor();
   const walletBalanceKobo = actor ? await getSchoolWalletBalanceKobo(actor.schoolId) : 0;
+  const directorySchools = await db
+    .select({
+      id: schools.id,
+      name: schools.name,
+      area: schools.area,
+      address: schools.address,
+      status: schools.status,
+    })
+    .from(schools)
+    .orderBy(asc(schools.name))
+    .limit(500);
 
   return (
     <SchoolAppShell activeKey="clearance-new" role={currentRole}>
@@ -35,7 +50,7 @@ export default async function ClearanceNewPage() {
         </div>
 
         <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
-          <ClearanceRequestForm role={currentRole} walletBalanceKobo={walletBalanceKobo} />
+          <ClearanceRequestForm role={currentRole} walletBalanceKobo={walletBalanceKobo} schools={directorySchools} />
         </div>
       </div>
     </SchoolAppShell>

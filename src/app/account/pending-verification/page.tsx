@@ -5,10 +5,16 @@ import { redirect } from 'next/navigation';
 import { db } from '@/db/client';
 import { schoolClaims } from '@/db/schema';
 import { getAuthenticatedUser } from '@/lib/auth-session';
-import { APP_NAME } from '@/lib/site';
+import { APP_NAME, SUPPORT_EMAIL } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 
 export const metadata = noIndexMetadata(`Pending Verification | ${APP_NAME}`, 'School account verification status.');
+
+const MAX_SCHOOL_CLAIM_APPEALS = 3;
+
+function supportHref(schoolName: string) {
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`EduClearance school claim support: ${schoolName}`)}`;
+}
 
 export default async function PendingVerificationPage() {
   const user = await getAuthenticatedUser();
@@ -58,7 +64,7 @@ export default async function PendingVerificationPage() {
           </div>
           <h1 className="text-2xl font-bold">Your school account is waiting for verification</h1>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-600">
-            You can sign in, but clearance tools stay locked until a submitted school claim is approved. If this is urgent, contact the platform admin with your school name and official phone number.
+            You can sign in, but clearance tools stay locked until a submitted school claim is approved. If your claim has been rejected three times, contact support directly so a human can verify ownership.
           </p>
         </div>
 
@@ -68,24 +74,36 @@ export default async function PendingVerificationPage() {
             <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
               No claim has been submitted from this account yet. Search the directory or request a new school profile to begin verification.
             </div>
-          ) : claims.map((claim) => (
-            <div key={claim.id} className="rounded-xl border border-background-secondary bg-background p-4 text-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-bold text-navy-900">{claim.requestedSchoolName}</p>
-                  <p className="text-xs text-slate-500">{claim.requestedArea}</p>
+          ) : claims.map((claim) => {
+            const attemptCount = claims.filter((item) => item.requestedSchoolName === claim.requestedSchoolName).length;
+            const reachedAppealLimit = claim.status === 'rejected' && attemptCount >= MAX_SCHOOL_CLAIM_APPEALS;
+
+            return (
+              <div key={claim.id} className="rounded-xl border border-background-secondary bg-background p-4 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-navy-900">{claim.requestedSchoolName}</p>
+                    <p className="text-xs text-slate-500">{claim.requestedArea}</p>
+                  </div>
+                  <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold uppercase text-amber-700">{claim.status}</span>
                 </div>
-                <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold uppercase text-amber-700">{claim.status}</span>
+                <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                  <p>Official email: {claim.officialEmail}</p>
+                  <p>Official phone: {claim.officialPhone}</p>
+                  <p>Proof file: {claim.proofFileName}</p>
+                  <p>Submitted: {claim.createdAt.toISOString().slice(0, 10)}</p>
+                  <p>Online attempts: {Math.min(attemptCount, MAX_SCHOOL_CLAIM_APPEALS)} of {MAX_SCHOOL_CLAIM_APPEALS}</p>
+                </div>
+                {claim.adminNote ? <p className="mt-3 rounded-lg bg-white p-3 text-xs text-slate-600">Admin note: {claim.adminNote}</p> : null}
+                {reachedAppealLimit ? (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+                    If you are the real owner of this school, contact support directly so we can review your documents manually.{' '}
+                    <a href={supportHref(claim.requestedSchoolName)} className="font-semibold underline">Email support</a>
+                  </div>
+                ) : null}
               </div>
-              <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-                <p>Official email: {claim.officialEmail}</p>
-                <p>Official phone: {claim.officialPhone}</p>
-                <p>Proof file: {claim.proofFileName}</p>
-                <p>Submitted: {claim.createdAt.toISOString().slice(0, 10)}</p>
-              </div>
-              {claim.adminNote ? <p className="mt-3 rounded-lg bg-white p-3 text-xs text-slate-600">Admin note: {claim.adminNote}</p> : null}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </main>

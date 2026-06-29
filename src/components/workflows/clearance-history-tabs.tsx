@@ -213,7 +213,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                             {updatingId === request.id ? 'Recording…' : 'No Outstanding Issue'}
                           </button>
                           <Link
-                            href={withRoleQuery('/issues/new?source=inbound', role)}
+                            href={withRoleQuery(`/issues/new?source=inbound&requestId=${encodeURIComponent(request.id)}`, role)}
                             className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-navy-900"
                           >
                             Report Issue

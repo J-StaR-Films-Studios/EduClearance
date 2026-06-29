@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useMemo, useState } from 'react';
 
+import { normalizeSearchText } from '@/lib/text';
+
 type SchoolStatus = 'unclaimed' | 'pending' | 'active' | 'suspended';
 type ClaimFlowState = 'search' | 'claim' | 'new-school' | 'auth-required' | 'pending';
 type ClaimType = 'existing_school' | 'new_school';
@@ -92,6 +94,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
   const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission | null>(null);
   const [claimProofFileName, setClaimProofFileName] = useState('');
   const [newSchoolProofFileName, setNewSchoolProofFileName] = useState('');
+  const [newSchoolNameQuery, setNewSchoolNameQuery] = useState('');
   const [submissionError, setSubmissionError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -105,6 +108,26 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
     return directorySchools.filter((school) => `${school.name} ${school.location}`.toLowerCase().includes(query));
   }, [directorySchools, searchQuery]);
 
+  const similarNewSchoolMatches = useMemo(() => {
+    const query = normalizeSearchText(newSchoolNameQuery);
+
+    if (query.length < 3) {
+      return [];
+    }
+
+    return directorySchools
+      .map((school) => {
+        const searchable = normalizeSearchText(`${school.name} ${school.location} ${school.area ?? ''} ${school.address ?? ''}`);
+        const wordOverlap = query.split(' ').filter((part) => part.length > 2 && searchable.includes(part)).length;
+        const score = searchable.includes(query) ? 10 : wordOverlap;
+        return { school, score };
+      })
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.school.name.localeCompare(b.school.name))
+      .slice(0, 3)
+      .map((entry) => entry.school);
+  }, [directorySchools, newSchoolNameQuery]);
+
   const currentStep = flowState === 'pending' ? 3 : flowState === 'search' ? 1 : 2;
   const canSubmitClaims = Boolean(currentUser && currentUser.role !== 'platform_admin');
   const applicantUser = canSubmitClaims ? currentUser : null;
@@ -115,6 +138,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
     setPendingSubmission(null);
     setClaimProofFileName('');
     setNewSchoolProofFileName('');
+    setNewSchoolNameQuery('');
     setSubmissionError('');
     setFlowState('search');
   }
@@ -578,9 +602,32 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 name="schoolName"
                 type="text"
                 required
+                value={newSchoolNameQuery}
+                onChange={(event) => setNewSchoolNameQuery(event.currentTarget.value)}
                 placeholder="e.g. New Abuja Model School"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
+              {similarNewSchoolMatches.length > 0 ? (
+                <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
+                  <p className="font-semibold text-navy-900">Did you mean one of these existing schools?</p>
+                  <div className="mt-2 space-y-1">
+                    {similarNewSchoolMatches.map((school) => (
+                      <button
+                        key={school.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSchool(school);
+                          setFlowState('claim');
+                        }}
+                        className="block w-full rounded-lg bg-white px-3 py-2 text-left text-navy-900 hover:bg-background-secondary"
+                      >
+                        {school.name} <span className="text-slate-500">· {school.location}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10px] text-amber-700">If none of these are correct, keep typing the new school name.</p>
+                </div>
+              ) : null}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1">

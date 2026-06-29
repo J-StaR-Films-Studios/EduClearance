@@ -56,8 +56,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: 'The requested claim was not found.' }, { status: 404 });
     }
 
-    if (claim.status !== 'pending') {
-      return NextResponse.json({ ok: false, message: 'Only pending claims can be reviewed from this action.' }, { status: 409 });
+    const canApprove = claim.status === 'pending' || claim.status === 'rejected';
+    const canReject = claim.status === 'pending';
+
+    if (payload.data.action === 'approve' && !canApprove) {
+      return NextResponse.json({ ok: false, message: 'Only pending or rejected claims can be approved from this action.' }, { status: 409 });
+    }
+
+    if (payload.data.action === 'reject' && !canReject) {
+      return NextResponse.json({ ok: false, message: 'Only pending claims can be rejected from this action.' }, { status: 409 });
     }
 
     if (payload.data.action === 'reject') {

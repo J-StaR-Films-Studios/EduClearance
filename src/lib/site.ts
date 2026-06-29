@@ -13,6 +13,7 @@ export const APP_KEYWORDS = [
 ] as const;
 export const OG_IMAGE_PATH = '/opengraph-image';
 export const PUBLIC_SITE_ROUTES = ['/'] as const;
+export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || 'support@educlearance.meloschool.com';
 
 const DEFAULT_APP_URL = 'http://localhost:3000';
 

@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { APP_NAME } from '@/lib/site';
-
 export const metadata: Metadata = {
-  title: `Terms | ${APP_NAME}`,
+  title: 'Terms',
   description: 'EduClearance school-to-school clearance network terms.',
 };
 

@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { and, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { IssueReportForm } from '@/components/workflows/issue-report-form';
+import { db } from '@/db/client';
+import { clearanceRequests, schools } from '@/db/schema';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
 import { requireSchoolSession } from '@/lib/require-school-session';
@@ -11,12 +15,30 @@ import { withRoleQuery } from '@/lib/local-school-data';
 export const metadata: Metadata = noIndexMetadata(`Report Unresolved Issue | ${APP_NAME}`, 'Private issue reporting form.');
 
 type IssuesNewPageProps = {
-  searchParams: Promise<{ source?: string }>;
+  searchParams: Promise<{ source?: string; requestId?: string }>;
 };
 
 export default async function IssuesNewPage({ searchParams }: IssuesNewPageProps) {
-  const { source } = await searchParams;
+  const { source, requestId } = await searchParams;
   const currentRole = await requireSchoolSession('/issues/new');
+  const actor = await resolveLocalSchoolActor();
+  const inboundRequest = source === 'inbound' && requestId && actor
+    ? await db
+        .select({
+          id: clearanceRequests.id,
+          studentName: clearanceRequests.studentName,
+          lastClass: clearanceRequests.lastClass,
+          parentName: clearanceRequests.parentName,
+          parentPhone: clearanceRequests.parentPhone,
+          requestingSchoolName: schools.name,
+          requestedAt: clearanceRequests.createdAt,
+        })
+        .from(clearanceRequests)
+        .leftJoin(schools, eq(schools.id, clearanceRequests.incomingSchoolId))
+        .where(and(eq(clearanceRequests.id, requestId), eq(clearanceRequests.previousSchoolId, actor.schoolId)))
+        .limit(1)
+        .then((rows) => rows[0] ?? null)
+    : null;
 
   return (
     <SchoolAppShell activeKey="issues-new" role={currentRole}>
@@ -45,7 +67,18 @@ export default async function IssuesNewPage({ searchParams }: IssuesNewPageProps
           </p>
         </div>
 
-        <IssueReportForm fromInboundRequest={source === 'inbound'} />
+        <IssueReportForm
+          fromInboundRequest={source === 'inbound'}
+          inboundRequest={inboundRequest ? {
+            id: inboundRequest.id,
+            studentName: inboundRequest.studentName,
+            lastClass: inboundRequest.lastClass,
+            parentName: inboundRequest.parentName,
+            parentPhone: inboundRequest.parentPhone,
+            requestingSchoolName: inboundRequest.requestingSchoolName ?? 'Requesting school',
+            requestedAt: inboundRequest.requestedAt.toISOString(),
+          } : null}
+        />
       </div>
     </SchoolAppShell>
   );
