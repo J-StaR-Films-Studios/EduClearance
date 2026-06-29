@@ -21,6 +21,9 @@ type AdminSchoolClaim = {
   officialEmail: string;
   officialPhone: string;
   proofFileName: string;
+  proofFileType: string | null;
+  proofFileSize: number | null;
+  hasProofFile: boolean;
   proofNote: string;
   type: SchoolClaimType;
   status: SchoolClaimStatus;
@@ -273,7 +276,12 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                     <td className="px-6 py-4">
                       <p className="font-semibold text-navy-900">{claim.proofFileName}</p>
                       <p className="mt-1 line-clamp-3 whitespace-normal text-[10px] leading-relaxed text-slate-400">{claim.proofNote}</p>
-                      <p className="mt-1 text-[10px] text-slate-400">Proof file metadata only — no download storage configured.</p>
+                      <p className="mt-1 text-[10px] text-slate-400">{claim.proofFileType ?? 'Uploaded proof'} · {claim.proofFileSize ? `${Math.ceil(claim.proofFileSize / 1024)} KB` : 'size unavailable'}</p>
+                      {claim.hasProofFile ? (
+                        <Link href={`/api/admin/school-claims/proof?claimId=${encodeURIComponent(claim.id)}`} target="_blank" className="mt-1 inline-flex text-[10px] font-semibold text-navy-900 underline">
+                          View proof document
+                        </Link>
+                      ) : null}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 whitespace-nowrap">
@@ -346,9 +354,15 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                 <p className="mt-1">{selectedClaim.officialPhone}</p>
               </div>
               <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
-                <p className="font-semibold uppercase tracking-wider text-navy-900">Proof metadata</p>
+                <p className="font-semibold uppercase tracking-wider text-navy-900">Proof document</p>
                 <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.proofFileName}</p>
                 <p className="mt-1 leading-relaxed">{selectedClaim.proofNote}</p>
+                <p className="mt-2 text-slate-500">{selectedClaim.proofFileType ?? 'Uploaded proof'} · {selectedClaim.proofFileSize ? `${Math.ceil(selectedClaim.proofFileSize / 1024)} KB` : 'size unavailable'}</p>
+                {selectedClaim.hasProofFile ? (
+                  <Link href={`/api/admin/school-claims/proof?claimId=${encodeURIComponent(selectedClaim.id)}`} target="_blank" className="mt-2 inline-flex rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary">
+                    View proof document
+                  </Link>
+                ) : null}
                 <p className="mt-2 text-[10px] uppercase tracking-wider text-slate-400">Reviewed at: {selectedClaim.reviewedAt ?? 'Not yet reviewed'}</p>
               </div>
             </div>
@@ -474,7 +488,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
 
             <div className="space-y-2 rounded-xl border border-background-secondary bg-background p-4 text-xs leading-relaxed text-slate-500">
               <p className="font-semibold text-navy-900">Review checklist</p>
-              <p>• Confirm the proof filename and note match the contact details.</p>
+              <p>• Open the proof document and confirm it matches the contact details.</p>
               <p>• Approve existing schools only when the directory record is truly unclaimed.</p>
               <p>• New school requests will create a pending school profile after approval.</p>
               <p>• Update the linked school status from this panel when onboarding changes.</p>

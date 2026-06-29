@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { users } from '@/db/schema';
+import { schoolClaims, users } from '@/db/schema';
 import { createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
 import { verifyPassword } from '@/lib/auth-password';
 import { getSafeInternalPath } from '@/lib/local-session';
@@ -43,8 +43,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Use the platform admin sign-in page.' }, { status: 403 });
   }
 
-  const fallback = user.role === 'platform_admin' ? '/admin' : user.schoolId ? '/dashboard' : '/claim-school';
-  const redirectTo = user.role !== 'platform_admin' && !user.schoolId ? '/claim-school' : getSafeInternalPath(payload.data.redirect, fallback);
+  let unverifiedFallback = '/claim-school';
+
+  if (user.role !== 'platform_admin' && !user.schoolId) {
+    const [pendingClaim] = await db
+      .select({ id: schoolClaims.id })
+      .from(schoolClaims)
+      .where(eq(schoolClaims.applicantUserId, user.id))
+      .limit(1);
+    unverifiedFallback = pendingClaim ? '/account/pending-verification' : '/claim-school';
+  }
+
+  const fallback = user.role === 'platform_admin' ? '/admin' : user.schoolId ? '/dashboard' : unverifiedFallback;
+  const redirectTo = user.role !== 'platform_admin' && !user.schoolId ? unverifiedFallback : getSafeInternalPath(payload.data.redirect, fallback);
   const session = await createUserSession(user.id);
   const response = NextResponse.json({ ok: true, redirectTo });
 

@@ -19,6 +19,7 @@ const issueReportSchema = z.object({
   note: z.string().trim().min(10),
   evidenceUrl: z.string().trim().url().optional(),
   source: z.string().trim().optional(),
+  certified: z.literal(true),
 });
 
 export async function POST(request: Request) {

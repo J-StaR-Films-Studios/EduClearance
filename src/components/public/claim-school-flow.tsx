@@ -61,14 +61,27 @@ type ClaimSchoolFlowProps = {
   currentUser: CurrentUser | null;
 };
 
-function readFileName(form: HTMLFormElement, name: string) {
+const MAX_PROOF_FILE_BYTES = 2_000_000;
+
+function readProofFile(form: HTMLFormElement, name: string): Promise<{ name: string; type: string; size: number; dataUrl: string } | null> {
   const input = form.elements.namedItem(name);
 
   if (!(input instanceof HTMLInputElement) || input.type !== 'file') {
-    return '';
+    return Promise.resolve(null);
   }
 
-  return input.files?.[0]?.name ?? '';
+  const file = input.files?.[0];
+
+  if (!file) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: String(reader.result ?? '') });
+    reader.onerror = () => reject(new Error('Unable to read proof file.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFlowProps) {
@@ -160,10 +173,15 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
     }
 
     const formData = new FormData(form);
-    const proofFileName = readFileName(form, 'proofFile');
+    const proofFile = await readProofFile(form, 'proofFile');
 
-    if (!proofFileName) {
+    if (!proofFile) {
       setSubmissionError('Select a proof document before submitting.');
+      return;
+    }
+
+    if (proofFile.size > MAX_PROOF_FILE_BYTES) {
+      setSubmissionError('Proof document must be 2MB or smaller.');
       return;
     }
 
@@ -176,7 +194,10 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: String(formData.get('officialContactName') ?? '').trim(),
       officialEmail: String(formData.get('officialEmail') ?? '').trim(),
       officialPhone: String(formData.get('officialPhone') ?? '').trim(),
-      proofFileName,
+      proofFileName: proofFile.name,
+      proofFileType: proofFile.type,
+      proofFileSize: proofFile.size,
+      proofFileDataUrl: proofFile.dataUrl,
       proofNote: String(formData.get('proofNote') ?? '').trim(),
     };
 
@@ -206,7 +227,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: payload.officialContactName,
       officialEmail: payload.officialEmail,
       officialPhone: payload.officialPhone,
-      proofFileName,
+      proofFileName: proofFile.name,
       proofNote: payload.proofNote,
     });
     setFlowState('pending');
@@ -226,10 +247,15 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
     }
 
     const formData = new FormData(form);
-    const proofFileName = readFileName(form, 'proofFile');
+    const proofFile = await readProofFile(form, 'proofFile');
 
-    if (!proofFileName) {
+    if (!proofFile) {
       setSubmissionError('Select a proof document before submitting.');
+      return;
+    }
+
+    if (proofFile.size > MAX_PROOF_FILE_BYTES) {
+      setSubmissionError('Proof document must be 2MB or smaller.');
       return;
     }
 
@@ -241,7 +267,10 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: String(formData.get('officialContactName') ?? '').trim(),
       officialEmail: String(formData.get('officialEmail') ?? '').trim(),
       officialPhone: String(formData.get('officialPhone') ?? '').trim(),
-      proofFileName,
+      proofFileName: proofFile.name,
+      proofFileType: proofFile.type,
+      proofFileSize: proofFile.size,
+      proofFileDataUrl: proofFile.dataUrl,
       proofNote: String(formData.get('proofNote') ?? '').trim(),
     };
 
@@ -271,7 +300,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: payload.officialContactName,
       officialEmail: payload.officialEmail,
       officialPhone: payload.officialPhone,
-      proofFileName,
+      proofFileName: proofFile.name,
       proofNote: payload.proofNote,
     });
     setFlowState('pending');
@@ -280,10 +309,10 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-center justify-between border-b border-background-secondary pb-4">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-navy-900 px-2.5 py-1 font-display font-bold text-white">EC</div>
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900 font-display font-bold text-white shadow-sm">EC</div>
           <span className="font-display text-lg font-bold text-navy-900">EduClearance</span>
-        </div>
+        </Link>
         {currentUser ? (
           <div className="flex items-center gap-3 text-xs">
             <span className="hidden text-slate-500 sm:inline">{currentUser.name}</span>
@@ -506,7 +535,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
               <p className="text-xs text-slate-500">
-                We store the selected filename for review. File storage/download is not enabled yet.
+                PDF, PNG, or JPG. Max 2MB. Admins can view the submitted file during review.
               </p>
               {claimProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {claimProofFileName}</p> : null}
             </div>
@@ -648,7 +677,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 onChange={(event) => setNewSchoolProofFileName(event.currentTarget.files?.[0]?.name ?? '')}
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
               />
-              <p className="text-xs text-slate-500">We store the selected filename for review. File storage/download is not enabled yet.</p>
+              <p className="text-xs text-slate-500">PDF, PNG, or JPG. Max 2MB. Admins can view the submitted file during review.</p>
               {newSchoolProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {newSchoolProofFileName}</p> : null}
             </div>
 
@@ -669,9 +698,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
 
       {flowState === 'pending' && pendingSubmission ? (
         <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-8 text-center shadow-sm" id="pending-page">
-          <div className="inline-flex rounded-full border border-amber-100 bg-amber-50 p-4 text-amber-600">
-            <svg className="h-12 w-12 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0l-3-3m3 3l3-3m6-2a9 9 0 11-12.728 0" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700">
+            <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
             </svg>
           </div>
           <div className="space-y-3">
@@ -692,8 +721,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
             <p className="mt-3 text-slate-500">Wallet/top-up/payment setup may still be required before clearance checks are enabled.</p>
           </div>
           <div className="pt-4">
-            <Link href="/dashboard" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
-              Go to Dashboard
+            <Link href="/account/pending-verification" className="inline-block rounded-lg bg-navy-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800">
+              View Verification Status
             </Link>
           </div>
           <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900">

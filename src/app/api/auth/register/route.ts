@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { isNotNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
@@ -8,6 +8,7 @@ import { hashPassword } from '@/lib/auth-password';
 import { createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
 import { makeEntityId } from '@/lib/ids';
 import { getSafeInternalPath } from '@/lib/local-session';
+import { normalizePhoneNumber } from '@/lib/text';
 
 export const runtime = 'nodejs';
 
@@ -27,10 +28,23 @@ export async function POST(request: Request) {
   }
 
   const email = payload.data.email.toLowerCase();
-  const [existingUser] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
+  const phone = normalizePhoneNumber(payload.data.phone);
 
-  if (existingUser) {
+  if (phone.length < 10) {
+    return NextResponse.json({ ok: false, message: 'Enter a valid contact phone number.' }, { status: 400 });
+  }
+
+  const [existingEmailUser] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
+
+  if (existingEmailUser) {
     return NextResponse.json({ ok: false, message: 'An account already exists for this email.' }, { status: 409 });
+  }
+
+  const existingPhoneUsers = await db.select({ id: users.id, phone: users.phone }).from(users).where(isNotNull(users.phone));
+  const existingPhoneUser = existingPhoneUsers.find((user) => normalizePhoneNumber(user.phone ?? '') === phone);
+
+  if (existingPhoneUser) {
+    return NextResponse.json({ ok: false, message: 'An account already exists for this phone number.' }, { status: 409 });
   }
 
   const passwordHash = await hashPassword(payload.data.password);
@@ -41,7 +55,7 @@ export async function POST(request: Request) {
     schoolId: null,
     name: payload.data.name,
     email,
-    phone: payload.data.phone,
+    phone,
     role: 'school_owner',
     passwordHash,
   });

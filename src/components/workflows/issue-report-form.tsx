@@ -6,12 +6,18 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCertified, setIsCertified] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
     if (!form.reportValidity()) {
+      return;
+    }
+
+    if (!isCertified) {
+      setErrorMessage('Please certify that the issue record is accurate before saving.');
       return;
     }
 
@@ -35,6 +41,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           parentPhone: String(formData.get('parentPhone') ?? '').trim(),
           note: String(formData.get('note') ?? '').trim(),
           source: fromInboundRequest ? 'inbound' : 'direct',
+          certified: isCertified,
         }),
       });
       const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
@@ -46,6 +53,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
 
       setSubmitted(true);
       form.reset();
+      setIsCertified(false);
     } catch {
       setErrorMessage('Unable to save issue report. Please try again.');
     } finally {
@@ -232,6 +240,8 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
             id="ethicalCheck"
             type="checkbox"
             required
+            checked={isCertified}
+            onChange={(event) => setIsCertified(event.currentTarget.checked)}
             className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800"
           />
           <label htmlFor="ethicalCheck" className="text-xs leading-relaxed text-slate-500">
@@ -239,7 +249,7 @@ export function IssueReportForm({ fromInboundRequest = false }: { fromInboundReq
           </label>
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400">
+        <button type="submit" disabled={isSubmitting || !isCertified} className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400">
           {isSubmitting ? 'Saving Issue…' : 'Save Unresolved Issue'}
         </button>
       </form>

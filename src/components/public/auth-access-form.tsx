@@ -42,6 +42,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const loginContent = {
     ...formContent.login[audience],
     destination: destination ?? formContent.login[audience].destination,
@@ -56,6 +57,11 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
 
     const form = event.currentTarget;
     if (!form.reportValidity()) {
+      return;
+    }
+
+    if (mode === 'register' && !hasAcceptedTerms) {
+      setErrorMessage('Please agree to the privacy statement and terms before registering.');
       return;
     }
 
@@ -251,10 +257,19 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 id="consent"
                 type="checkbox"
                 required
+                checked={hasAcceptedTerms}
+                onChange={(event) => setHasAcceptedTerms(event.currentTarget.checked)}
                 className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800"
               />
               <label htmlFor="consent" className="text-xs leading-relaxed text-slate-500">
-                I agree to the privacy statement and terms of school-to-school cluster network compliance.
+                I agree to the{' '}
+                <Link href="/privacy" className="font-semibold text-navy-900 hover:underline" target="_blank">
+                  privacy statement
+                </Link>{' '}
+                and{' '}
+                <Link href="/terms" className="font-semibold text-navy-900 hover:underline" target="_blank">
+                  terms of school-to-school cluster network compliance
+                </Link>.
               </label>
             </div>
 
@@ -264,8 +279,8 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-90"
+              disabled={isSubmitting || !hasAcceptedTerms}
+              className="w-full rounded-lg bg-navy-900 py-3 text-sm font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-90"
             >
               {isSubmitting ? registerContent.pendingLabel : registerContent.buttonLabel}
             </button>

@@ -20,6 +20,9 @@ const schoolClaimSchema = z.object({
   officialEmail: z.string().trim().email(),
   officialPhone: z.string().trim().min(6),
   proofFileName: z.string().trim().min(1),
+  proofFileType: z.string().trim().min(1).max(100),
+  proofFileSize: z.number().int().positive().max(2_000_000),
+  proofFileDataUrl: z.string().trim().min(1).max(3_000_000),
   proofNote: z.string().trim().min(10),
 });
 
@@ -87,6 +90,9 @@ export async function POST(request: Request) {
         officialEmail: payload.data.officialEmail.toLowerCase(),
         officialPhone: payload.data.officialPhone,
         proofFileName: payload.data.proofFileName,
+        proofFileType: payload.data.proofFileType,
+        proofFileSize: payload.data.proofFileSize,
+        proofFileDataUrl: payload.data.proofFileDataUrl,
         proofNote: payload.data.proofNote,
         type: 'existing_school',
         status: 'pending',
@@ -125,6 +131,9 @@ export async function POST(request: Request) {
         officialEmail: payload.data.officialEmail.toLowerCase(),
         officialPhone: payload.data.officialPhone,
         proofFileName: payload.data.proofFileName,
+        proofFileType: payload.data.proofFileType,
+        proofFileSize: payload.data.proofFileSize,
+        proofFileDataUrl: payload.data.proofFileDataUrl,
         proofNote: payload.data.proofNote,
         type: 'new_school',
         status: 'pending',
@@ -149,6 +158,8 @@ export async function POST(request: Request) {
         officialEmail: payload.data.officialEmail,
         officialPhone: payload.data.officialPhone,
         proofFileName: payload.data.proofFileName,
+        proofFileType: payload.data.proofFileType,
+        proofFileSize: payload.data.proofFileSize,
       },
       ipAddress,
     });

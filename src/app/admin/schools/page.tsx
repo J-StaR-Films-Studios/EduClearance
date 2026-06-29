@@ -33,6 +33,9 @@ export default async function AdminSchoolsPage() {
       officialEmail: schoolClaims.officialEmail,
       officialPhone: schoolClaims.officialPhone,
       proofFileName: schoolClaims.proofFileName,
+      proofFileType: schoolClaims.proofFileType,
+      proofFileSize: schoolClaims.proofFileSize,
+      hasProofFile: schoolClaims.proofFileDataUrl,
       proofNote: schoolClaims.proofNote,
       type: schoolClaims.type,
       status: schoolClaims.status,
@@ -49,6 +52,7 @@ export default async function AdminSchoolsPage() {
 
   const submittedClaims = claimRows.map((claim) => ({
     ...claim,
+    hasProofFile: Boolean(claim.hasProofFile),
     createdAt: claim.createdAt.toISOString(),
     reviewedAt: claim.reviewedAt?.toISOString() ?? null,
     linkedSchoolStatus: claim.linkedSchoolStatus ?? null,
