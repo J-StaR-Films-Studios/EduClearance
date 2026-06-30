@@ -10,6 +10,7 @@ export type OutboundClearance = {
   parentPhone: string;
   previousSchoolName: string;
   previousSchoolPhone?: string;
+  previousSchoolWhatsappPhone?: string;
   previousSchoolEmail?: string;
   previousSchoolListed: boolean;
   requestingSchoolName?: string;

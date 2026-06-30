@@ -102,6 +102,7 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
       parentPhone: request.parentPhone,
       previousSchoolName,
       previousSchoolPhone: previousSchool?.clearancePhone ?? previousSchool?.mainPhone ?? undefined,
+      previousSchoolWhatsappPhone: previousSchool?.whatsappPhone ?? previousSchool?.clearancePhone ?? previousSchool?.mainPhone ?? undefined,
       previousSchoolEmail: previousSchool?.contactEmail ?? undefined,
       previousSchoolListed: Boolean(previousSchool),
       requestingSchoolName: incomingSchoolName,
@@ -256,6 +257,10 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const requestingSchoolWhatsappHref = clearance.requestingSchoolWhatsappPhone
     ? buildWhatsAppHref(clearance.requestingSchoolWhatsappPhone, requestingSchoolWhatsappMessage)
     : undefined;
+  const potentialPreviousSchoolWhatsappMessage = `Hello ${previousSchoolName}, this is ${clearance.requestingSchoolName ?? 'the requesting school'}. EduClearance found a possible match for our clearance request, but it is not confirmed. Please help verify whether this looks like the same student before we take any action.`;
+  const potentialPreviousSchoolWhatsappHref = clearance.previousSchoolWhatsappPhone
+    ? buildWhatsAppHref(clearance.previousSchoolWhatsappPhone, potentialPreviousSchoolWhatsappMessage)
+    : undefined;
 
   return (
     <SchoolAppShell activeKey="dashboard" mobileMode="detail" role={currentRole}>
@@ -343,11 +348,27 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     EduClearance found a similar unresolved record using student-name and school matching. The name may be incomplete, swapped, or from a different but similar record, so this is not a confirmed obligation yet.
                   </p>
                   <p className="text-xs text-amber-800">
-                    Verify the parent details and previous school directly before treating this as the same child or taking admissions/dispute action.
+                    Verify the parent details and school contact directly before treating this as the same child or taking admissions/dispute action.
                   </p>
-                  <p className="rounded-lg border border-amber-200 bg-white/70 p-3 text-xs font-semibold text-amber-900">
-                    The green paid/cleared confirmation is intentionally locked for this case because EduClearance has not confirmed it is the exact same student record. If this is a typo or wrong-school match, ask the requesting school to correct the details and rerun the check.
-                  </p>
+                  <div className="rounded-xl border border-emerald-100 bg-white p-3 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 cursor-not-allowed rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 opacity-60"
+                      >
+                        Confirm paid / cleared
+                      </button>
+                      <details className="group relative">
+                        <summary className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100">
+                          i
+                        </summary>
+                        <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
+                          This action unlocks only for confirmed records. For a possible match, verify the details first; if the requesting school entered a typo, they should correct the request instead of asking another school to clear it.
+                        </div>
+                      </details>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
@@ -524,6 +545,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                           <p className="font-semibold text-navy-900">{clearance.previousSchoolPhone}</p>
                         </div>
                       ) : null}
+                      {clearance.previousSchoolWhatsappPhone ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase text-slate-400">WhatsApp Line</p>
+                          <p className="font-semibold text-navy-900">{clearance.previousSchoolWhatsappPhone}</p>
+                        </div>
+                      ) : null}
                     </>
                   )}
                 </div>
@@ -548,7 +575,28 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                       </a>
                     ) : null}
                   </div>
-                ) : null}
+                ) : (
+                  <div className="space-y-2">
+                    {clearance.previousSchoolPhone ? (
+                      <a
+                        href={`tel:${clearance.previousSchoolPhone.replace(/\s+/g, '')}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                      >
+                        Call Potential Previous School
+                      </a>
+                    ) : null}
+                    {potentialPreviousSchoolWhatsappHref ? (
+                      <a
+                        href={potentialPreviousSchoolWhatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                      >
+                        WhatsApp Potential Previous School
+                      </a>
+                    ) : null}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
