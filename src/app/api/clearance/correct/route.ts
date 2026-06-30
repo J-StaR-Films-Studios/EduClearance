@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       .filter((issue) => issue.qualifies)
       .sort((a, b) => b.score - a.score);
 
-    const confirmedIssue = candidateIssues.find((issue) => issue.schoolMatch && (issue.exactName || issue.signatureMatch)) ?? null;
+    const confirmedIssue = candidateIssues.find((issue) => issue.schoolMatch && (issue.exactName || issue.signatureMatch || issue.qualifies)) ?? null;
     const possibleIssue = confirmedIssue ? null : candidateIssues[0] ?? null;
     const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
     const [matchedIssueSchool] = issueSchoolId && issueSchoolId !== selectedPreviousSchool?.id
