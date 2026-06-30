@@ -1,0 +1,1 @@
+ALTER TABLE "clearance_requests" ADD COLUMN "correction_count" integer DEFAULT 0 NOT NULL;

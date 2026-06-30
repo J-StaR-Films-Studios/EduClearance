@@ -43,6 +43,13 @@
       "when": 1782859200911,
       "tag": "0005_real_ozymandias",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782861617895,
+      "tag": "0006_equal_wind_dancer",
+      "breakpoints": true
     }
   ]
 }

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CopyMessageButton } from '@/components/workflows/copy-message-button';
 import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
+import { ClearanceCorrectionPanel } from '@/components/workflows/clearance-correction-panel';
 import { DisputeModal } from '@/components/workflows/dispute-modal';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
@@ -32,6 +33,7 @@ type DatabaseClearanceDetail = {
   previousSchoolId: string | null;
   reportingSchoolId: string | null;
   issueId: string | null;
+  correctionCount: number;
 };
 
 export const metadata: Metadata = noIndexMetadata(`Clearance Request Result | ${APP_NAME}`, 'Private clearance result view.');
@@ -95,6 +97,7 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
     previousSchoolId: request.previousSchoolId,
     reportingSchoolId: issue?.reportingSchoolId ?? null,
     issueId: issue?.id ?? null,
+    correctionCount: request.correctionCount,
     clearance: {
       id: request.id,
       studentName: request.studentName,
@@ -242,6 +245,13 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const isIncomingSchoolViewer = actor.sessionRole === 'platform_admin' || actor.schoolId === databaseDetail.incomingSchoolId;
   const isPreviousSchoolViewer = actor.schoolId === databaseDetail.previousSchoolId && !isIncomingSchoolViewer;
   const canResolveLinkedIssue = Boolean(databaseDetail.issueId && clearance.resultState === 'match' && actor.schoolId === databaseDetail.reportingSchoolId);
+  const correctionSchools = isIncomingSchoolViewer && clearance.resultState === 'possible_match'
+    ? await db
+        .select({ id: schools.id, name: schools.name, area: schools.area, address: schools.address, status: schools.status })
+        .from(schools)
+        .orderBy(asc(schools.name))
+        .limit(500)
+    : [];
 
   const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
@@ -500,6 +510,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                 </div>
               </div>
             ) : clearance.resultState === 'possible_match' ? (
+              <>
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">{isPreviousSchoolViewer ? 'Contact Requesting School' : 'Review Required'}</h3>
                 <p className="text-[11px] text-slate-500">
@@ -598,6 +609,16 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   </div>
                 )}
               </div>
+              {isIncomingSchoolViewer ? (
+                <ClearanceCorrectionPanel
+                  clearanceRequestId={clearance.id}
+                  studentName={studentName}
+                  previousSchoolName={previousSchoolName}
+                  correctionCount={databaseDetail.correctionCount}
+                  schools={correctionSchools}
+                />
+              ) : null}
+              </>
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">{isIncomingSchoolViewer ? 'Contact & Dispute Paths' : 'Case context'}</h3>

@@ -163,6 +163,7 @@ export const clearanceRequests = pgTable(
     status: clearanceRequestStatusEnum('status').notNull(),
     searchResult: searchResultEnum('search_result').notNull(),
     amountCharged: integer('amount_charged').notNull(),
+    correctionCount: integer('correction_count').notNull().default(0),
     notificationStatus: notificationStatusEnum('notification_status').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
     createdByUserId: text('created_by_user_id')
