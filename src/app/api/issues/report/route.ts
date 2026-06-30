@@ -17,7 +17,7 @@ const issueReportSchema = z.object({
   term: z.string().trim().min(3),
   parentName: z.string().trim().min(2),
   parentPhone: z.string().trim().min(7),
-  note: z.string().trim().min(10),
+  note: z.string().trim().min(5, 'Official note must be at least 5 characters.'),
   evidenceUrl: z.string().trim().url().optional(),
   clearanceRequestId: z.string().trim().min(1).nullable().optional(),
   source: z.string().trim().optional(),
@@ -34,7 +34,9 @@ export async function POST(request: Request) {
   const payload = issueReportSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Please complete the issue report before saving.', issues: payload.error.flatten() }, { status: 400 });
+    const issues = payload.error.flatten();
+    const firstIssue = Object.values(issues.fieldErrors).flat().find(Boolean);
+    return NextResponse.json({ ok: false, message: firstIssue ?? 'Please complete the issue report before saving.', issues }, { status: 400 });
   }
 
   const issueId = makeEntityId('issue');

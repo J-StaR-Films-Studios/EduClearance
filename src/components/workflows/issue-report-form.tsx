@@ -55,7 +55,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
           certified: isCertified,
         }),
       });
-      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; issues?: { fieldErrors?: Record<string, string[]> } } | null;
 
       if (!response.ok || !result?.ok) {
         setErrorMessage(result?.message ?? 'Unable to save issue report. Please try again.');
@@ -241,6 +241,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
             id="issueNote"
             name="note"
             required
+            minLength={5}
             rows={3}
             placeholder="Outline tuition balances, contact attempts, and settlement milestones..."
             className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
