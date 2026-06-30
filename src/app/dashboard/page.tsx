@@ -22,7 +22,7 @@ export const metadata: Metadata = noIndexMetadata(`Dashboard | ${APP_NAME}`, 'Pr
 export default async function DashboardPage() {
   const currentRole = await requireSchoolSession('/dashboard');
   const actor = await resolveLocalSchoolActor();
-  const [walletBalanceKobo, recentClearances, inboundClearances] = actor
+  const [walletBalanceKobo, recentClearances, inboundClearances, currentSchoolContact] = actor
     ? await Promise.all([
         getSchoolWalletBalanceKobo(actor.schoolId),
         db
@@ -43,15 +43,23 @@ export default async function DashboardPage() {
             studentName: clearanceRequests.studentName,
             requestingSchool: schools.name,
             status: clearanceRequests.status,
+            searchResult: clearanceRequests.searchResult,
           })
           .from(clearanceRequests)
           .innerJoin(schools, eq(schools.id, clearanceRequests.incomingSchoolId))
           .where(eq(clearanceRequests.previousSchoolId, actor.schoolId))
           .orderBy(desc(clearanceRequests.createdAt))
           .limit(10),
+        db
+          .select({ name: schools.name, clearancePhone: schools.clearancePhone, mainPhone: schools.mainPhone, contactEmail: schools.contactEmail })
+          .from(schools)
+          .where(eq(schools.id, actor.schoolId))
+          .limit(1)
+          .then((rows) => rows[0] ?? null),
       ])
-    : [0, [], []];
+    : [0, [], [], null];
   const pendingInboundClearance = inboundClearances.find((request) => !['cleared_by_previous_school', 'closed'].includes(request.status));
+  const pendingInboundIsPotential = pendingInboundClearance?.searchResult === 'possible_match';
   const schoolName = actor?.schoolName ?? 'School Dashboard';
 
   return (
@@ -129,30 +137,49 @@ export default async function DashboardPage() {
         </div>
 
         {pendingInboundClearance ? (
-          <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
+          <div className={cn('space-y-2 rounded-xl border p-4 text-sm leading-relaxed', pendingInboundIsPotential ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-terracotta-200 bg-terracotta-50 text-terracotta-900')}>
             <div className="flex items-center gap-2 font-bold">
-              <svg className="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className={cn('h-4 w-4', pendingInboundIsPotential ? 'text-amber-600' : 'text-terracotta-600')} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              Pending Clearance Response Required
+              {pendingInboundIsPotential ? 'Potential Clearance Match Needs Review' : 'Confirmed Clearance Response Required'}
             </div>
-            <p className="text-xs">
-              <strong>{pendingInboundClearance.requestingSchool}</strong> has opened a clearance verification check for <strong>{pendingInboundClearance.studentName}</strong>,
-              who registered your school as their previous attending school. Please verify or update their clearance status.
-            </p>
+            {pendingInboundIsPotential ? (
+              <div className="space-y-2 text-xs">
+                <p>
+                  <strong>{pendingInboundClearance.requestingSchool}</strong> opened a clearance check that looks similar to a record associated with your school. This is a fuzzy match, not a confirmed student obligation, so review privately before responding.
+                </p>
+                <div className="rounded-lg border border-amber-200 bg-white/70 p-3">
+                  <p className="font-semibold text-amber-950">Likely related school contact</p>
+                  <ul className="mt-1 space-y-1">
+                    <li>
+                      {currentSchoolContact?.name ?? schoolName}
+                      {currentSchoolContact?.clearancePhone || currentSchoolContact?.mainPhone ? ` · ${currentSchoolContact.clearancePhone ?? currentSchoolContact.mainPhone}` : ''}
+                      {currentSchoolContact?.contactEmail ? ` · ${currentSchoolContact.contactEmail}` : ''}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs">
+                <strong>{pendingInboundClearance.requestingSchool}</strong> has opened a confirmed clearance verification check involving your school. Please verify or update the clearance status.
+              </p>
+            )}
             <div className="flex gap-2">
               <Link
                 href={withRoleQuery('/clearance?tab=inbound', currentRole)}
-                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition', pendingInboundIsPotential ? 'bg-amber-600 hover:bg-amber-700' : 'bg-terracotta-600 hover:bg-terracotta-700')}
               >
-                Review Inbound Request
+                {pendingInboundIsPotential ? 'Review Potential Match' : 'Review Inbound Request'}
               </Link>
-              <Link
-                href={withRoleQuery('/issues/new?source=inbound', currentRole)}
-                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50"
-              >
-                Report Owed Balance
-              </Link>
+              {!pendingInboundIsPotential ? (
+                <Link
+                  href={withRoleQuery('/issues/new?source=inbound', currentRole)}
+                  className="rounded-lg border border-terracotta-300 bg-white px-3 py-1.5 text-xs font-semibold text-terracotta-900 transition hover:bg-terracotta-50"
+                >
+                  Report Owed Balance
+                </Link>
+              ) : null}
             </div>
           </div>
         ) : null}

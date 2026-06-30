@@ -46,8 +46,12 @@ function getResultState(searchResult: string): ClearanceHistoryOutbound['resultS
   return 'no_record';
 }
 
-function getInboundStatus(status: string): ClearanceHistoryInbound['status'] {
-  return status === 'cleared_by_previous_school' || status === 'closed' ? 'resolved' : 'response_needed';
+function getInboundStatus(status: string, searchResult: string): ClearanceHistoryInbound['status'] {
+  if (status === 'cleared_by_previous_school' || status === 'closed') {
+    return 'resolved';
+  }
+
+  return searchResult === 'possible_match' ? 'potential_response' : 'response_needed';
 }
 
 export default async function ClearanceHistoryPage({ searchParams }: ClearanceHistoryPageProps) {
@@ -68,6 +72,7 @@ export default async function ClearanceHistoryPage({ searchParams }: ClearanceHi
     studentName: string;
     requestingSchool: string;
     status: string;
+    searchResult: string;
     createdAt: Date;
   }[] = [];
   let openDisputeCount = { value: 0 };
@@ -93,6 +98,7 @@ export default async function ClearanceHistoryPage({ searchParams }: ClearanceHi
           studentName: clearanceRequests.studentName,
           requestingSchool: schools.name,
           status: clearanceRequests.status,
+          searchResult: clearanceRequests.searchResult,
           createdAt: clearanceRequests.createdAt,
         })
         .from(clearanceRequests)
@@ -124,9 +130,9 @@ export default async function ClearanceHistoryPage({ searchParams }: ClearanceHi
     studentName: request.studentName,
     requestingSchool: request.requestingSchool,
     requestedAt: request.createdAt.toISOString().slice(0, 16).replace('T', ' '),
-    status: getInboundStatus(request.status),
+    status: getInboundStatus(request.status, request.searchResult),
   }));
-  const activeInboundCount = inboundRequests.filter((request) => request.status === 'response_needed').length;
+  const activeInboundCount = inboundRequests.filter((request) => request.status !== 'resolved').length;
 
   return (
     <SchoolAppShell activeKey="clearance" mobileMode="history" role={currentRole}>

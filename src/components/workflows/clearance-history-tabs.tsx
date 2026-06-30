@@ -21,7 +21,7 @@ export type ClearanceHistoryInbound = {
   studentName: string;
   requestingSchool: string;
   requestedAt: string;
-  status: 'response_needed' | 'resolved';
+  status: 'response_needed' | 'potential_response' | 'resolved';
 };
 
 type ClearanceHistoryTabsProps = {
@@ -39,7 +39,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const activeInboundCount = useMemo(
-    () => requests.filter((request) => request.status === 'response_needed').length,
+    () => requests.filter((request) => request.status !== 'resolved').length,
     [requests],
   );
 
@@ -186,7 +186,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                   <tr key={request.id}>
                     <td className="px-6 py-4">
                       <Link href={withRoleQuery(`/clearance/${request.id}`, role)} className="font-semibold text-navy-900 hover:underline">
-                        {request.studentName}
+                        {request.status === 'potential_response' ? 'Potential student match' : request.studentName}
                       </Link>
                       <p className="mt-1 text-[10px] text-slate-400">View case history</p>
                     </td>
@@ -197,16 +197,25 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                           'rounded-full border px-2 py-0.5 font-semibold',
                           request.status === 'resolved'
                             ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                            : 'border-amber-100 bg-amber-50 text-amber-700',
+                            : request.status === 'potential_response'
+                              ? 'border-amber-100 bg-amber-50 text-amber-700'
+                              : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
                         )}
                       >
-                        {request.status === 'resolved' ? 'No outstanding issue confirmed' : 'Response needed'}
+                        {request.status === 'resolved' ? 'No outstanding issue confirmed' : request.status === 'potential_response' ? 'Potential match review' : 'Response needed'}
                       </span>
                     </td>
                     <td className="px-6 py-4">{request.requestedAt}</td>
                     <td className="px-6 py-4">
                       {request.status === 'resolved' ? (
                         <span className="font-medium text-slate-500">Response recorded</span>
+                      ) : request.status === 'potential_response' ? (
+                        <Link
+                          href={withRoleQuery(`/clearance/${request.id}`, role)}
+                          className="rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white"
+                        >
+                          Review Potential Match
+                        </Link>
                       ) : (
                         <div className="flex gap-2">
                           <button
