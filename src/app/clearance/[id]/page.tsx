@@ -360,25 +360,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   <p className="text-xs text-amber-800">
                     Verify the parent details and school contact directly before treating this as the same child or taking admissions/dispute action.
                   </p>
-                  <div className="rounded-xl border border-emerald-100 bg-white p-3 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 cursor-not-allowed rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 opacity-60"
-                      >
-                        Confirm paid / cleared
-                      </button>
-                      <details className="group relative">
-                        <summary className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100">
-                          i
-                        </summary>
-                        <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
-                          This action unlocks only for confirmed records. For a possible match, verify the details first; if the requesting school entered a typo, they should correct the request instead of asking another school to clear it.
-                        </div>
-                      </details>
-                    </div>
-                  </div>
+
                 </div>
               </>
             ) : (
@@ -670,6 +652,9 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
           entityId={clearance.id}
           entries={caseTimeline}
           resolutionAction={canResolveLinkedIssue && databaseDetail.issueId ? { issueId: databaseDetail.issueId, initialResolved: clearance.statusLabel === 'Cleared by previous school' } : undefined}
+          blockedResolutionAction={databaseDetail.issueId && clearance.resultState === 'possible_match' && actor.schoolId === databaseDetail.reportingSchoolId ? {
+            reason: 'This is still a possible match, so it cannot be marked paid/cleared yet. If the requesting school made a typo, they can use their one correction on this request; once the corrected name and school match the complaint, this confirmation unlocks.',
+          } : undefined}
         />
       </div>
     </SchoolAppShell>

@@ -24,6 +24,9 @@ type CaseTimelinePanelProps = {
     issueId: string;
     initialResolved?: boolean;
   };
+  blockedResolutionAction?: {
+    reason: string;
+  };
 };
 
 type AttachmentFile = {
@@ -62,7 +65,7 @@ function readAttachment(form: HTMLFormElement): Promise<AttachmentFile | null> {
   });
 }
 
-export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityId, entries, canComment = true, resolutionAction }: CaseTimelinePanelProps) {
+export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityId, entries, canComment = true, resolutionAction, blockedResolutionAction }: CaseTimelinePanelProps) {
   const [timelineEntries, setTimelineEntries] = useState(entries);
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
@@ -209,6 +212,23 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
                   : 'Also confirm payment received / no outstanding issue remains and clear the linked request.'}
               </span>
             </label>
+          ) : blockedResolutionAction ? (
+            <div className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 text-xs leading-relaxed text-emerald-800 opacity-80">
+              <input
+                type="checkbox"
+                disabled
+                className="mt-0.5 h-4 w-4 rounded border-emerald-300 text-emerald-700"
+              />
+              <span className="flex-1">Confirm payment received / no outstanding issue remains and clear the linked request.</span>
+              <details className="relative">
+                <summary className="flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-emerald-200 bg-white text-[10px] font-bold text-emerald-700">
+                  i
+                </summary>
+                <div className="absolute bottom-7 right-0 z-10 w-72 rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
+                  {blockedResolutionAction.reason}
+                </div>
+              </details>
+            </div>
           ) : null}
           {notice ? <div className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">{notice}</div> : null}
           <button type="submit" disabled={isSubmitting} className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-300">

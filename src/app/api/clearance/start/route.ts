@@ -103,7 +103,7 @@ export async function POST(request: Request) {
           const overlap = getNameTokenOverlap(issue.studentName, studentName);
           const enoughOverlap = submittedTokenCount <= 1 ? overlap >= 1 : overlap >= 2;
           const phoneMatch = normalizePhoneNumber(issue.parentPhone) === parentPhoneNormalized;
-          const schoolMatch = selectedPreviousSchool ? issue.reportingSchoolId === selectedPreviousSchool.id : true;
+          const schoolMatch = selectedPreviousSchool ? issue.reportingSchoolId === selectedPreviousSchool.id : false;
           const qualifies = exactName || signatureMatch || enoughOverlap;
           const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + (schoolMatch ? 10 : 0) + overlap;
 
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
         .filter((issue) => issue.qualifies)
         .sort((a, b) => b.score - a.score);
 
-      const confirmedIssue = candidateIssues.find((issue) => issue.phoneMatch && issue.schoolMatch && (issue.exactName || issue.signatureMatch)) ?? null;
+      const confirmedIssue = candidateIssues.find((issue) => issue.schoolMatch && (issue.exactName || issue.signatureMatch)) ?? null;
       const possibleIssue = confirmedIssue ? null : candidateIssues[0] ?? null;
       const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
 

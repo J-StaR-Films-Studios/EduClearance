@@ -96,7 +96,8 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
     : [null];
 
   const canView = isPlatformAdminActor(actor) || issue.reportingSchoolId === actor.schoolId || linkedRequest?.incomingSchoolId === actor.schoolId || linkedRequest?.previousSchoolId === actor.schoolId;
-  const canResolveIssue = !isPlatformAdminActor(actor) && issue.reportingSchoolId === actor.schoolId;
+  const isPossibleLinkedRequest = linkedRequest?.searchResult === 'possible_match';
+  const canResolveIssue = !isPlatformAdminActor(actor) && issue.reportingSchoolId === actor.schoolId && !isPossibleLinkedRequest;
 
   if (!canView) {
     notFound();
@@ -161,6 +162,9 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
           entityId={issue.id}
           entries={timelineEntries}
           resolutionAction={canResolveIssue ? { issueId: issue.id, initialResolved: issue.status === 'resolved' } : undefined}
+          blockedResolutionAction={!isPlatformAdminActor(actor) && issue.reportingSchoolId === actor.schoolId && isPossibleLinkedRequest ? {
+            reason: 'This issue is linked to a possible match, not a confirmed exact request. Ask the requesting school to use their one correction if the school/name was typed incorrectly; the clear action unlocks after the request becomes confirmed.',
+          } : undefined}
         />
       </div>
     </SchoolAppShell>
