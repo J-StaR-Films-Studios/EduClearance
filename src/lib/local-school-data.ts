@@ -1,7 +1,7 @@
 import { CHECK_PRICE_KOBO } from '@/lib/money';
 
 export type SchoolUserRole = 'school_owner' | 'school_admin' | 'school_staff';
-export type ClearanceResultState = 'no_record' | 'possible_match' | 'match';
+export type ClearanceResultState = 'no_record' | 'possible_match' | 'match' | 'cleared';
 
 export type OutboundClearance = {
   id: string;

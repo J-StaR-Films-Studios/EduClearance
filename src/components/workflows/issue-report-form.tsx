@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+
+import { buildStudentDisplayName } from '@/lib/text';
 
 const MAX_EVIDENCE_FILE_BYTES = 2_000_000;
 
@@ -44,6 +46,14 @@ function readEvidenceFile(form: HTMLFormElement, name: string): Promise<Evidence
 }
 
 export function IssueReportForm({ fromInboundRequest = false, inboundRequest = null }: { fromInboundRequest?: boolean; inboundRequest?: InboundIssueRequest | null }) {
+  const inboundNameParts = useMemo(() => {
+    const parts = inboundRequest?.studentName.trim().split(/\s+/).filter(Boolean) ?? [];
+    return {
+      firstName: parts[0] ?? '',
+      middleName: parts.length > 2 ? parts.slice(1, -1).join(' ') : '',
+      lastName: parts.length > 1 ? parts[parts.length - 1] : '',
+    };
+  }, [inboundRequest?.studentName]);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,7 +89,14 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentName: String(formData.get('studentName') ?? '').trim(),
+          studentName: buildStudentDisplayName(
+            String(formData.get('studentFirstName') ?? ''),
+            String(formData.get('studentMiddleName') ?? ''),
+            String(formData.get('studentLastName') ?? ''),
+          ),
+          studentFirstName: String(formData.get('studentFirstName') ?? '').trim(),
+          studentMiddleName: String(formData.get('studentMiddleName') ?? '').trim(),
+          studentLastName: String(formData.get('studentLastName') ?? '').trim(),
           lastClass: String(formData.get('lastClass') ?? '').trim(),
           issueType: String(formData.get('issueType') ?? 'other'),
           amountNaira: Number(formData.get('amountNaira') ?? 0),
@@ -146,19 +163,45 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
       ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-1">
-          <label htmlFor="issueStudentName" className="block text-xs font-semibold text-navy-800">
-            Student&apos;s Full Name
-          </label>
-          <input
-            id="issueStudentName"
-            name="studentName"
-            type="text"
-            required
-            defaultValue={inboundRequest?.studentName ?? ''}
-            placeholder="e.g. Aisha Bello"
-            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-          />
+        <div className="space-y-2">
+          <p className="block text-xs font-semibold text-navy-800">Student Name</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <label htmlFor="issueStudentFirstName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">First name</label>
+              <input
+                id="issueStudentFirstName"
+                name="studentFirstName"
+                type="text"
+                required
+                defaultValue={inboundNameParts.firstName}
+                placeholder="e.g. Aisha"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="issueStudentMiddleName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Middle name</label>
+              <input
+                id="issueStudentMiddleName"
+                name="studentMiddleName"
+                type="text"
+                defaultValue={inboundNameParts.middleName}
+                placeholder="Optional"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="issueStudentLastName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Last name</label>
+              <input
+                id="issueStudentLastName"
+                name="studentLastName"
+                type="text"
+                defaultValue={inboundNameParts.lastName}
+                placeholder="Optional"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-500">Split names help future checks catch swapped or partially entered names without auto-confirming the wrong student.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

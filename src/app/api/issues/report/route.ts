@@ -6,10 +6,13 @@ import { db } from '@/db/client';
 import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
-import { normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
+import { buildStudentDisplayName, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
 const issueReportSchema = z.object({
-  studentName: z.string().trim().min(2),
+  studentName: z.string().trim().optional(),
+  studentFirstName: z.string().trim().min(1).optional(),
+  studentMiddleName: z.string().trim().optional(),
+  studentLastName: z.string().trim().optional(),
   lastClass: z.string().trim().optional(),
   issueType: z.enum(['school_fees', 'books', 'uniform', 'transport', 'other']),
   amountNaira: z.number().positive().max(100_000_000),
@@ -43,6 +46,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: firstIssue ?? 'Please complete the issue report before saving.', issues }, { status: 400 });
   }
 
+  const studentName = buildStudentDisplayName(payload.data.studentFirstName ?? '', payload.data.studentMiddleName, payload.data.studentLastName) || payload.data.studentName?.trim() || '';
+
+  if (!studentName) {
+    return NextResponse.json({ ok: false, message: 'Enter at least the student first name before saving an issue report.' }, { status: 400 });
+  }
+
   const issueId = makeEntityId('issue');
   const amountOwed = Math.round(payload.data.amountNaira * 100);
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
@@ -66,8 +75,8 @@ export async function POST(request: Request) {
       id: issueId,
       clearanceRequestId: linkedClearanceRequestId,
       reportingSchoolId: actor.schoolId,
-      studentName: payload.data.studentName,
-      studentNameNormalized: normalizeSearchText(payload.data.studentName),
+      studentName,
+      studentNameNormalized: normalizeSearchText(studentName),
       parentName: payload.data.parentName,
       parentPhone: normalizePhoneNumber(payload.data.parentPhone),
       amountOwed,
@@ -113,7 +122,7 @@ export async function POST(request: Request) {
       entityType: 'clearance_issue',
       entityId: issueId,
       metadataJson: {
-        studentName: payload.data.studentName,
+        studentName,
         amountOwed,
         issueType: payload.data.issueType,
         source: payload.data.source ?? null,

@@ -86,7 +86,8 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
     : [null];
   const incomingSchoolName = incomingSchool?.name ?? 'the admitting school';
   const previousSchoolName = previousSchool?.name ?? request.previousSchoolNameSnapshot;
-  const resultState = request.searchResult === 'no_match' ? 'no_record' : request.searchResult === 'possible_match' ? 'possible_match' : 'match';
+  const isCleared = request.status === 'cleared_by_previous_school' || issue?.status === 'resolved';
+  const resultState = isCleared ? 'cleared' : request.searchResult === 'no_match' ? 'no_record' : request.searchResult === 'possible_match' ? 'possible_match' : 'match';
   const noRecordMessage = `Hello ${previousSchoolName}, this is the Admitting Office at ${incomingSchoolName}. We are processing the admission transfer for student ${request.studentName}. Please let us know if there are any outstanding clearances or issues to resolve. Thank you.`;
 
   return {
@@ -107,11 +108,13 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
       lastClass: request.lastClass ?? '',
       createdAt: request.createdAt.toISOString().slice(0, 10),
       resultLabel:
-        request.searchResult === 'no_match'
-          ? 'No Platform Record Found'
-          : request.searchResult === 'possible_match'
-            ? 'Possible Record Requires Review'
-            : 'Unresolved Balance Reported',
+        isCleared
+          ? 'Cleared / Issue Resolved'
+          : request.searchResult === 'no_match'
+            ? 'No Platform Record Found'
+            : request.searchResult === 'possible_match'
+              ? 'Possible Record Requires Review'
+              : 'Unresolved Balance Reported',
       resultState,
       statusLabel: getRequestStatusLabel(request.status),
       searchResult: request.searchResult,
@@ -266,7 +269,28 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="space-y-6 md:col-span-2">
-            {clearance.resultState === 'no_record' ? (
+            {clearance.resultState === 'cleared' ? (
+              <>
+                <div className="flex">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/20 bg-emerald-50/40 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <span className="h-2 w-2 rounded-sm bg-emerald-600" />
+                    Cleared / Issue Resolved
+                  </span>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-relaxed text-emerald-900">
+                  <div className="flex items-center gap-2 font-bold text-emerald-800">
+                    <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Clearance confirmed
+                  </div>
+                  <p className="font-medium text-emerald-900">
+                    The linked issue has been resolved or the previous school confirmed that no outstanding obligation remains. This is a platform record marked as cleared, not a missing-record result.
+                  </p>
+                </div>
+              </>
+            ) : clearance.resultState === 'no_record' ? (
               <>
                 <div className="flex">
                   <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/20 bg-emerald-50/40 px-2.5 py-1 text-xs font-semibold text-emerald-700">
@@ -305,12 +329,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                 </div>
 
                 <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950">
-                  <h3 className="font-bold text-amber-800">Same-name record found</h3>
+                  <h3 className="font-bold text-amber-800">Similar student record found</h3>
                   <p className="font-medium text-amber-900">
-                    A same-name unresolved issue exists, but the parent phone number did not match exactly. Treat this as a review item, not a confirmed obligation.
+                    EduClearance found a similar unresolved record using student-name and school matching. The name may be incomplete, swapped, or from a different but similar record, so this is not a confirmed obligation yet.
                   </p>
                   <p className="text-xs text-amber-800">
-                    Contact the previous school through official channels before taking admissions or dispute action on this request.
+                    Verify the parent details and previous school directly before treating this as the same child or taking admissions/dispute action.
                   </p>
                 </div>
               </>
@@ -365,7 +389,24 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
           </div>
 
           <div className="space-y-6">
-            {clearance.resultState === 'no_record' ? (
+            {clearance.resultState === 'cleared' ? (
+              <div className="space-y-4 rounded-xl border border-emerald-100 bg-white p-6 shadow-sm">
+                <h3 className="text-base font-bold text-navy-900">Clearance Complete</h3>
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  This request has a platform record and it is now marked cleared. Keep the timeline evidence for audit context.
+                </p>
+                <div className="space-y-3 border-t border-background-secondary pt-3 text-xs">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Previous School</p>
+                    <p className="font-semibold text-navy-900">{previousSchoolName}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase text-slate-400">Final Status</p>
+                    <p className="font-semibold text-emerald-700">{clearance.statusLabel}</p>
+                  </div>
+                </div>
+              </div>
+            ) : clearance.resultState === 'no_record' ? (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">Previous School Contact</h3>
                 <p className="text-[11px] text-slate-500">Contact information registered in directory:</p>
@@ -429,7 +470,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">Review Required</h3>
                 <p className="text-[11px] text-slate-500">
-                  This request has a same-name possible match. Do not treat it as a confirmed outstanding record until school staff verify the parent details.
+                  This request has a similar-name possible match. Do not treat it as a confirmed outstanding record until school staff verify the parent and school details.
                 </p>
                 <div className="space-y-3 border-t border-background-secondary pt-3 text-xs">
                   <div>

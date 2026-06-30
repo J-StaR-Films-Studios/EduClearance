@@ -7,10 +7,13 @@ import { auditLogs, clearanceIssues, clearanceRequests, schools, walletTransacti
 import { makeEntityId, makeWalletReference } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { CHECK_PRICE_KOBO } from '@/lib/money';
-import { normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
+import { buildStudentDisplayName, getNameTokenOverlap, getNameTokens, normalizeNameSignature, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
 const clearanceStartSchema = z.object({
-  studentName: z.string().trim().min(1),
+  studentName: z.string().trim().optional(),
+  studentFirstName: z.string().trim().min(1).optional(),
+  studentMiddleName: z.string().trim().optional(),
+  studentLastName: z.string().trim().optional(),
   parentName: z.string().trim().min(1),
   parentPhone: z.string().trim().min(1),
   previousSchoolId: z.string().trim().min(1).nullable().optional(),
@@ -37,7 +40,14 @@ export async function POST(request: Request) {
   }
 
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
-  const studentNameNormalized = normalizeSearchText(payload.data.studentName);
+  const studentName = buildStudentDisplayName(payload.data.studentFirstName ?? '', payload.data.studentMiddleName, payload.data.studentLastName) || payload.data.studentName?.trim() || '';
+
+  if (!studentName) {
+    return NextResponse.json({ ok: false, message: 'Enter at least the student first name before starting a clearance request.' }, { status: 400 });
+  }
+
+  const studentNameNormalized = normalizeSearchText(studentName);
+  const studentNameSignature = normalizeNameSignature(studentName);
   const parentPhoneNormalized = normalizePhoneNumber(payload.data.parentPhone);
 
   try {
@@ -61,32 +71,59 @@ export async function POST(request: Request) {
         return { kind: 'insufficient_funds' as const, balanceKobo: currentWallet?.balanceKobo ?? 0 };
       }
 
-      const possibleIssues = await tx
-        .select({
-          id: clearanceIssues.id,
-          reportingSchoolId: clearanceIssues.reportingSchoolId,
-          parentPhone: clearanceIssues.parentPhone,
-        })
-        .from(clearanceIssues)
-        .where(and(eq(clearanceIssues.status, 'unresolved'), eq(clearanceIssues.studentNameNormalized, studentNameNormalized)))
-        .limit(10);
-
-      const confirmedIssue = possibleIssues.find((issue) => normalizePhoneNumber(issue.parentPhone) === parentPhoneNormalized) ?? null;
-      const possibleIssue = confirmedIssue ? null : possibleIssues[0] ?? null;
-      const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
-
-      const lookupSchoolId = issueSchoolId ?? payload.data.previousSchoolId ?? null;
-      const [previousSchool] = lookupSchoolId
+      const [selectedPreviousSchool] = payload.data.previousSchoolId
         ? await tx
             .select({ id: schools.id, name: schools.name, status: schools.status })
             .from(schools)
-            .where(eq(schools.id, lookupSchoolId))
+            .where(eq(schools.id, payload.data.previousSchoolId))
             .limit(1)
         : await tx
             .select({ id: schools.id, name: schools.name, status: schools.status })
             .from(schools)
             .where(ilike(schools.name, `%${payload.data.previousSchoolName}%`))
             .limit(1);
+
+      const unresolvedIssues = await tx
+        .select({
+          id: clearanceIssues.id,
+          reportingSchoolId: clearanceIssues.reportingSchoolId,
+          studentName: clearanceIssues.studentName,
+          studentNameNormalized: clearanceIssues.studentNameNormalized,
+          parentPhone: clearanceIssues.parentPhone,
+        })
+        .from(clearanceIssues)
+        .where(eq(clearanceIssues.status, 'unresolved'))
+        .limit(100);
+
+      const submittedTokenCount = getNameTokens(studentName).length;
+      const candidateIssues = unresolvedIssues
+        .map((issue) => {
+          const exactName = issue.studentNameNormalized === studentNameNormalized;
+          const signatureMatch = normalizeNameSignature(issue.studentName) === studentNameSignature && studentNameSignature.length > 0;
+          const overlap = getNameTokenOverlap(issue.studentName, studentName);
+          const enoughOverlap = submittedTokenCount <= 1 ? overlap >= 1 : overlap >= 2;
+          const phoneMatch = normalizePhoneNumber(issue.parentPhone) === parentPhoneNormalized;
+          const schoolMatch = selectedPreviousSchool ? issue.reportingSchoolId === selectedPreviousSchool.id : true;
+          const qualifies = exactName || signatureMatch || enoughOverlap;
+          const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + (schoolMatch ? 10 : 0) + overlap;
+
+          return { ...issue, exactName, signatureMatch, phoneMatch, schoolMatch, qualifies, score };
+        })
+        .filter((issue) => issue.qualifies)
+        .sort((a, b) => b.score - a.score);
+
+      const confirmedIssue = candidateIssues.find((issue) => issue.phoneMatch && issue.schoolMatch && (issue.exactName || issue.signatureMatch)) ?? null;
+      const possibleIssue = confirmedIssue ? null : candidateIssues[0] ?? null;
+      const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
+
+      const [matchedIssueSchool] = issueSchoolId && issueSchoolId !== selectedPreviousSchool?.id
+        ? await tx
+            .select({ id: schools.id, name: schools.name, status: schools.status })
+            .from(schools)
+            .where(eq(schools.id, issueSchoolId))
+            .limit(1)
+        : [null];
+      const previousSchool = matchedIssueSchool ?? selectedPreviousSchool ?? null;
 
       const requestId = makeEntityId('clearance');
       const debitReference = makeWalletReference('clearance');
@@ -106,7 +143,7 @@ export async function POST(request: Request) {
         incomingSchoolId: actor.schoolId,
         previousSchoolId,
         previousSchoolNameSnapshot: previousSchool?.name ?? payload.data.previousSchoolName,
-        studentName: payload.data.studentName,
+        studentName,
         studentNameNormalized,
         gender: payload.data.gender ?? null,
         lastClass: payload.data.lastClass ?? null,
@@ -136,7 +173,7 @@ export async function POST(request: Request) {
         schoolId: actor.schoolId,
         type: 'debit',
         amountKobo: CHECK_PRICE_KOBO,
-        description: `Clearance request for ${payload.data.studentName}`,
+        description: `Clearance request for ${studentName}`,
         reference: debitReference,
         provider: 'system',
         createdByUserId: actor.userId,
@@ -156,7 +193,7 @@ export async function POST(request: Request) {
             matchedIssueId: confirmedIssue?.id ?? null,
             possibleIssueId: possibleIssue?.id ?? null,
             linkedIssueId: linkedIssue?.id ?? null,
-            possibleIssueCount: possibleIssues.length,
+            possibleIssueCount: candidateIssues.length,
             amountChargedKobo: CHECK_PRICE_KOBO,
           },
           ipAddress,
@@ -189,7 +226,7 @@ export async function POST(request: Request) {
                   clearanceRequestId: requestId,
                   searchResult,
                   status,
-                  possibleIssueCount: possibleIssues.length,
+                  possibleIssueCount: candidateIssues.length,
                 },
                 ipAddress,
               },

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 
 import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { CHECK_PRICE_KOBO, formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
-import { normalizeSearchText } from '@/lib/text';
+import { buildStudentDisplayName, normalizeSearchText } from '@/lib/text';
 
 type DirectorySchoolOption = {
   id: string;
@@ -66,7 +66,10 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
     }
 
     const formData = new FormData(form);
-    const studentName = String(formData.get('studentName') ?? '').trim();
+    const studentFirstName = String(formData.get('studentFirstName') ?? '').trim();
+    const studentMiddleName = String(formData.get('studentMiddleName') ?? '').trim();
+    const studentLastName = String(formData.get('studentLastName') ?? '').trim();
+    const studentName = buildStudentDisplayName(studentFirstName, studentMiddleName, studentLastName);
     const parentName = String(formData.get('parentName') ?? '').trim();
     const parentPhone = String(formData.get('parentPhone') ?? '').trim();
     const manualSchoolName = String(formData.get('manualSchoolName') ?? '').trim();
@@ -84,6 +87,9 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           studentName,
+          studentFirstName,
+          studentMiddleName,
+          studentLastName,
           parentName,
           parentPhone,
           previousSchoolId: selectedDirectorySchool?.id ?? null,
@@ -116,11 +122,23 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
         handleSubmit();
       }}
     >
-      <div className="space-y-1">
-        <label htmlFor="studentName" className="block text-xs font-semibold text-navy-800">
-          Student&apos;s Full Name
-        </label>
-        <input id="studentName" name="studentName" type="text" required placeholder="e.g. Chinedu Okafor" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
+      <div className="space-y-2">
+        <p className="block text-xs font-semibold text-navy-800">Student Name</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="space-y-1">
+            <label htmlFor="studentFirstName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">First name</label>
+            <input id="studentFirstName" name="studentFirstName" type="text" required placeholder="e.g. Aisha" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="studentMiddleName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Middle name</label>
+            <input id="studentMiddleName" name="studentMiddleName" type="text" placeholder="Optional" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="studentLastName" className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Last name</label>
+            <input id="studentLastName" name="studentLastName" type="text" placeholder="Optional" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-500">Splitting names helps EduClearance catch swapped or partially entered names without treating every similar record as confirmed.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

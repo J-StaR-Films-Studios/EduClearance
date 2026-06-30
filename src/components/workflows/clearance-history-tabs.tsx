@@ -11,7 +11,7 @@ export type ClearanceHistoryOutbound = {
   id: string;
   studentName: string;
   previousSchoolName: string;
-  resultState: 'no_record' | 'possible_match' | 'match';
+  resultState: 'no_record' | 'possible_match' | 'match' | 'cleared';
   statusLabel: string;
   amountChargedKobo: number;
 };
@@ -135,7 +135,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                         'rounded-full border px-2 py-0.5 font-semibold',
                         clearance.resultState === 'match'
                           ? 'border-terracotta-100 bg-terracotta-50 text-terracotta-600'
-                          : clearance.resultState === 'no_record'
+                          : clearance.resultState === 'no_record' || clearance.resultState === 'cleared'
                             ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
                             : 'border-amber-100 bg-amber-50 text-amber-700',
                       )}
