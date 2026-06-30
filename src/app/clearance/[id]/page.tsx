@@ -7,7 +7,6 @@ import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CopyMessageButton } from '@/components/workflows/copy-message-button';
 import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
 import { DisputeModal } from '@/components/workflows/dispute-modal';
-import { IssueResolutionPanel } from '@/components/workflows/issue-resolution-panel';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import {
@@ -445,8 +444,6 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   ) : null}
                 </div>
               </div>
-            ) : canResolveLinkedIssue && databaseDetail.issueId ? (
-              <IssueResolutionPanel issueId={databaseDetail.issueId} initialResolved={clearance.statusLabel === 'Cleared by previous school'} />
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                 <h3 className="text-base font-bold text-navy-900">{isIncomingSchoolViewer ? 'Contact & Dispute Paths' : 'Case context'}</h3>
@@ -493,7 +490,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
           </div>
         </div>
 
-        <CaseTimelinePanel entityType="clearance_request" entityId={clearance.id} entries={caseTimeline} />
+        <CaseTimelinePanel
+          entityType="clearance_request"
+          entityId={clearance.id}
+          entries={caseTimeline}
+          resolutionAction={canResolveLinkedIssue && databaseDetail.issueId ? { issueId: databaseDetail.issueId, initialResolved: clearance.statusLabel === 'Cleared by previous school' } : undefined}
+        />
       </div>
     </SchoolAppShell>
   );

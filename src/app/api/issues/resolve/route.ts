@@ -68,8 +68,10 @@ export async function POST(request: Request) {
         .where(eq(clearanceRequests.id, issue.clearanceRequestId));
     }
 
+    const timelineEntryId = makeEntityId('case_timeline');
+
     await tx.insert(caseTimelineEntries).values({
-      id: makeEntityId('case_timeline'),
+      id: timelineEntryId,
       entityType: 'clearance_issue',
       entityId: issue.id,
       authorUserId: actor.userId,
@@ -93,7 +95,20 @@ export async function POST(request: Request) {
       ipAddress,
     });
 
-    return { issueId: issue.id, clearanceRequestId: issue.clearanceRequestId, alreadyResolved: false };
+    return {
+      issueId: issue.id,
+      clearanceRequestId: issue.clearanceRequestId,
+      alreadyResolved: false,
+      entry: {
+        id: timelineEntryId,
+        entryType: 'status_change',
+        body: note,
+        authorLabel: actor.schoolName,
+        createdAt: resolvedAt.toISOString().slice(0, 16).replace('T', ' '),
+        attachmentFileName: null,
+        attachmentFileSize: null,
+      },
+    };
   });
 
   if (!result) {

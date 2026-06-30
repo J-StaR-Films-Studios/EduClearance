@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
-import { IssueResolutionPanel } from '@/components/workflows/issue-resolution-panel';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import { isPlatformAdminActor, resolveOptionalLocalActor } from '@/lib/local-actor';
@@ -157,9 +156,12 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
           <p className="mt-4 rounded-xl border border-background-secondary bg-background p-4 text-sm leading-relaxed text-slate-600">{issue.note}</p>
         </section>
 
-        {canResolveIssue ? <IssueResolutionPanel issueId={issue.id} initialResolved={issue.status === 'resolved'} /> : null}
-
-        <CaseTimelinePanel entityType="clearance_issue" entityId={issue.id} entries={timelineEntries} />
+        <CaseTimelinePanel
+          entityType="clearance_issue"
+          entityId={issue.id}
+          entries={timelineEntries}
+          resolutionAction={canResolveIssue ? { issueId: issue.id, initialResolved: issue.status === 'resolved' } : undefined}
+        />
       </div>
     </SchoolAppShell>
   );

@@ -20,6 +20,10 @@ type CaseTimelinePanelProps = {
   entityId: string;
   entries: TimelineEntry[];
   canComment?: boolean;
+  resolutionAction?: {
+    issueId: string;
+    initialResolved?: boolean;
+  };
 };
 
 type AttachmentFile = {
@@ -58,11 +62,13 @@ function readAttachment(form: HTMLFormElement): Promise<AttachmentFile | null> {
   });
 }
 
-export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityId, entries, canComment = true }: CaseTimelinePanelProps) {
+export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityId, entries, canComment = true, resolutionAction }: CaseTimelinePanelProps) {
   const [timelineEntries, setTimelineEntries] = useState(entries);
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shouldResolveIssue, setShouldResolveIssue] = useState(false);
+  const [isResolved, setIsResolved] = useState(Boolean(resolutionAction?.initialResolved));
 
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,8 +77,8 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
     const body = message.trim();
     const attachment = await readAttachment(form);
 
-    if (!body && !attachment) {
-      setNotice('Add a message or attach evidence before sending.');
+    if (!body && !attachment && !shouldResolveIssue) {
+      setNotice('Add a message, attach evidence, or tick the confirmation checkbox before sending.');
       return;
     }
 
@@ -84,29 +90,60 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
     setIsSubmitting(true);
     setNotice('');
 
-    const response = await fetch('/api/case-timeline/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        entityType,
-        entityId,
-        body: body || `Uploaded ${attachment?.name ?? 'evidence'}`,
-        attachmentFileName: attachment?.name,
-        attachmentFileType: attachment?.type,
-        attachmentFileSize: attachment?.size,
-        attachmentDataUrl: attachment?.dataUrl,
-      }),
-    });
-    const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; entry?: TimelineEntry } | null;
+    const newEntries: TimelineEntry[] = [];
+
+    if (body || attachment) {
+      const response = await fetch('/api/case-timeline/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType,
+          entityId,
+          body: body || `Uploaded ${attachment?.name ?? 'evidence'}`,
+          attachmentFileName: attachment?.name,
+          attachmentFileType: attachment?.type,
+          attachmentFileSize: attachment?.size,
+          attachmentDataUrl: attachment?.dataUrl,
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; entry?: TimelineEntry } | null;
+
+      if (!response.ok || !result?.ok || !result.entry) {
+        setIsSubmitting(false);
+        setNotice(result?.message ?? 'Unable to add this timeline entry.');
+        return;
+      }
+
+      newEntries.push(result.entry);
+    }
+
+    if (shouldResolveIssue && resolutionAction && !isResolved) {
+      const response = await fetch('/api/issues/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueId: resolutionAction.issueId, confirmed: true, note: body || undefined }),
+      });
+      const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string; alreadyResolved?: boolean; entry?: TimelineEntry } | null;
+
+      if (!response.ok || !result?.ok) {
+        setIsSubmitting(false);
+        setNotice(result?.message ?? 'Unable to confirm payment/no outstanding issue.');
+        return;
+      }
+
+      if (result.entry) {
+        newEntries.push(result.entry);
+      }
+      setIsResolved(true);
+      setShouldResolveIssue(false);
+      setNotice(result.alreadyResolved ? 'This issue was already marked resolved.' : 'Timeline updated and the linked request was cleared.');
+    }
 
     setIsSubmitting(false);
 
-    if (!response.ok || !result?.ok || !result.entry) {
-      setNotice(result?.message ?? 'Unable to add this timeline entry.');
-      return;
+    if (newEntries.length > 0) {
+      setTimelineEntries((current) => [...current, ...newEntries]);
     }
-
-    setTimelineEntries((current) => [...current, result.entry!]);
     setMessage('');
     form.reset();
   }
@@ -157,9 +194,25 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
             className="w-full rounded-lg border border-background-secondary bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
           />
           <p className="text-xs text-slate-500">Optional PDF, PNG, or JPG. Max 2MB.</p>
+          {resolutionAction ? (
+            <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-800">
+              <input
+                type="checkbox"
+                checked={shouldResolveIssue || isResolved}
+                disabled={isResolved}
+                onChange={(event) => setShouldResolveIssue(event.currentTarget.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-emerald-300 text-emerald-700 focus:ring-emerald-700"
+              />
+              <span>
+                {isResolved
+                  ? 'This issue has been confirmed resolved / no outstanding issue remains.'
+                  : 'Also confirm payment received / no outstanding issue remains and clear the linked request.'}
+              </span>
+            </label>
+          ) : null}
           {notice ? <div className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">{notice}</div> : null}
-          <button type="submit" disabled={isSubmitting} className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-80">
-            {isSubmitting ? 'Adding…' : 'Add to timeline'}
+          <button type="submit" disabled={isSubmitting} className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-300">
+            {isSubmitting ? 'Adding…' : shouldResolveIssue ? 'Add to timeline & clear issue' : 'Add to timeline'}
           </button>
         </form>
       ) : null}
