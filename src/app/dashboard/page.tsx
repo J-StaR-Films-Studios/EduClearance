@@ -22,7 +22,7 @@ export const metadata: Metadata = noIndexMetadata(`Dashboard | ${APP_NAME}`, 'Pr
 export default async function DashboardPage() {
   const currentRole = await requireSchoolSession('/dashboard');
   const actor = await resolveLocalSchoolActor();
-  const [walletBalanceKobo, recentClearances, inboundClearances, currentSchoolContact] = actor
+  const [walletBalanceKobo, recentClearances, inboundClearances] = actor
     ? await Promise.all([
         getSchoolWalletBalanceKobo(actor.schoolId),
         db
@@ -42,6 +42,9 @@ export default async function DashboardPage() {
             id: clearanceRequests.id,
             studentName: clearanceRequests.studentName,
             requestingSchool: schools.name,
+            requestingSchoolPhone: schools.clearancePhone,
+            requestingSchoolMainPhone: schools.mainPhone,
+            requestingSchoolEmail: schools.contactEmail,
             status: clearanceRequests.status,
             searchResult: clearanceRequests.searchResult,
           })
@@ -50,14 +53,8 @@ export default async function DashboardPage() {
           .where(eq(clearanceRequests.previousSchoolId, actor.schoolId))
           .orderBy(desc(clearanceRequests.createdAt))
           .limit(10),
-        db
-          .select({ name: schools.name, clearancePhone: schools.clearancePhone, mainPhone: schools.mainPhone, contactEmail: schools.contactEmail })
-          .from(schools)
-          .where(eq(schools.id, actor.schoolId))
-          .limit(1)
-          .then((rows) => rows[0] ?? null),
       ])
-    : [0, [], [], null];
+    : [0, [], []];
   const pendingInboundClearance = inboundClearances.find((request) => !['cleared_by_previous_school', 'closed'].includes(request.status));
   const pendingInboundIsPotential = pendingInboundClearance?.searchResult === 'possible_match';
   const schoolName = actor?.schoolName ?? 'School Dashboard';
@@ -150,12 +147,12 @@ export default async function DashboardPage() {
                   <strong>{pendingInboundClearance.requestingSchool}</strong> opened a clearance check that looks similar to a record associated with your school. This is a fuzzy match, not a confirmed student obligation, so review privately before responding.
                 </p>
                 <div className="rounded-lg border border-amber-200 bg-white/70 p-3">
-                  <p className="font-semibold text-amber-950">Likely related school contact</p>
+                  <p className="font-semibold text-amber-950">Contact the school that filed this request</p>
                   <ul className="mt-1 space-y-1">
                     <li>
-                      {currentSchoolContact?.name ?? schoolName}
-                      {currentSchoolContact?.clearancePhone || currentSchoolContact?.mainPhone ? ` · ${currentSchoolContact.clearancePhone ?? currentSchoolContact.mainPhone}` : ''}
-                      {currentSchoolContact?.contactEmail ? ` · ${currentSchoolContact.contactEmail}` : ''}
+                      {pendingInboundClearance.requestingSchool}
+                      {pendingInboundClearance.requestingSchoolPhone || pendingInboundClearance.requestingSchoolMainPhone ? ` · ${pendingInboundClearance.requestingSchoolPhone ?? pendingInboundClearance.requestingSchoolMainPhone}` : ''}
+                      {pendingInboundClearance.requestingSchoolEmail ? ` · ${pendingInboundClearance.requestingSchoolEmail}` : ''}
                     </li>
                   </ul>
                 </div>

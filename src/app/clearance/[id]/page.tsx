@@ -104,6 +104,9 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
       previousSchoolPhone: previousSchool?.clearancePhone ?? previousSchool?.mainPhone ?? undefined,
       previousSchoolEmail: previousSchool?.contactEmail ?? undefined,
       previousSchoolListed: Boolean(previousSchool),
+      requestingSchoolName: incomingSchoolName,
+      requestingSchoolPhone: incomingSchool?.clearancePhone ?? incomingSchool?.mainPhone ?? undefined,
+      requestingSchoolEmail: incomingSchool?.contactEmail ?? undefined,
       gender: request.gender ?? '',
       lastClass: request.lastClass ?? '',
       createdAt: request.createdAt.toISOString().slice(0, 10),
@@ -235,7 +238,8 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const chargedThisFlow = query.charged === '1';
   const caseTimeline = await getCaseTimeline(clearance.id, databaseDetail.issueId);
   const isIncomingSchoolViewer = actor.sessionRole === 'platform_admin' || actor.schoolId === databaseDetail.incomingSchoolId;
-  const canResolveLinkedIssue = Boolean(databaseDetail.issueId && actor.schoolId === databaseDetail.reportingSchoolId);
+  const isPreviousSchoolViewer = actor.schoolId === databaseDetail.previousSchoolId && !isIncomingSchoolViewer;
+  const canResolveLinkedIssue = Boolean(databaseDetail.issueId && clearance.resultState === 'match' && actor.schoolId === databaseDetail.reportingSchoolId);
 
   const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
@@ -468,22 +472,55 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
               </div>
             ) : clearance.resultState === 'possible_match' ? (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
-                <h3 className="text-base font-bold text-navy-900">Review Required</h3>
+                <h3 className="text-base font-bold text-navy-900">{isPreviousSchoolViewer ? 'Contact Requesting School' : 'Review Required'}</h3>
                 <p className="text-[11px] text-slate-500">
-                  This request has a similar-name possible match. Do not treat it as a confirmed outstanding record until school staff verify the parent and school details.
+                  {isPreviousSchoolViewer
+                    ? 'This is only a possible match to a record near your school. Contact the school that filed the clearance request before treating it as your student or taking action.'
+                    : 'This request has a similar-name possible match. Do not treat it as a confirmed outstanding record until school staff verify the parent and school details.'}
                 </p>
                 <div className="space-y-3 border-t border-background-secondary pt-3 text-xs">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase text-slate-400">Previous School</p>
-                    <p className="font-semibold text-navy-900">{previousSchoolName}</p>
-                  </div>
-                  {clearance.previousSchoolPhone ? (
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase text-slate-400">Clearance Office Phone</p>
-                      <p className="font-semibold text-navy-900">{clearance.previousSchoolPhone}</p>
-                    </div>
-                  ) : null}
+                  {isPreviousSchoolViewer ? (
+                    <>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase text-slate-400">Requesting School</p>
+                        <p className="font-semibold text-navy-900">{clearance.requestingSchoolName}</p>
+                      </div>
+                      {clearance.requestingSchoolPhone ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase text-slate-400">Requesting School Phone</p>
+                          <p className="font-semibold text-navy-900">{clearance.requestingSchoolPhone}</p>
+                        </div>
+                      ) : null}
+                      {clearance.requestingSchoolEmail ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase text-slate-400">Requesting School Email</p>
+                          <p className="text-slate-600">{clearance.requestingSchoolEmail}</p>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase text-slate-400">Potential Previous School</p>
+                        <p className="font-semibold text-navy-900">{previousSchoolName}</p>
+                      </div>
+                      {clearance.previousSchoolPhone ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase text-slate-400">Clearance Office Phone</p>
+                          <p className="font-semibold text-navy-900">{clearance.previousSchoolPhone}</p>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
                 </div>
+                {isPreviousSchoolViewer && clearance.requestingSchoolPhone ? (
+                  <a
+                    href={`tel:${clearance.requestingSchoolPhone.replace(/\s+/g, '')}`}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                  >
+                    Call Requesting School
+                  </a>
+                ) : null}
               </div>
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
