@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, clearanceIssues, clearanceRequests } from '@/db/schema';
+import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
@@ -19,6 +19,10 @@ const issueReportSchema = z.object({
   parentPhone: z.string().trim().min(7),
   note: z.string().trim().min(5, 'Official note must be at least 5 characters.'),
   evidenceUrl: z.string().trim().url().optional(),
+  evidenceFileName: z.string().trim().min(1).optional(),
+  evidenceFileType: z.string().trim().min(1).max(100).optional(),
+  evidenceFileSize: z.number().int().positive().max(2_000_000).optional(),
+  evidenceDataUrl: z.string().trim().min(1).max(3_000_000).optional(),
   clearanceRequestId: z.string().trim().min(1).nullable().optional(),
   source: z.string().trim().optional(),
   certified: z.literal(true),
@@ -56,6 +60,8 @@ export async function POST(request: Request) {
       linkedClearanceRequestId = request?.id ?? null;
     }
 
+    const hasEvidence = Boolean(payload.data.evidenceFileName && payload.data.evidenceFileType && payload.data.evidenceFileSize && payload.data.evidenceDataUrl);
+
     await tx.insert(clearanceIssues).values({
       id: issueId,
       clearanceRequestId: linkedClearanceRequestId,
@@ -69,8 +75,22 @@ export async function POST(request: Request) {
       academicSession: payload.data.academicSession,
       term: payload.data.term,
       note: payload.data.note,
-      evidenceUrl: payload.data.evidenceUrl ?? null,
+      evidenceUrl: payload.data.evidenceUrl ?? (hasEvidence ? `case-timeline:${issueId}` : null),
       status: 'unresolved',
+    });
+
+    await tx.insert(caseTimelineEntries).values({
+      id: makeEntityId('case_timeline'),
+      entityType: 'clearance_issue',
+      entityId: issueId,
+      authorUserId: actor.userId,
+      authorSchoolId: actor.schoolId,
+      entryType: hasEvidence ? 'evidence' : 'message',
+      body: payload.data.note,
+      attachmentFileName: payload.data.evidenceFileName ?? null,
+      attachmentFileType: payload.data.evidenceFileType ?? null,
+      attachmentFileSize: payload.data.evidenceFileSize ?? null,
+      attachmentDataUrl: payload.data.evidenceDataUrl ?? null,
     });
 
     if (linkedClearanceRequestId) {

@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CopyMessageButton } from '@/components/workflows/copy-message-button';
+import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
 import { DisputeModal } from '@/components/workflows/dispute-modal';
 import { db } from '@/db/client';
-import { clearanceIssues, clearanceRequests, schools } from '@/db/schema';
+import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import {
   buildWhatsAppHref,
   NO_RECORD_DISCLAIMER,
@@ -30,6 +31,7 @@ type DatabaseClearanceDetail = {
   incomingSchoolId: string;
   previousSchoolId: string | null;
   reportingSchoolId: string | null;
+  issueId: string | null;
 };
 
 export const metadata: Metadata = noIndexMetadata(`Clearance Request Result | ${APP_NAME}`, 'Private clearance result view.');
@@ -91,6 +93,7 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
     incomingSchoolId: request.incomingSchoolId,
     previousSchoolId: request.previousSchoolId,
     reportingSchoolId: issue?.reportingSchoolId ?? null,
+    issueId: issue?.id ?? null,
     clearance: {
       id: request.id,
       studentName: request.studentName,
@@ -142,6 +145,57 @@ function canViewDatabaseClearance(actor: LocalActor, detail: DatabaseClearanceDe
   );
 }
 
+type TimelineEntryView = {
+  id: string;
+  entryType: string;
+  body: string;
+  authorLabel: string;
+  createdAt: string;
+  attachmentFileName: string | null;
+  attachmentFileSize: number | null;
+};
+
+async function getAuthorLabel(authorSchoolId: string | null, authorUserId: string | null) {
+  if (authorSchoolId) {
+    const [school] = await db.select({ name: schools.name }).from(schools).where(eq(schools.id, authorSchoolId)).limit(1);
+    return school?.name ?? 'School update';
+  }
+
+  return authorUserId ? 'Platform admin' : 'System';
+}
+
+async function getCaseTimeline(clearanceRequestId: string, issueId: string | null): Promise<TimelineEntryView[]> {
+  const requestEntries = await db
+    .select()
+    .from(caseTimelineEntries)
+    .where(and(eq(caseTimelineEntries.entityType, 'clearance_request'), eq(caseTimelineEntries.entityId, clearanceRequestId)));
+
+  const issueEntries = issueId
+    ? await db
+        .select()
+        .from(caseTimelineEntries)
+        .where(and(eq(caseTimelineEntries.entityType, 'clearance_issue'), eq(caseTimelineEntries.entityId, issueId)))
+    : [];
+
+  const disputeRows = await db.select({ id: disputes.id }).from(disputes).where(eq(disputes.clearanceRequestId, clearanceRequestId));
+  const disputeEntries = (await Promise.all(disputeRows.map((dispute) => db
+    .select()
+    .from(caseTimelineEntries)
+    .where(and(eq(caseTimelineEntries.entityType, 'dispute'), eq(caseTimelineEntries.entityId, dispute.id)))))).flat();
+
+  const entries = [...requestEntries, ...issueEntries, ...disputeEntries].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+  return Promise.all(entries.map(async (entry) => ({
+    id: entry.id,
+    entryType: entry.entryType,
+    body: entry.body,
+    authorLabel: await getAuthorLabel(entry.authorSchoolId, entry.authorUserId),
+    createdAt: entry.createdAt.toISOString().slice(0, 16).replace('T', ' '),
+    attachmentFileName: entry.attachmentFileName,
+    attachmentFileSize: entry.attachmentFileSize,
+  })));
+}
+
 function applyMessageOverrides(message: string, clearance: OutboundClearance, studentName: string, previousSchoolName: string) {
   return message
     .replaceAll(clearance.studentName, studentName)
@@ -176,6 +230,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const previousSchoolListed = query.listed ? query.listed === '1' : clearance.previousSchoolListed;
   const notificationHref = actor.sessionRole === 'platform_admin' ? '/admin/clearance' : withRoleQuery('/clearance', currentRole);
   const chargedThisFlow = query.charged === '1';
+  const caseTimeline = await getCaseTimeline(clearance.id, databaseDetail.issueId);
 
   const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
@@ -428,6 +483,8 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
             )}
           </div>
         </div>
+
+        <CaseTimelinePanel entityType="clearance_request" entityId={clearance.id} entries={caseTimeline} />
       </div>
     </SchoolAppShell>
   );

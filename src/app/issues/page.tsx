@@ -119,9 +119,10 @@ export default async function IssuesPage() {
                   issues.map((issue) => (
                     <tr key={issue.id}>
                       <td className="px-6 py-4 align-top">
-                        <p className="font-semibold text-navy-900">{issue.studentName}</p>
+                        <Link href={`/issues/${issue.id}`} className="font-semibold text-navy-900 hover:underline">{issue.studentName}</Link>
                         <p className="mt-1 text-[11px] text-slate-500">Parent: {issue.parentName}</p>
                         <p className="mt-1 text-[11px] text-slate-400">Reported {issue.createdAt.toISOString().slice(0, 10)}</p>
+                        <Link href={`/issues/${issue.id}`} className="mt-2 inline-flex text-[11px] font-semibold text-navy-900 underline">View case history</Link>
                       </td>
                       <td className="px-6 py-4 align-top">
                         <p className="font-medium text-navy-900">{getIssueCategoryLabel(issue.issueType)}</p>

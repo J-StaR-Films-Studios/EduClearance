@@ -184,7 +184,12 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                   </tr>
                 ) : requests.map((request) => (
                   <tr key={request.id}>
-                    <td className="px-6 py-4 font-semibold text-navy-900">{request.studentName}</td>
+                    <td className="px-6 py-4">
+                      <Link href={withRoleQuery(`/clearance/${request.id}`, role)} className="font-semibold text-navy-900 hover:underline">
+                        {request.studentName}
+                      </Link>
+                      <p className="mt-1 text-[10px] text-slate-400">View case history</p>
+                    </td>
                     <td className="px-6 py-4">{request.requestingSchool}</td>
                     <td className="px-6 py-4">
                       <span

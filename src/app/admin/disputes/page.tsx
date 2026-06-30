@@ -40,6 +40,8 @@ export default async function AdminDisputesPage() {
         reason: dispute.reason,
         adminNote: dispute.adminNote ?? 'Evidence review pending.',
         refundReady: dispute.status === 'under_review',
+        clearanceRequestId: dispute.clearanceRequestId,
+        clearanceIssueId: dispute.clearanceIssueId,
       };
     }),
   );

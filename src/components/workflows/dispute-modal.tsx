@@ -2,6 +2,36 @@
 
 import { useState, type FormEvent } from 'react';
 
+const MAX_DISPUTE_EVIDENCE_BYTES = 2_000_000;
+
+type EvidenceFile = {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+};
+
+function readEvidenceFile(form: HTMLFormElement, name: string): Promise<EvidenceFile | null> {
+  const input = form.elements.namedItem(name);
+
+  if (!(input instanceof HTMLInputElement) || input.type !== 'file') {
+    return Promise.resolve(null);
+  }
+
+  const file = input.files?.[0];
+
+  if (!file) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: String(reader.result ?? '') });
+    reader.onerror = () => reject(new Error('Unable to read evidence file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function DisputeModal({ clearanceRequestId }: { clearanceRequestId: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -17,6 +47,13 @@ export function DisputeModal({ clearanceRequestId }: { clearanceRequestId: strin
     }
 
     const formData = new FormData(form);
+    const evidenceFile = await readEvidenceFile(form, 'evidenceFile');
+
+    if (evidenceFile && evidenceFile.size > MAX_DISPUTE_EVIDENCE_BYTES) {
+      setErrorMessage('Evidence file must be 2MB or smaller.');
+      return;
+    }
+
     setErrorMessage('');
     setIsSubmitting(true);
 
@@ -24,7 +61,14 @@ export function DisputeModal({ clearanceRequestId }: { clearanceRequestId: strin
       const response = await fetch('/api/disputes/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clearanceRequestId, reason: String(formData.get('reason') ?? '').trim() }),
+        body: JSON.stringify({
+          clearanceRequestId,
+          reason: String(formData.get('reason') ?? '').trim(),
+          evidenceFileName: evidenceFile?.name,
+          evidenceFileType: evidenceFile?.type,
+          evidenceFileSize: evidenceFile?.size,
+          evidenceDataUrl: evidenceFile?.dataUrl,
+        }),
       });
       const result = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
 
@@ -87,6 +131,19 @@ export function DisputeModal({ clearanceRequestId }: { clearanceRequestId: strin
                   placeholder="e.g. Parent has presented receipt number #4492 indicating full clearance on 2026-04-12."
                   className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
                 />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="disputeEvidence" className="block text-xs font-semibold text-navy-800">
+                  Payment Evidence / Receipt (Optional)
+                </label>
+                <input
+                  id="disputeEvidence"
+                  name="evidenceFile"
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+                <p className="text-xs text-slate-500">Upload parent receipt, bank proof, ledger screenshot, or related document. Max 2MB.</p>
               </div>
               <div className="flex justify-end gap-3 pt-2 text-sm font-semibold">
                 <button type="button" onClick={() => setIsOpen(false)} className="rounded-lg border border-background-secondary px-4 py-2 transition hover:bg-background-secondary">

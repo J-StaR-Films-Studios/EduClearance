@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { adminDisputes, type AdminDisputeRecord } from '@/lib/local-admin-data';
@@ -149,7 +150,11 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
                     <span className="text-slate-400">{record.raisedAt}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-navy-900">Dispute: {record.studentName} ({record.amountLabel})</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-navy-900">Dispute: {record.studentName} ({record.amountLabel})</p>
+                      {record.clearanceRequestId ? <Link href={`/clearance/${record.clearanceRequestId}`} className="font-semibold text-navy-900 underline">View case</Link> : null}
+                      {record.clearanceIssueId ? <Link href={`/issues/${record.clearanceIssueId}`} className="font-semibold text-navy-900 underline">View issue</Link> : null}
+                    </div>
                     <p className="mt-1 text-slate-600">
                       Raised by: <strong>{record.raisedBySchool}</strong> (Admitting School)
                     </p>

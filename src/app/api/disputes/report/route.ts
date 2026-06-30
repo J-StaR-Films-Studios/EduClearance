@@ -3,13 +3,17 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, clearanceIssues, clearanceRequests, disputes } from '@/db/schema';
+import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests, disputes } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 
 const disputeReportSchema = z.object({
   clearanceRequestId: z.string().trim().min(1),
-  reason: z.string().trim().min(10),
+  reason: z.string().trim().min(5),
+  evidenceFileName: z.string().trim().min(1).optional(),
+  evidenceFileType: z.string().trim().min(1).max(100).optional(),
+  evidenceFileSize: z.number().int().positive().max(2_000_000).optional(),
+  evidenceDataUrl: z.string().trim().min(1).max(3_000_000).optional(),
 });
 
 export async function POST(request: Request) {
@@ -60,6 +64,22 @@ export async function POST(request: Request) {
     if (issue) {
       await tx.update(clearanceIssues).set({ status: 'disputed' }).where(eq(clearanceIssues.id, issue.id));
     }
+
+    const hasEvidence = Boolean(payload.data.evidenceFileName && payload.data.evidenceFileType && payload.data.evidenceFileSize && payload.data.evidenceDataUrl);
+
+    await tx.insert(caseTimelineEntries).values({
+      id: makeEntityId('case_timeline'),
+      entityType: 'dispute',
+      entityId: disputeId,
+      authorUserId: actor.userId,
+      authorSchoolId: actor.schoolId,
+      entryType: hasEvidence ? 'evidence' : 'message',
+      body: payload.data.reason,
+      attachmentFileName: payload.data.evidenceFileName ?? null,
+      attachmentFileType: payload.data.evidenceFileType ?? null,
+      attachmentFileSize: payload.data.evidenceFileSize ?? null,
+      attachmentDataUrl: payload.data.evidenceDataUrl ?? null,
+    });
 
     await tx.insert(auditLogs).values({
       id: makeEntityId('audit'),

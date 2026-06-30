@@ -69,6 +69,8 @@ export type AdminDisputeRecord = {
   reason: string;
   adminNote: string;
   refundReady: boolean;
+  clearanceRequestId?: string | null;
+  clearanceIssueId?: string | null;
 };
 
 export const adminOverviewMetrics: AdminMetric[] = [

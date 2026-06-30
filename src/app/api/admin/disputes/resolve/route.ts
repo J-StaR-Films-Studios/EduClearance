@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, clearanceIssues, disputes } from '@/db/schema';
+import { auditLogs, caseTimelineEntries, clearanceIssues, disputes } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveOptionalLocalActor } from '@/lib/local-actor';
 
@@ -48,6 +48,20 @@ export async function POST(request: Request) {
         .set({ status: payload.data.action === 'resolved' ? 'resolved' : 'disputed', resolvedAt: payload.data.action === 'resolved' ? new Date() : null })
         .where(eq(clearanceIssues.id, updated.clearanceIssueId));
     }
+
+    await tx.insert(caseTimelineEntries).values({
+      id: makeEntityId('case_timeline'),
+      entityType: 'dispute',
+      entityId: updated.id,
+      authorUserId: actor.userId,
+      authorSchoolId: null,
+      entryType: 'status_change',
+      body: adminNote,
+      attachmentFileName: null,
+      attachmentFileType: null,
+      attachmentFileSize: null,
+      attachmentDataUrl: null,
+    });
 
     await tx.insert(auditLogs).values({
       id: makeEntityId('audit'),

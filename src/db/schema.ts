@@ -269,6 +269,28 @@ export const payments = pgTable(
   }),
 );
 
+export const caseTimelineEntries = pgTable(
+  'case_timeline_entries',
+  {
+    id: text('id').primaryKey(),
+    entityType: text('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    authorUserId: text('author_user_id').references(() => users.id, { onDelete: 'set null' }),
+    authorSchoolId: text('author_school_id').references(() => schools.id, { onDelete: 'set null' }),
+    entryType: text('entry_type').notNull(),
+    body: text('body').notNull(),
+    attachmentFileName: text('attachment_file_name'),
+    attachmentFileType: text('attachment_file_type'),
+    attachmentFileSize: integer('attachment_file_size'),
+    attachmentDataUrl: text('attachment_data_url'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    entityIdx: index('case_timeline_entries_entity_idx').on(table.entityType, table.entityId, table.createdAt),
+    authorSchoolIdx: index('case_timeline_entries_author_school_id_idx').on(table.authorSchoolId),
+  }),
+);
+
 export const disputes = pgTable(
   'disputes',
   {

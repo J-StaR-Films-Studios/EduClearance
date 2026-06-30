@@ -1,6 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
+
+const MAX_EVIDENCE_FILE_BYTES = 2_000_000;
+
+type EvidenceFile = {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+};
 
 type InboundIssueRequest = {
   id: string;
@@ -11,6 +21,27 @@ type InboundIssueRequest = {
   requestingSchoolName: string;
   requestedAt: string;
 };
+
+function readEvidenceFile(form: HTMLFormElement, name: string): Promise<EvidenceFile | null> {
+  const input = form.elements.namedItem(name);
+
+  if (!(input instanceof HTMLInputElement) || input.type !== 'file') {
+    return Promise.resolve(null);
+  }
+
+  const file = input.files?.[0];
+
+  if (!file) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: String(reader.result ?? '') });
+    reader.onerror = () => reject(new Error('Unable to read evidence file.'));
+    reader.readAsDataURL(file);
+  });
+}
 
 export function IssueReportForm({ fromInboundRequest = false, inboundRequest = null }: { fromInboundRequest?: boolean; inboundRequest?: InboundIssueRequest | null }) {
   const [submitted, setSubmitted] = useState(false);
@@ -32,6 +63,13 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
     }
 
     const formData = new FormData(form);
+    const evidenceFile = await readEvidenceFile(form, 'evidenceFile');
+
+    if (evidenceFile && evidenceFile.size > MAX_EVIDENCE_FILE_BYTES) {
+      setErrorMessage('Evidence file must be 2MB or smaller.');
+      return;
+    }
+
     setSubmitted(false);
     setErrorMessage('');
     setIsSubmitting(true);
@@ -50,6 +88,10 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
           parentName: String(formData.get('parentName') ?? '').trim(),
           parentPhone: String(formData.get('parentPhone') ?? '').trim(),
           note: String(formData.get('note') ?? '').trim(),
+          evidenceFileName: evidenceFile?.name,
+          evidenceFileType: evidenceFile?.type,
+          evidenceFileSize: evidenceFile?.size,
+          evidenceDataUrl: evidenceFile?.dataUrl,
           clearanceRequestId: inboundRequest?.id ?? null,
           source: fromInboundRequest ? 'inbound' : 'direct',
           certified: isCertified,
@@ -77,9 +119,9 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
       {submitted ? (
         <div className="mb-4 space-y-2 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
           <p>Issue reported successfully. The record is marked unresolved and will remain available for school-scoped review and follow-up.</p>
-          <a href="/issues" className="inline-flex font-semibold underline">
+          <Link href="/issues" className="inline-flex font-semibold underline">
             View reported issues
-          </a>
+          </Link>
         </div>
       ) : null}
 
@@ -254,9 +296,12 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
           </label>
           <input
             id="issueEvidence"
+            name="evidenceFile"
             type="file"
+            accept=".pdf,.png,.jpg,.jpeg"
             className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
           />
+          <p className="text-xs text-slate-500">Optional PDF, PNG, or JPG. Max 2MB. It will appear in the case timeline.</p>
         </div>
 
         <div className="flex items-start gap-2.5 py-2">
