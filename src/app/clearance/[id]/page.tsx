@@ -106,6 +106,7 @@ async function getDatabaseOutboundClearance(id: string): Promise<DatabaseClearan
       previousSchoolListed: Boolean(previousSchool),
       requestingSchoolName: incomingSchoolName,
       requestingSchoolPhone: incomingSchool?.clearancePhone ?? incomingSchool?.mainPhone ?? undefined,
+      requestingSchoolWhatsappPhone: incomingSchool?.whatsappPhone ?? incomingSchool?.clearancePhone ?? incomingSchool?.mainPhone ?? undefined,
       requestingSchoolEmail: incomingSchool?.contactEmail ?? undefined,
       gender: request.gender ?? '',
       lastClass: request.lastClass ?? '',
@@ -251,6 +252,10 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const matchWhatsappHref = clearance.issue && issueWhatsappMessage
     ? buildWhatsAppHref(clearance.issue.phone, issueWhatsappMessage)
     : undefined;
+  const requestingSchoolWhatsappMessage = `Hello ${clearance.requestingSchoolName ?? 'Admissions team'}, this is ${previousSchoolName}. We are reviewing the possible EduClearance match for your clearance request. Please help confirm the parent details so we do not treat a fuzzy match as a confirmed record.`;
+  const requestingSchoolWhatsappHref = clearance.requestingSchoolWhatsappPhone
+    ? buildWhatsAppHref(clearance.requestingSchoolWhatsappPhone, requestingSchoolWhatsappMessage)
+    : undefined;
 
   return (
     <SchoolAppShell activeKey="dashboard" mobileMode="detail" role={currentRole}>
@@ -339,6 +344,9 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   </p>
                   <p className="text-xs text-amber-800">
                     Verify the parent details and previous school directly before treating this as the same child or taking admissions/dispute action.
+                  </p>
+                  <p className="rounded-lg border border-amber-200 bg-white/70 p-3 text-xs font-semibold text-amber-900">
+                    The green paid/cleared confirmation is intentionally locked for this case because EduClearance has not confirmed it is the exact same student record. If this is a typo or wrong-school match, ask the requesting school to correct the details and rerun the check.
                   </p>
                 </div>
               </>
@@ -491,6 +499,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                           <p className="font-semibold text-navy-900">{clearance.requestingSchoolPhone}</p>
                         </div>
                       ) : null}
+                      {clearance.requestingSchoolWhatsappPhone ? (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase text-slate-400">WhatsApp Line</p>
+                          <p className="font-semibold text-navy-900">{clearance.requestingSchoolWhatsappPhone}</p>
+                        </div>
+                      ) : null}
                       {clearance.requestingSchoolEmail ? (
                         <div>
                           <p className="text-[10px] font-semibold uppercase text-slate-400">Requesting School Email</p>
@@ -513,13 +527,27 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     </>
                   )}
                 </div>
-                {isPreviousSchoolViewer && clearance.requestingSchoolPhone ? (
-                  <a
-                    href={`tel:${clearance.requestingSchoolPhone.replace(/\s+/g, '')}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
-                  >
-                    Call Requesting School
-                  </a>
+                {isPreviousSchoolViewer ? (
+                  <div className="space-y-2">
+                    {clearance.requestingSchoolPhone ? (
+                      <a
+                        href={`tel:${clearance.requestingSchoolPhone.replace(/\s+/g, '')}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                      >
+                        Call Requesting School
+                      </a>
+                    ) : null}
+                    {requestingSchoolWhatsappHref ? (
+                      <a
+                        href={requestingSchoolWhatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                      >
+                        WhatsApp Requesting School
+                      </a>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : (

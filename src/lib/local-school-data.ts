@@ -14,6 +14,7 @@ export type OutboundClearance = {
   previousSchoolListed: boolean;
   requestingSchoolName?: string;
   requestingSchoolPhone?: string;
+  requestingSchoolWhatsappPhone?: string;
   requestingSchoolEmail?: string;
   gender: string;
   lastClass: string;

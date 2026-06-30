@@ -32,6 +32,7 @@ export default async function AdminSchoolsPage() {
       officialContactName: schoolClaims.officialContactName,
       officialEmail: schoolClaims.officialEmail,
       officialPhone: schoolClaims.officialPhone,
+      officialWhatsappPhone: schoolClaims.officialWhatsappPhone,
       proofFileName: schoolClaims.proofFileName,
       proofFileType: schoolClaims.proofFileType,
       proofFileSize: schoolClaims.proofFileSize,

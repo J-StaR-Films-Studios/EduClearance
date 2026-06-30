@@ -34,6 +34,7 @@ export default async function PendingVerificationPage() {
       requestedArea: schoolClaims.requestedArea,
       officialEmail: schoolClaims.officialEmail,
       officialPhone: schoolClaims.officialPhone,
+      officialWhatsappPhone: schoolClaims.officialWhatsappPhone,
       proofFileName: schoolClaims.proofFileName,
       status: schoolClaims.status,
       adminNote: schoolClaims.adminNote,
@@ -90,6 +91,7 @@ export default async function PendingVerificationPage() {
                 <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
                   <p>Official email: {claim.officialEmail}</p>
                   <p>Official phone: {claim.officialPhone}</p>
+                  <p>WhatsApp line: {claim.officialWhatsappPhone ?? claim.officialPhone}</p>
                   <p>Proof file: {claim.proofFileName}</p>
                   <p>Submitted: {claim.createdAt.toISOString().slice(0, 10)}</p>
                   <p>Online attempts: {Math.min(attemptCount, MAX_SCHOOL_CLAIM_APPEALS)} of {MAX_SCHOOL_CLAIM_APPEALS}</p>

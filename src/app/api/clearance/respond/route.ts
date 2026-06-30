@@ -19,6 +19,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Please sign in with an active school account.' }, { status: 401 });
   }
 
+  if (actor.schoolStatus !== 'active') {
+    return NextResponse.json({ ok: false, message: 'Your school must be verified before it can answer clearance requests.' }, { status: 403 });
+  }
+
   const payload = responseSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {

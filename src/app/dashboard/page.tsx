@@ -7,6 +7,7 @@ import { APP_NAME } from '@/lib/site';
 import { db } from '@/db/client';
 import { clearanceRequests, schools } from '@/db/schema';
 import {
+  buildWhatsAppHref,
   schoolProfile,
   withRoleQuery,
 } from '@/lib/local-school-data';
@@ -44,6 +45,7 @@ export default async function DashboardPage() {
             requestingSchool: schools.name,
             requestingSchoolPhone: schools.clearancePhone,
             requestingSchoolMainPhone: schools.mainPhone,
+            requestingSchoolWhatsappPhone: schools.whatsappPhone,
             requestingSchoolEmail: schools.contactEmail,
             status: clearanceRequests.status,
             searchResult: clearanceRequests.searchResult,
@@ -57,6 +59,11 @@ export default async function DashboardPage() {
     : [0, [], []];
   const pendingInboundClearance = inboundClearances.find((request) => !['cleared_by_previous_school', 'closed'].includes(request.status));
   const pendingInboundIsPotential = pendingInboundClearance?.searchResult === 'possible_match';
+  const pendingInboundRequestPhone = pendingInboundClearance?.requestingSchoolPhone ?? pendingInboundClearance?.requestingSchoolMainPhone ?? null;
+  const pendingInboundWhatsappPhone = pendingInboundClearance?.requestingSchoolWhatsappPhone ?? pendingInboundRequestPhone;
+  const pendingInboundWhatsappHref = pendingInboundClearance && pendingInboundWhatsappPhone
+    ? buildWhatsAppHref(pendingInboundWhatsappPhone, `Hello ${pendingInboundClearance.requestingSchool}, we are reviewing your EduClearance request because it only looks like a possible match. Please help confirm the parent details before we treat it as a confirmed record.`)
+    : undefined;
   const schoolName = actor?.schoolName ?? 'School Dashboard';
 
   return (
@@ -151,7 +158,8 @@ export default async function DashboardPage() {
                   <ul className="mt-1 space-y-1">
                     <li>
                       {pendingInboundClearance.requestingSchool}
-                      {pendingInboundClearance.requestingSchoolPhone || pendingInboundClearance.requestingSchoolMainPhone ? ` · ${pendingInboundClearance.requestingSchoolPhone ?? pendingInboundClearance.requestingSchoolMainPhone}` : ''}
+                      {pendingInboundRequestPhone ? ` · ${pendingInboundRequestPhone}` : ''}
+                      {pendingInboundClearance.requestingSchoolWhatsappPhone ? ` · WhatsApp: ${pendingInboundClearance.requestingSchoolWhatsappPhone}` : ''}
                       {pendingInboundClearance.requestingSchoolEmail ? ` · ${pendingInboundClearance.requestingSchoolEmail}` : ''}
                     </li>
                   </ul>
@@ -169,6 +177,24 @@ export default async function DashboardPage() {
               >
                 {pendingInboundIsPotential ? 'Review Potential Match' : 'Review Inbound Request'}
               </Link>
+              {pendingInboundIsPotential && pendingInboundRequestPhone ? (
+                <a
+                  href={`tel:${pendingInboundRequestPhone.replace(/\s+/g, '')}`}
+                  className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50"
+                >
+                  Call Requesting School
+                </a>
+              ) : null}
+              {pendingInboundIsPotential && pendingInboundWhatsappHref ? (
+                <a
+                  href={pendingInboundWhatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-50"
+                >
+                  WhatsApp Requesting School
+                </a>
+              ) : null}
               {!pendingInboundIsPotential ? (
                 <Link
                   href={withRoleQuery('/issues/new?source=inbound', currentRole)}

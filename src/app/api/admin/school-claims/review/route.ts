@@ -45,6 +45,7 @@ export async function POST(request: Request) {
         officialContactName: schoolClaims.officialContactName,
         officialEmail: schoolClaims.officialEmail,
         officialPhone: schoolClaims.officialPhone,
+        officialWhatsappPhone: schoolClaims.officialWhatsappPhone,
         type: schoolClaims.type,
         status: schoolClaims.status,
       })
@@ -112,6 +113,7 @@ export async function POST(request: Request) {
       await tx.update(schools).set({
         status: 'active',
         clearancePhone: claim.officialPhone,
+        whatsappPhone: claim.officialWhatsappPhone ?? claim.officialPhone,
         contactEmail: claim.officialEmail,
         contactPerson: claim.officialContactName,
         updatedAt: reviewedAt,
@@ -130,6 +132,7 @@ export async function POST(request: Request) {
         area: claim.requestedArea,
         mainPhone: null,
         clearancePhone: claim.officialPhone,
+        whatsappPhone: claim.officialWhatsappPhone ?? claim.officialPhone,
         contactEmail: claim.officialEmail,
         contactPerson: claim.officialContactName,
         logoUrl: null,

@@ -34,6 +34,7 @@ type PendingSubmission = {
   officialContactName: string;
   officialEmail: string;
   officialPhone: string;
+  officialWhatsappPhone: string;
   proofFileName: string;
   proofNote: string;
 };
@@ -96,6 +97,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
   const [newSchoolProofFileName, setNewSchoolProofFileName] = useState('');
   const [newSchoolNameQuery, setNewSchoolNameQuery] = useState('');
   const [submissionError, setSubmissionError] = useState('');
+  const [claimWhatsappSameAsPhone, setClaimWhatsappSameAsPhone] = useState(true);
+  const [newSchoolWhatsappSameAsPhone, setNewSchoolWhatsappSameAsPhone] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -140,6 +143,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
     setNewSchoolProofFileName('');
     setNewSchoolNameQuery('');
     setSubmissionError('');
+    setClaimWhatsappSameAsPhone(true);
+    setNewSchoolWhatsappSameAsPhone(true);
     setFlowState('search');
   }
 
@@ -209,6 +214,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       return;
     }
 
+    const officialPhone = String(formData.get('officialPhone') ?? '').trim();
+    const officialWhatsappPhone = claimWhatsappSameAsPhone ? officialPhone : String(formData.get('officialWhatsappPhone') ?? '').trim();
     const payload = {
       claimType: 'existing_school' as const,
       schoolId: selectedSchool.id,
@@ -217,7 +224,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       requestedAddress: selectedSchool.address ?? selectedSchool.location,
       officialContactName: String(formData.get('officialContactName') ?? '').trim(),
       officialEmail: String(formData.get('officialEmail') ?? '').trim(),
-      officialPhone: String(formData.get('officialPhone') ?? '').trim(),
+      officialPhone,
+      officialWhatsappPhone,
       proofFileName: proofFile.name,
       proofFileType: proofFile.type,
       proofFileSize: proofFile.size,
@@ -251,6 +259,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: payload.officialContactName,
       officialEmail: payload.officialEmail,
       officialPhone: payload.officialPhone,
+      officialWhatsappPhone: payload.officialWhatsappPhone,
       proofFileName: proofFile.name,
       proofNote: payload.proofNote,
     });
@@ -283,6 +292,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       return;
     }
 
+    const officialPhone = String(formData.get('officialPhone') ?? '').trim();
+    const officialWhatsappPhone = newSchoolWhatsappSameAsPhone ? officialPhone : String(formData.get('officialWhatsappPhone') ?? '').trim();
     const payload = {
       claimType: 'new_school' as const,
       requestedSchoolName: String(formData.get('schoolName') ?? '').trim(),
@@ -290,7 +301,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       requestedAddress: String(formData.get('schoolAddress') ?? '').trim(),
       officialContactName: String(formData.get('officialContactName') ?? '').trim(),
       officialEmail: String(formData.get('officialEmail') ?? '').trim(),
-      officialPhone: String(formData.get('officialPhone') ?? '').trim(),
+      officialPhone,
+      officialWhatsappPhone,
       proofFileName: proofFile.name,
       proofFileType: proofFile.type,
       proofFileSize: proofFile.size,
@@ -324,6 +336,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       officialContactName: payload.officialContactName,
       officialEmail: payload.officialEmail,
       officialPhone: payload.officialPhone,
+      officialWhatsappPhone: payload.officialWhatsappPhone,
       proofFileName: proofFile.name,
       proofNote: payload.proofNote,
     });
@@ -519,18 +532,43 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="official-phone" className="block text-xs font-semibold text-navy-800">
-                Official Clearance Phone
-              </label>
-              <input
-                id="official-phone"
-                name="officialPhone"
-                type="tel"
-                required
-                placeholder="e.g. +234 803 123 4567"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label htmlFor="official-phone" className="block text-xs font-semibold text-navy-800">
+                  Official Clearance Phone
+                </label>
+                <input
+                  id="official-phone"
+                  name="officialPhone"
+                  type="tel"
+                  required
+                  placeholder="e.g. +234 803 123 4567"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="official-whatsapp-phone" className="block text-xs font-semibold text-navy-800">
+                  WhatsApp Line
+                </label>
+                <input
+                  id="official-whatsapp-phone"
+                  name="officialWhatsappPhone"
+                  type="tel"
+                  required={!claimWhatsappSameAsPhone}
+                  disabled={claimWhatsappSameAsPhone}
+                  placeholder="e.g. +234 803 123 4567"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 disabled:bg-slate-100 disabled:text-slate-400"
+                />
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={claimWhatsappSameAsPhone}
+                    onChange={(event) => setClaimWhatsappSameAsPhone(event.currentTarget.checked)}
+                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900"
+                  />
+                  Same number for WhatsApp
+                </label>
+              </div>
             </div>
             <div className="space-y-1">
               <label htmlFor="claim-proof-note" className="block text-xs font-semibold text-navy-800">
@@ -685,18 +723,43 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="new-official-phone" className="block text-xs font-semibold text-navy-800">
-                Official Clearance Phone
-              </label>
-              <input
-                id="new-official-phone"
-                name="officialPhone"
-                type="tel"
-                required
-                placeholder="e.g. +234 803 123 4567"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label htmlFor="new-official-phone" className="block text-xs font-semibold text-navy-800">
+                  Official Clearance Phone
+                </label>
+                <input
+                  id="new-official-phone"
+                  name="officialPhone"
+                  type="tel"
+                  required
+                  placeholder="e.g. +234 803 123 4567"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="new-official-whatsapp-phone" className="block text-xs font-semibold text-navy-800">
+                  WhatsApp Line
+                </label>
+                <input
+                  id="new-official-whatsapp-phone"
+                  name="officialWhatsappPhone"
+                  type="tel"
+                  required={!newSchoolWhatsappSameAsPhone}
+                  disabled={newSchoolWhatsappSameAsPhone}
+                  placeholder="e.g. +234 803 123 4567"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 disabled:bg-slate-100 disabled:text-slate-400"
+                />
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={newSchoolWhatsappSameAsPhone}
+                    onChange={(event) => setNewSchoolWhatsappSameAsPhone(event.currentTarget.checked)}
+                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900"
+                  />
+                  Same number for WhatsApp
+                </label>
+              </div>
             </div>
             <div className="space-y-1">
               <label htmlFor="new-proof-note" className="block text-xs font-semibold text-navy-800">
@@ -763,6 +826,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
             <p className="mt-2 text-slate-600">Official contact: {pendingSubmission.officialContactName}</p>
             <p className="mt-2 text-slate-600">Official email: {pendingSubmission.officialEmail}</p>
             <p className="mt-2 text-slate-600">Clearance phone: {pendingSubmission.officialPhone}</p>
+            <p className="mt-2 text-slate-600">WhatsApp line: {pendingSubmission.officialWhatsappPhone}</p>
             <p className="mt-2 text-slate-600">Proof document selected: {pendingSubmission.proofFileName}</p>
             <p className="mt-2 text-slate-600">Proof note: {pendingSubmission.proofNote}</p>
             <p className="mt-3 text-slate-500">Wallet/top-up/payment setup may still be required before clearance checks are enabled.</p>

@@ -11,6 +11,7 @@ const schoolUpdateSchema = z.object({
   schoolId: z.string().trim().min(1),
   status: z.enum(['unclaimed', 'pending', 'active', 'suspended']).optional(),
   clearancePhone: z.string().trim().optional(),
+  whatsappPhone: z.string().trim().optional(),
   contactEmail: z.string().trim().email().optional(),
   contactPerson: z.string().trim().optional(),
   adminNote: z.string().trim().optional(),
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
   const updates = {
     ...(payload.data.status ? { status: payload.data.status } : {}),
     ...(payload.data.clearancePhone !== undefined ? { clearancePhone: payload.data.clearancePhone } : {}),
+    ...(payload.data.whatsappPhone !== undefined ? { whatsappPhone: payload.data.whatsappPhone } : {}),
     ...(payload.data.contactEmail !== undefined ? { contactEmail: payload.data.contactEmail } : {}),
     ...(payload.data.contactPerson !== undefined ? { contactPerson: payload.data.contactPerson } : {}),
     updatedAt: new Date(),
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
     metadataJson: {
       status: payload.data.status ?? null,
       clearancePhone: payload.data.clearancePhone ?? null,
+      whatsappPhone: payload.data.whatsappPhone ?? null,
       contactEmail: payload.data.contactEmail ?? null,
       contactPerson: payload.data.contactPerson ?? null,
       adminNote: payload.data.adminNote ?? null,

@@ -20,6 +20,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Please sign in with an active school account.' }, { status: 401 });
   }
 
+  if (actor.schoolStatus !== 'active') {
+    return NextResponse.json({ ok: false, message: 'Your school must be verified before it can clear issue records.' }, { status: 403 });
+  }
+
   const payload = issueResolveSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
@@ -49,6 +53,18 @@ export async function POST(request: Request) {
 
     if (issue.status === 'resolved') {
       return { issueId: issue.id, clearanceRequestId: issue.clearanceRequestId, alreadyResolved: true };
+    }
+
+    if (issue.clearanceRequestId) {
+      const [linkedRequest] = await tx
+        .select({ searchResult: clearanceRequests.searchResult })
+        .from(clearanceRequests)
+        .where(eq(clearanceRequests.id, issue.clearanceRequestId))
+        .limit(1);
+
+      if (linkedRequest?.searchResult === 'possible_match') {
+        return { blockedReason: 'potential_match' as const };
+      }
     }
 
     await tx
@@ -113,6 +129,10 @@ export async function POST(request: Request) {
 
   if (!result) {
     return NextResponse.json({ ok: false, message: 'Issue record was not found for your school.' }, { status: 404 });
+  }
+
+  if ('blockedReason' in result && result.blockedReason === 'potential_match') {
+    return NextResponse.json({ ok: false, message: 'This is still a potential fuzzy match. Confirm the school/student details before marking it paid or cleared.' }, { status: 409 });
   }
 
   return NextResponse.json({ ok: true, ...result });

@@ -20,6 +20,7 @@ type AdminSchoolClaim = {
   officialContactName: string;
   officialEmail: string;
   officialPhone: string;
+  officialWhatsappPhone: string | null;
   proofFileName: string;
   proofFileType: string | null;
   proofFileSize: number | null;
@@ -93,6 +94,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
         claim.officialContactName,
         claim.officialEmail,
         claim.officialPhone,
+        claim.officialWhatsappPhone ?? '',
         claim.proofFileName,
       ].some((value) => value.toLowerCase().includes(query));
     });
@@ -176,6 +178,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
       schoolId: selectedClaim.schoolId,
       status: String(formData.get('schoolStatus') ?? selectedClaim.linkedSchoolStatus ?? 'active') as SchoolStatus,
       clearancePhone: String(formData.get('clearancePhone') ?? ''),
+      whatsappPhone: String(formData.get('whatsappPhone') ?? ''),
       contactEmail: String(formData.get('contactEmail') ?? ''),
       contactPerson: String(formData.get('contactPerson') ?? ''),
       adminNote: String(formData.get('adminNote') ?? ''),
@@ -202,6 +205,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
         officialContactName: payload.contactPerson,
         officialEmail: payload.contactEmail,
         officialPhone: payload.clearancePhone,
+        officialWhatsappPhone: payload.whatsappPhone,
         adminNote: payload.adminNote || selectedClaim.adminNote,
       },
       `${selectedClaim.requestedSchoolName}: linked school profile updated.`,
@@ -330,6 +334,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                   <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.officialContactName}</p>
                   <p className="mt-1 break-all">{selectedClaim.officialEmail}</p>
                   <p className="mt-1">{selectedClaim.officialPhone}</p>
+                  <p className="mt-1">WhatsApp: {selectedClaim.officialWhatsappPhone ?? selectedClaim.officialPhone}</p>
                 </div>
                 <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
                   <p className="font-semibold uppercase tracking-wider text-navy-900">Proof document</p>
@@ -432,6 +437,18 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                       id="clearancePhone"
                       name="clearancePhone"
                       defaultValue={selectedClaim.officialPhone}
+                      className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-navy-800" htmlFor="whatsappPhone">
+                      WhatsApp Line
+                    </label>
+                    <input
+                      id="whatsappPhone"
+                      name="whatsappPhone"
+                      defaultValue={selectedClaim.officialWhatsappPhone ?? selectedClaim.officialPhone}
                       className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
                     />
                   </div>
