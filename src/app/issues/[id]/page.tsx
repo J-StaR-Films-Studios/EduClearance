@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 
 import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
+import { IssueResolutionPanel } from '@/components/workflows/issue-resolution-panel';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import { isPlatformAdminActor, resolveOptionalLocalActor } from '@/lib/local-actor';
@@ -96,6 +97,7 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
     : [null];
 
   const canView = isPlatformAdminActor(actor) || issue.reportingSchoolId === actor.schoolId || linkedRequest?.incomingSchoolId === actor.schoolId || linkedRequest?.previousSchoolId === actor.schoolId;
+  const canResolveIssue = !isPlatformAdminActor(actor) && issue.reportingSchoolId === actor.schoolId;
 
   if (!canView) {
     notFound();
@@ -117,7 +119,7 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
             <p className="mt-1 text-xs text-slate-500">Parent: {issue.parentName} · {issue.parentPhone}</p>
           </div>
           <div className="flex items-center gap-3">
-            {linkedRequest ? <Link href={`/clearance/${linkedRequest.id}`} className="text-xs font-semibold text-navy-900 hover:underline">View clearance request</Link> : null}
+            {linkedRequest ? <Link href={`/clearance/${linkedRequest.id}`} className="text-xs font-semibold text-navy-900 hover:underline">View linked request context</Link> : null}
             <Link href="/issues" className="text-xs text-slate-500 hover:text-navy-900">← Back</Link>
           </div>
         </header>
@@ -154,6 +156,8 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
           </div>
           <p className="mt-4 rounded-xl border border-background-secondary bg-background p-4 text-sm leading-relaxed text-slate-600">{issue.note}</p>
         </section>
+
+        {canResolveIssue ? <IssueResolutionPanel issueId={issue.id} initialResolved={issue.status === 'resolved'} /> : null}
 
         <CaseTimelinePanel entityType="clearance_issue" entityId={issue.id} entries={timelineEntries} />
       </div>

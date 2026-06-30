@@ -7,6 +7,7 @@ import { SchoolAppShell } from '@/components/app/school-app-shell';
 import { CopyMessageButton } from '@/components/workflows/copy-message-button';
 import { CaseTimelinePanel } from '@/components/workflows/case-timeline-panel';
 import { DisputeModal } from '@/components/workflows/dispute-modal';
+import { IssueResolutionPanel } from '@/components/workflows/issue-resolution-panel';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import {
@@ -231,6 +232,8 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   const notificationHref = actor.sessionRole === 'platform_admin' ? '/admin/clearance' : withRoleQuery('/clearance', currentRole);
   const chargedThisFlow = query.charged === '1';
   const caseTimeline = await getCaseTimeline(clearance.id, databaseDetail.issueId);
+  const isIncomingSchoolViewer = actor.sessionRole === 'platform_admin' || actor.schoolId === databaseDetail.incomingSchoolId;
+  const canResolveLinkedIssue = Boolean(databaseDetail.issueId && actor.schoolId === databaseDetail.reportingSchoolId);
 
   const noRecordMessage = applyMessageOverrides(clearance.whatsappMessage, clearance, studentName, previousSchoolName);
   const noRecordWhatsappHref = clearance.previousSchoolPhone
@@ -442,10 +445,14 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   ) : null}
                 </div>
               </div>
+            ) : canResolveLinkedIssue && databaseDetail.issueId ? (
+              <IssueResolutionPanel issueId={databaseDetail.issueId} initialResolved={clearance.statusLabel === 'Cleared by previous school'} />
             ) : (
               <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
-                <h3 className="text-base font-bold text-navy-900">Contact &amp; Dispute Paths</h3>
-                <p className="text-[11px] text-slate-500">Take action regarding this outstanding record:</p>
+                <h3 className="text-base font-bold text-navy-900">{isIncomingSchoolViewer ? 'Contact & Dispute Paths' : 'Case context'}</h3>
+                <p className="text-[11px] text-slate-500">
+                  {isIncomingSchoolViewer ? 'Take action regarding this outstanding record:' : 'This linked request is shown for context. The admitting school owns dispute actions.'}
+                </p>
 
                 <div className="space-y-3 border-t border-background-secondary pt-3 text-xs">
                   <div>
@@ -458,27 +465,29 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2">
-                  {clearance.issue?.phone ? (
-                    <a
-                      href={`tel:${clearance.issue.phone.replace(/\s+/g, '')}`}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
-                    >
-                      {`Contact ${previousSchoolName}`}
-                    </a>
-                  ) : null}
-                  {matchWhatsappHref ? (
-                    <a
-                      href={matchWhatsappHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
-                    >
-                      Message Previous School on WhatsApp
-                    </a>
-                  ) : null}
-                  <DisputeModal clearanceRequestId={clearance.id} />
-                </div>
+                {isIncomingSchoolViewer ? (
+                  <div className="space-y-2 pt-2">
+                    {clearance.issue?.phone ? (
+                      <a
+                        href={`tel:${clearance.issue.phone.replace(/\s+/g, '')}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                      >
+                        {`Contact ${previousSchoolName}`}
+                      </a>
+                    ) : null}
+                    {matchWhatsappHref ? (
+                      <a
+                        href={matchWhatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                      >
+                        Message Previous School on WhatsApp
+                      </a>
+                    ) : null}
+                    <DisputeModal clearanceRequestId={clearance.id} />
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
