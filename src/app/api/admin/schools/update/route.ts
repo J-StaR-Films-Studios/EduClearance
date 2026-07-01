@@ -6,6 +6,7 @@ import { db } from '@/db/client';
 import { auditLogs, schools } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveOptionalLocalActor } from '@/lib/local-actor';
+import { isValidPhoneNumber } from '@/lib/text';
 
 const schoolUpdateSchema = z.object({
   schoolId: z.string().trim().min(1),
@@ -28,6 +29,14 @@ export async function POST(request: Request) {
 
   if (!payload.success) {
     return NextResponse.json({ ok: false, message: 'Invalid school update.', issues: payload.error.flatten() }, { status: 400 });
+  }
+
+  if (payload.data.clearancePhone && !isValidPhoneNumber(payload.data.clearancePhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real clearance phone number.' }, { status: 400 });
+  }
+
+  if (payload.data.whatsappPhone && !isValidPhoneNumber(payload.data.whatsappPhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real WhatsApp phone number.' }, { status: 400 });
   }
 
   const updates = {

@@ -6,7 +6,7 @@ import { db } from '@/db/client';
 import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
-import { buildStudentDisplayName, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
+import { buildStudentDisplayName, isValidPhoneNumber, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
 const issueReportSchema = z.object({
   studentName: z.string().trim().optional(),
@@ -50,6 +50,10 @@ export async function POST(request: Request) {
 
   if (!studentName) {
     return NextResponse.json({ ok: false, message: 'Enter at least the student first name before saving an issue report.' }, { status: 400 });
+  }
+
+  if (!isValidPhoneNumber(payload.data.parentPhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real parent phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
   }
 
   const issueId = makeEntityId('issue');

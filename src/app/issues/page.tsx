@@ -70,10 +70,6 @@ export default async function IssuesPage() {
           </div>
         </header>
 
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-          Issue resolution, withdrawal, and evidence review are handled through school-scoped review controls with audit logging.
-        </div>
-
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Unresolved</p>

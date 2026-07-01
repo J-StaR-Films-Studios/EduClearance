@@ -7,7 +7,7 @@ import { auditLogs, clearanceIssues, clearanceRequests, schools, walletTransacti
 import { makeEntityId, makeWalletReference } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { CHECK_PRICE_KOBO } from '@/lib/money';
-import { buildStudentDisplayName, getNameTokenOverlap, getNameTokens, normalizeNameSignature, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
+import { buildStudentDisplayName, getNameTokenOverlap, getNameTokens, isValidPhoneNumber, normalizeNameSignature, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
 const clearanceStartSchema = z.object({
   studentName: z.string().trim().optional(),
@@ -44,6 +44,10 @@ export async function POST(request: Request) {
 
   if (!studentName) {
     return NextResponse.json({ ok: false, message: 'Enter at least the student first name before starting a clearance request.' }, { status: 400 });
+  }
+
+  if (!isValidPhoneNumber(payload.data.parentPhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real parent phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
   }
 
   const studentNameNormalized = normalizeSearchText(studentName);

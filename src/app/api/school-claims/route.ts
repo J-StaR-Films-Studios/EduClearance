@@ -7,7 +7,7 @@ import { auditLogs, schoolClaims, schools } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { getAuthenticatedUser } from '@/lib/auth-session';
 import { SUPPORT_EMAIL } from '@/lib/site';
-import { normalizeSearchText } from '@/lib/text';
+import { isValidPhoneNumber, normalizeSearchText } from '@/lib/text';
 
 export const runtime = 'nodejs';
 
@@ -50,6 +50,14 @@ export async function POST(request: Request) {
 
   if (!payload.success) {
     return NextResponse.json({ ok: false, message: 'Please complete the school claim form before submitting.', issues: payload.error.flatten() }, { status: 400 });
+  }
+
+  if (!isValidPhoneNumber(payload.data.officialPhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real official phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
+  }
+
+  if (payload.data.officialWhatsappPhone && !isValidPhoneNumber(payload.data.officialWhatsappPhone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real WhatsApp phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
   }
 
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');

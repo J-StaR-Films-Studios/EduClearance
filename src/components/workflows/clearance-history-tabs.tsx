@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
@@ -32,6 +33,7 @@ type ClearanceHistoryTabsProps = {
 };
 
 export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundClearances, inboundRequests }: ClearanceHistoryTabsProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'outbound' | 'inbound'>(initialTab);
   const [requests, setRequests] = useState(inboundRequests);
   const [notice, setNotice] = useState('');
@@ -67,6 +69,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
         ),
       );
       setNotice('Cleared by previous school. No outstanding records remain.');
+      router.refresh();
     } catch {
       setErrorMessage('Unable to record this response. Please try again.');
     } finally {

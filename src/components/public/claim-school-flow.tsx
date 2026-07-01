@@ -541,6 +541,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   id="official-phone"
                   name="officialPhone"
                   type="tel"
+                  inputMode="tel"
+                  pattern="[+0-9()\\s-]{10,20}"
+                  title="Enter a real phone number, e.g. +234 803 123 4567"
                   required
                   placeholder="e.g. +234 803 123 4567"
                   className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
@@ -554,6 +557,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   id="official-whatsapp-phone"
                   name="officialWhatsappPhone"
                   type="tel"
+                  inputMode="tel"
+                  pattern="[+0-9()\\s-]{10,20}"
+                  title="Enter a real WhatsApp number, e.g. +234 803 123 4567"
                   required={!claimWhatsappSameAsPhone}
                   disabled={claimWhatsappSameAsPhone}
                   placeholder="e.g. +234 803 123 4567"
@@ -732,6 +738,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   id="new-official-phone"
                   name="officialPhone"
                   type="tel"
+                  inputMode="tel"
+                  pattern="[+0-9()\\s-]{10,20}"
+                  title="Enter a real phone number, e.g. +234 803 123 4567"
                   required
                   placeholder="e.g. +234 803 123 4567"
                   className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
@@ -745,6 +754,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   id="new-official-whatsapp-phone"
                   name="officialWhatsappPhone"
                   type="tel"
+                  inputMode="tel"
+                  pattern="[+0-9()\\s-]{10,20}"
+                  title="Enter a real WhatsApp number, e.g. +234 803 123 4567"
                   required={!newSchoolWhatsappSameAsPhone}
                   disabled={newSchoolWhatsappSameAsPhone}
                   placeholder="e.g. +234 803 123 4567"

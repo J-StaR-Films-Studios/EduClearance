@@ -233,6 +233,9 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 id="phone"
                 name="phone"
                 type="tel"
+                inputMode="tel"
+                pattern="[+0-9()\\s-]{10,20}"
+                title="Enter a real phone number, e.g. +234 803 123 4567"
                 required
                 placeholder="e.g. +234 803 123 4567"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"

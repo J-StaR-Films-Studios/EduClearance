@@ -8,7 +8,7 @@ import { hashPassword } from '@/lib/auth-password';
 import { createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
 import { makeEntityId } from '@/lib/ids';
 import { getSafeInternalPath } from '@/lib/local-session';
-import { normalizePhoneNumber } from '@/lib/text';
+import { isValidPhoneNumber, normalizePhoneNumber } from '@/lib/text';
 
 export const runtime = 'nodejs';
 
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
   const email = payload.data.email.toLowerCase();
   const phone = normalizePhoneNumber(payload.data.phone);
 
-  if (phone.length < 10) {
-    return NextResponse.json({ ok: false, message: 'Enter a valid contact phone number.' }, { status: 400 });
+  if (!isValidPhoneNumber(payload.data.phone)) {
+    return NextResponse.json({ ok: false, message: 'Enter a real contact phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
   }
 
   const [existingEmailUser] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);

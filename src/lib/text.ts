@@ -42,6 +42,20 @@ export function normalizePhoneNumber(value: string) {
   return digits;
 }
 
+export function isValidPhoneNumber(value: string) {
+  const digits = normalizePhoneNumber(value);
+
+  if (digits.length < 10 || digits.length > 15) {
+    return false;
+  }
+
+  if (/^(\d)\1+$/.test(digits)) {
+    return false;
+  }
+
+  return true;
+}
+
 export function slugify(value: string) {
   return value
     .trim()

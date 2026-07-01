@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState, type FormEvent } from 'react';
 
 import { buildStudentDisplayName } from '@/lib/text';
@@ -46,6 +47,7 @@ function readEvidenceFile(form: HTMLFormElement, name: string): Promise<Evidence
 }
 
 export function IssueReportForm({ fromInboundRequest = false, inboundRequest = null }: { fromInboundRequest?: boolean; inboundRequest?: InboundIssueRequest | null }) {
+  const router = useRouter();
   const inboundNameParts = useMemo(() => {
     const parts = inboundRequest?.studentName.trim().split(/\s+/).filter(Boolean) ?? [];
     return {
@@ -124,6 +126,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
       setSubmitted(true);
       form.reset();
       setIsCertified(false);
+      router.refresh();
     } catch {
       setErrorMessage('Unable to save issue report. Please try again.');
     } finally {
@@ -310,6 +313,9 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
               id="issuePhone"
               name="parentPhone"
               type="tel"
+              inputMode="tel"
+              pattern="[+0-9()\\s-]{10,20}"
+              title="Enter a real phone number, e.g. +234 802 111 2222"
               required
               defaultValue={inboundRequest?.parentPhone ?? ''}
               placeholder="e.g. +234 802 111 2222"

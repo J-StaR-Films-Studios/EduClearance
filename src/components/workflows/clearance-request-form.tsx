@@ -170,7 +170,7 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
 
       <div className="space-y-1">
         <label htmlFor="parentPhone" className="block text-xs font-semibold text-navy-800">Parent Phone Number (Key for Matching)</label>
-        <input id="parentPhone" name="parentPhone" type="tel" required placeholder="e.g. +234 803 123 4567" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
+        <input id="parentPhone" name="parentPhone" type="tel" inputMode="tel" pattern="[+0-9()\\s-]{10,20}" title="Enter a real phone number, e.g. +234 803 123 4567" required placeholder="e.g. +234 803 123 4567" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800" />
         <span className="text-[10px] text-slate-500">Phone numbers are normalized and matched against unresolved school balances.</span>
       </div>
 

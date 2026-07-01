@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 const MAX_TIMELINE_ATTACHMENT_BYTES = 2_000_000;
@@ -66,6 +67,7 @@ function readAttachment(form: HTMLFormElement): Promise<AttachmentFile | null> {
 }
 
 export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityId, entries, canComment = true, resolutionAction, blockedResolutionAction }: CaseTimelinePanelProps) {
+  const router = useRouter();
   const [timelineEntries, setTimelineEntries] = useState(entries);
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
@@ -149,6 +151,7 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
     }
     setMessage('');
     form.reset();
+    router.refresh();
   }
 
   return (
