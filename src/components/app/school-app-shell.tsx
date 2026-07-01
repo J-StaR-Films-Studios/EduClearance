@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
+import { SignOutButton } from '@/components/app/sign-out-button';
 
 export type SchoolAppShellNavKey = 'dashboard' | 'clearance-new' | 'clearance' | 'issues-new' | 'wallet';
 export type SchoolAppShellMobileMode = 'default' | 'history' | 'detail';
@@ -152,6 +153,7 @@ export async function SchoolAppShell({ activeKey, mobileMode = 'default', role =
           <p className="mt-1 font-semibold text-navy-800">
             {role === 'school_staff' ? 'Role: School Staff' : `Verification: ${schoolStatus}`}
           </p>
+          <SignOutButton className="mt-4" />
         </div>
       </aside>
 
@@ -162,13 +164,16 @@ export async function SchoolAppShell({ activeKey, mobileMode = 'default', role =
             <div className="rounded-lg bg-navy-900 p-1.5 font-display font-bold text-xs text-white">EC</div>
             <span className="font-display text-sm font-bold text-navy-900">EduClearance</span>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] font-medium text-slate-500 truncate max-w-[160px]" title={schoolName}>
-              {schoolName}
-            </p>
-            <p className="text-[9px] font-semibold text-navy-800 mt-0.5">
-              {role === 'school_staff' ? 'Role: School Staff' : `Verification: ${schoolStatus}`}
-            </p>
+          <div className="flex items-center gap-2">
+            <div className="text-right">
+              <p className="text-[10px] font-medium text-slate-500 truncate max-w-[150px]" title={schoolName}>
+                {schoolName}
+              </p>
+              <p className="text-[9px] font-semibold text-navy-800 mt-0.5">
+                {role === 'school_staff' ? 'Role: School Staff' : `Verification: ${schoolStatus}`}
+              </p>
+            </div>
+            <SignOutButton compact className="shrink-0" />
           </div>
         </header>
 

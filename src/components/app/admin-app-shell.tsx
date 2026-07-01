@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { adminHref, type AdminNavKey } from '@/lib/local-admin-data';
 import { cn } from '@/lib/utils';
+import { SignOutButton } from '@/components/app/sign-out-button';
 
 const navItems: Array<{ key: AdminNavKey; href: ReturnType<typeof adminHref>; label: string }> = [
   { key: 'overview', href: adminHref('/admin'), label: 'Admin Overview' },
@@ -73,13 +74,20 @@ export function AdminAppShell({ activeKey, children }: AdminAppShellProps) {
             );
           })}
         </nav>
+
+        <div className="border-t border-background-secondary pt-4">
+          <SignOutButton />
+        </div>
       </aside>
 
       <div className="flex-1">
         <div className="sticky top-0 z-50 border-b border-background-secondary bg-white px-4 py-4 md:hidden">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-navy-900 p-2 font-display font-bold text-white">EC</div>
-            <span className="font-display text-base font-bold text-navy-900">EduClearance Admin</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-navy-900 p-2 font-display font-bold text-white">EC</div>
+              <span className="font-display text-base font-bold text-navy-900">EduClearance Admin</span>
+            </div>
+            <SignOutButton compact className="shrink-0" />
           </div>
           <nav className="mt-4 flex gap-2 overflow-x-auto whitespace-nowrap pb-1">
             {navItems.map((item) => {
