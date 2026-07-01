@@ -200,8 +200,10 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
               }}
               className={`block w-full rounded-lg px-3 py-2 text-left text-xs transition ${selectedSchoolId === school.id ? 'bg-navy-900 text-white' : 'text-slate-600 hover:bg-background'}`}
             >
-              <span className="font-semibold">{school.name}</span>
-              <span className="ml-2 opacity-75">{school.area ?? school.address ?? 'Area not listed'} · {school.status}</span>
+              <span className="block font-semibold sm:inline">{school.name}</span>
+              <span className="block text-[10px] opacity-75 sm:inline sm:ml-2 sm:text-xs">
+                {school.area ?? school.address ?? 'Area not listed'} · {school.status}
+              </span>
             </button>
           ))}
         </div>
@@ -223,12 +225,12 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
         )}
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-background-secondary bg-background p-4 text-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-background-secondary bg-background p-4 text-sm">
         <div>
           <p className="font-semibold text-navy-900">Check Fee</p>
           <p className="text-xs text-slate-500">Charged from school wallet balance</p>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <p className="font-bold text-navy-900">₦100</p>
           <p className="text-xs text-emerald-600">Balance: {formatNairaFromKobo(walletBalanceKobo)} · {formatChecksFromKobo(remainingBalanceKobo)} checks after charge</p>
         </div>

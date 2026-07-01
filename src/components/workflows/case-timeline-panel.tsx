@@ -172,8 +172,17 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
             </div>
             <p className="mt-2 whitespace-pre-wrap text-slate-600">{entry.body}</p>
             {entry.attachmentFileName ? (
-              <a href={attachmentHref(entry.id)} target="_blank" className="mt-3 inline-flex rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary">
-                View evidence: {entry.attachmentFileName} ({sizeLabel(entry.attachmentFileSize)})
+              <a
+                href={attachmentHref(entry.id)}
+                target="_blank"
+                title={entry.attachmentFileName}
+                className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary"
+              >
+                <span className="flex-shrink-0">View evidence:</span>
+                <span className="truncate max-w-[140px] sm:max-w-[280px]" title={entry.attachmentFileName}>
+                  {entry.attachmentFileName}
+                </span>
+                <span className="flex-shrink-0">({sizeLabel(entry.attachmentFileSize)})</span>
               </a>
             ) : null}
           </div>
@@ -197,7 +206,7 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
             name="attachmentFile"
             type="file"
             accept=".pdf,.png,.jpg,.jpeg"
-            className="w-full rounded-lg border border-background-secondary bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+            className="w-full rounded-lg border border-background-secondary bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 file:mr-3 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] sm:file:text-xs file:font-semibold file:bg-navy-50 file:text-navy-700 hover:file:bg-navy-100"
           />
           <p className="text-xs text-slate-500">Optional PDF, PNG, or JPG. Max 2MB.</p>
           {resolutionAction ? (
@@ -227,7 +236,7 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
                 <summary className="flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-emerald-200 bg-white text-[10px] font-bold text-emerald-700">
                   i
                 </summary>
-                <div className="absolute bottom-7 right-0 z-10 w-72 rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
+                <div className="absolute bottom-7 right-0 z-10 w-72 max-w-[calc(100vw-60px)] rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
                   {blockedResolutionAction.reason}
                 </div>
               </details>
