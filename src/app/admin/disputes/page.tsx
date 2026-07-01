@@ -48,9 +48,11 @@ export default async function AdminDisputesPage() {
 
   return (
     <AdminAppShell activeKey="disputes">
-      <header className="border-b border-background-secondary pb-4">
-        <h1 className="text-2xl font-bold text-navy-900">Dispute Resolution Workspace</h1>
-        <p className="text-xs text-slate-500">Resolve inter-school record contests and billing disputes</p>
+      <header className="flex flex-col gap-1 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Dispute Resolution Workspace</h1>
+          <p className="text-xs text-slate-500">Resolve inter-school record contests and billing disputes</p>
+        </div>
       </header>
 
       <AdminDisputesWorkspace initialRecords={disputeRecords} />

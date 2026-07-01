@@ -62,9 +62,11 @@ export default async function AdminSchoolsPage() {
 
   return (
     <AdminAppShell activeKey="schools">
-      <header className="border-b border-background-secondary pb-4">
-        <h1 className="text-2xl font-bold text-navy-900">Submitted School Claims</h1>
-        <p className="text-xs text-slate-500">Review submitted claims and new-school requests. Directory candidates stay in the public claim flow.</p>
+      <header className="flex flex-col gap-1 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Submitted School Claims</h1>
+          <p className="text-xs text-slate-500">Review submitted claims and new-school requests. Directory candidates stay in the public claim flow.</p>
+        </div>
       </header>
 
       <AdminSchoolsWorkspace initialClaims={submittedClaims} />

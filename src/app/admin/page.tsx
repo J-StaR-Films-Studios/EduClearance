@@ -53,18 +53,20 @@ export default async function AdminOverviewPage() {
 
   return (
     <AdminAppShell activeKey="overview">
-      <header className="border-b border-background-secondary pb-4">
-        <h1 className="text-2xl font-bold text-navy-900">Platform Operations Center</h1>
-        <p className="text-xs text-slate-500">Monitor local clusters, verify claims, and inspect disputes</p>
+      <header className="flex flex-col gap-1 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Platform Operations Center</h1>
+          <p className="text-xs text-slate-500">Monitor local clusters, verify claims, and inspect disputes</p>
+        </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase text-slate-500">{metric.label}</p>
+          <div key={metric.label} className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{metric.label}</p>
             <p
               className={cn(
-                'mt-1 text-xl font-bold',
+                'mt-1 text-lg sm:text-xl font-bold',
                 metric.tone === 'warning'
                   ? 'text-amber-600'
                   : metric.tone === 'danger'
@@ -79,29 +81,29 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm lg:col-span-2">
+        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm lg:col-span-2">
           <h3 className="text-sm font-bold text-navy-900">Operational Alerts</h3>
           <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs leading-relaxed text-slate-500">
             Automated anomaly alerts are not enabled yet. Review clearance logs, disputes, and wallet activity from the operational workspaces.
           </div>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm">
           <h3 className="text-sm font-bold text-navy-900">Recent Pending Claims</h3>
           <div className="space-y-3">
             {recentPendingClaims.length === 0 ? (
               <p className="rounded-lg border border-background-secondary bg-background p-3 text-xs text-slate-500">No school claims are pending review.</p>
             ) : recentPendingClaims.map((claim) => (
               <div key={claim.id} className="space-y-2 rounded-lg border border-background-secondary bg-background p-3 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-navy-900">{claim.requestedSchoolName}</span>
-                  <span className="font-mono text-slate-500">{claim.createdAt.toISOString().slice(0, 10)}</span>
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                  <span className="font-bold text-navy-900 break-words">{claim.requestedSchoolName}</span>
+                  <span className="font-mono text-slate-400 text-[10px] shrink-0">{claim.createdAt.toISOString().slice(0, 10)}</span>
                 </div>
-                <p className="text-slate-600">
+                <p className="text-slate-600 break-words">
                   {claim.type === 'new_school' ? 'New school request' : 'Directory school claim'} · {claim.applicantName}
                 </p>
-                <p className="text-slate-500">Proof file: {claim.proofFileName}</p>
-                <Link href="/admin/schools" className="inline-block font-bold text-navy-900 hover:underline">
+                <p className="text-slate-500 break-all">Proof file: {claim.proofFileName}</p>
+                <Link href="/admin/schools" className="inline-block font-semibold text-navy-900 hover:underline mt-1">
                   Review Claim →
                 </Link>
               </div>
@@ -111,13 +113,13 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-background-secondary pb-4">
+        <div className="rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm lg:col-span-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
             <div>
               <h3 className="text-sm font-bold text-navy-900">Issue &amp; Clearance Snapshot</h3>
               <p className="text-xs text-slate-500">Operational overview across unresolved reports and paid checks</p>
             </div>
-            <Link href="/admin/clearance" className="text-xs font-semibold text-navy-900 hover:underline">
+            <Link href="/admin/clearance" className="text-xs font-semibold text-navy-900 hover:underline shrink-0">
               Open workspace
             </Link>
           </div>
@@ -125,26 +127,30 @@ export default async function AdminOverviewPage() {
             {recentIssueCards.length === 0 ? (
               <p className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 sm:col-span-3">No issue reports have been saved yet.</p>
             ) : recentIssueCards.map((issue) => (
-              <div key={issue.id} className="rounded-xl border border-background-secondary bg-background p-4 text-xs">
-                <p className="font-semibold text-navy-900">{issue.studentName}</p>
-                <p className="mt-1 text-slate-500">{issue.reportingSchool}</p>
-                <p className="mt-2 font-bold text-navy-900">{issue.amountLabel}</p>
-                <p className="mt-1 text-slate-400">{issue.updatedAt}</p>
+              <div key={issue.id} className="rounded-xl border border-background-secondary bg-background p-4 text-xs flex flex-col justify-between min-h-[110px]">
+                <div>
+                  <p className="font-semibold text-navy-900 break-words">{issue.studentName}</p>
+                  <p className="mt-1 text-slate-500 break-words">{issue.reportingSchool}</p>
+                </div>
+                <div className="mt-3 pt-2 border-t border-background-secondary/50 flex items-center justify-between">
+                  <p className="font-bold text-navy-900">{issue.amountLabel}</p>
+                  <p className="text-[10px] text-slate-400">{issue.updatedAt}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm">
           <h3 className="text-sm font-bold text-navy-900">Admin Quick Routes</h3>
           <div className="space-y-2 text-xs">
-            <Link href="/admin/schools" className="block rounded-lg border border-background-secondary bg-background px-3 py-2 font-semibold text-navy-900 hover:bg-background-secondary">
+            <Link href="/admin/schools" className="block rounded-lg border border-background-secondary bg-background px-3 py-2.5 font-semibold text-navy-900 hover:bg-background-secondary transition-colors">
               School approvals & contact edits
             </Link>
-            <Link href="/admin/clearance" className="block rounded-lg border border-background-secondary bg-background px-3 py-2 font-semibold text-navy-900 hover:bg-background-secondary">
+            <Link href="/admin/clearance" className="block rounded-lg border border-background-secondary bg-background px-3 py-2.5 font-semibold text-navy-900 hover:bg-background-secondary transition-colors">
               Clearance monitoring & wallet controls
             </Link>
-            <Link href="/admin/disputes" className="block rounded-lg border border-background-secondary bg-background px-3 py-2 font-semibold text-navy-900 hover:bg-background-secondary">
+            <Link href="/admin/disputes" className="block rounded-lg border border-background-secondary bg-background px-3 py-2.5 font-semibold text-navy-900 hover:bg-background-secondary transition-colors">
               Dispute resolution & refund helper
             </Link>
           </div>

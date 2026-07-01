@@ -77,7 +77,7 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
         <div className="flex flex-wrap gap-2">
           {([
             ['open', 'Open Queue'],
@@ -90,8 +90,8 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
               type="button"
               onClick={() => setFilter(value)}
               className={cn(
-                'rounded-lg border px-3 py-2 text-xs font-semibold',
-                filter === value ? 'border-navy-900 bg-navy-900 text-white' : 'border-background-secondary bg-white text-slate-600',
+                'rounded-lg border px-3 py-2 text-xs font-semibold transition-colors',
+                filter === value ? 'border-navy-900 bg-navy-900 text-white' : 'border-background-secondary bg-white text-slate-600 hover:bg-background-secondary',
               )}
             >
               {label}
@@ -104,14 +104,14 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search dispute by student or school"
-          className="w-full max-w-xs rounded-lg border border-background-secondary bg-white px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800"
+          className="w-full sm:max-w-xs rounded-lg border border-background-secondary bg-white px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800"
         />
       </div>
 
       {notice ? <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs text-emerald-700">{notice}</div> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm lg:col-span-2">
+        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm lg:col-span-2">
           <h3 className="text-sm font-bold text-navy-900">Open Disputes Queue</h3>
 
           <div className="divide-y divide-background-secondary">
@@ -119,11 +119,11 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
               <div className="py-8 text-sm text-slate-500">No disputes match this filter.</div>
             ) : (
               filteredRecords.map((record) => (
-                <div key={record.id} className="space-y-2 py-4 text-xs">
-                  <div className="flex items-center justify-between">
+                <div key={record.id} className="space-y-3.5 py-4 text-xs">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10px] font-semibold',
+                        'inline-flex w-fit items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
                         record.status === 'resolved'
                           ? 'border-emerald-600/20 bg-emerald-50/40 text-emerald-700'
                           : record.status === 'rejected'
@@ -147,46 +147,56 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
                           ? 'Resolved'
                           : 'Rejected'}
                     </span>
-                    <span className="text-slate-400">{record.raisedAt}</span>
+                    <span className="text-slate-400 font-mono text-[10px]">{record.raisedAt}</span>
                   </div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-bold text-navy-900">Dispute: {record.studentName} ({record.amountLabel})</p>
-                      {record.clearanceRequestId ? <Link href={`/clearance/${record.clearanceRequestId}`} className="font-semibold text-navy-900 underline">View case</Link> : null}
-                      {record.clearanceIssueId ? <Link href={`/issues/${record.clearanceIssueId}`} className="font-semibold text-navy-900 underline">View issue</Link> : null}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <p className="text-sm font-bold text-navy-900 break-words">Dispute: {record.studentName} ({record.amountLabel})</p>
+                      <div className="flex items-center gap-2 text-[11px]">
+                        {record.clearanceRequestId ? (
+                          <Link href={`/clearance/${record.clearanceRequestId}`} className="font-semibold text-navy-900 underline hover:text-navy-700">
+                            View case
+                          </Link>
+                        ) : null}
+                        {record.clearanceIssueId ? (
+                          <Link href={`/issues/${record.clearanceIssueId}`} className="font-semibold text-navy-900 underline hover:text-navy-700">
+                            View issue
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
-                    <p className="mt-1 text-slate-600">
-                      Raised by: <strong>{record.raisedBySchool}</strong> (Admitting School)
+                    <p className="mt-2 text-slate-600 break-words">
+                      Raised by: <strong className="text-navy-900">{record.raisedBySchool}</strong> (Admitting School)
                     </p>
-                    <p className="text-slate-600">
-                      Against: <strong>{record.reportingSchool}</strong> (Reporting School)
+                    <p className="text-slate-600 break-words">
+                      Against: <strong className="text-navy-900">{record.reportingSchool}</strong> (Reporting School)
                     </p>
-                    <p className="mt-2 rounded border border-background-secondary bg-background p-2 italic leading-relaxed text-slate-500">
+                    <p className="mt-2 rounded-lg border border-background-secondary bg-background p-3 italic leading-relaxed text-slate-500 break-words">
                       Reason: &quot;{record.reason}&quot;
                     </p>
-                    <p className="mt-2 rounded border border-background-secondary bg-white p-2 leading-relaxed text-slate-600">
+                    <p className="mt-2 rounded-lg border border-background-secondary bg-white p-3 leading-relaxed text-slate-600 break-words">
                       Admin note: {record.adminNote}
                     </p>
                   </div>
                   <div className="space-y-2 pt-2">
                     {record.refundReady ? (
-                      <p className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-[11px] text-amber-700">
+                      <p className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-[11px] text-amber-700 leading-relaxed">
                         Note: Clearing this record marks a ₦100 wallet credit for refund review by an authorized operator.
                       </p>
                     ) : null}
                     {record.status === 'under_review' ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <button
                           type="button"
                           onClick={() => void resolveDispute(record, 'resolved')}
-                          className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white transition hover:bg-emerald-700"
+                          className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700 w-full sm:w-auto text-center"
                         >
                           Clear Record (Resolve)
                         </button>
                         <button
                           type="button"
                           onClick={() => void resolveDispute(record, 'rejected')}
-                          className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-background-secondary"
+                          className="rounded-lg border border-background-secondary bg-white px-4 py-2 font-semibold text-slate-600 transition hover:bg-background-secondary w-full sm:w-auto text-center"
                         >
                           Keep Record (Decline)
                         </button>
@@ -199,12 +209,12 @@ export function AdminDisputesWorkspace({ initialRecords = adminDisputes }: Admin
           </div>
         </div>
 
-        <div className="space-y-3 rounded-2xl border border-background-secondary bg-white p-6 text-xs leading-relaxed shadow-sm">
+        <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 text-xs leading-relaxed shadow-sm self-start">
           <h3 className="text-sm font-bold text-navy-900">Resolution Standard Protocol</h3>
-          <p className="text-slate-500">1. Inspect admitting and reporting school comments before changing any live record.</p>
-          <p className="text-slate-500">2. Request parent ledger receipts or bursary proof where necessary.</p>
-          <p className="text-slate-500">3. Clearing an inaccurate record includes refund-review notes for the admitting school.</p>
-          <p className="text-slate-500">4. Confirm audit logs and school notifications before closing the dispute.</p>
+          <p className="text-slate-500 border-l-2 border-navy-900/10 pl-2">• Inspect admitting and reporting school comments before changing any live record.</p>
+          <p className="text-slate-500 border-l-2 border-navy-900/10 pl-2">• Request parent ledger receipts or bursary proof where necessary.</p>
+          <p className="text-slate-500 border-l-2 border-navy-900/10 pl-2">• Clearing an inaccurate record includes refund-review notes for the admitting school.</p>
+          <p className="text-slate-500 border-l-2 border-navy-900/10 pl-2">• Confirm audit logs and school notifications before closing the dispute.</p>
         </div>
       </div>
     </div>
