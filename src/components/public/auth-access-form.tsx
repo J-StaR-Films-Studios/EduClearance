@@ -14,7 +14,7 @@ const formContent = {
   login: {
     school: {
       title: 'Sign In to EduClearance',
-      description: 'Verify transfer clearances, manage issue reports, and monitor wallet activity.',
+      description: 'Verify student transfers, report unresolved fees, and manage your school profile.',
       buttonLabel: 'Sign In',
       pendingLabel: 'Opening workspace...',
       destination: '/dashboard',
@@ -22,7 +22,7 @@ const formContent = {
     },
     admin: {
       title: 'Platform Admin Sign In',
-      description: 'Review school claims, wallet operations, clearance cases, and disputes.',
+      description: 'Review school claims, monitor platform activity, and manage clearance disputes.',
       buttonLabel: 'Sign In',
       pendingLabel: 'Opening admin workspace...',
       destination: '/admin',
@@ -31,7 +31,7 @@ const formContent = {
   },
   register: {
     title: 'Create School Account',
-    description: 'Register a proprietor account to claim your school and manage clearance operations.',
+    description: 'Create an administrator account to claim your school and verify student transfers.',
     buttonLabel: 'Register Account',
     pendingLabel: 'Opening claim flow...',
     destination: '/claim-school',
@@ -103,7 +103,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-background-secondary bg-white p-8 shadow-sm">
+    <div className="w-full max-w-md rounded-2xl border border-background-secondary bg-white p-6 sm:p-8 shadow-sm">
       <div className="space-y-2 text-center">
         <div className="mb-2 inline-flex rounded-xl bg-navy-900 px-3 py-1.5 font-display text-lg font-bold tracking-wider text-white">
           EC
@@ -115,7 +115,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
       {mode === 'login' ? (
         <>
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label htmlFor="email" className="block text-xs font-semibold text-navy-800">
                 {loginContent.emailLabel}
               </label>
@@ -125,15 +125,15 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-xs font-semibold text-navy-800">
                   Password
                 </label>
-                <a href="#" className="text-xs text-slate-500 hover:underline">
+                <a href="#" className="text-xs text-slate-500 hover:text-navy-900 transition-colors hover:underline">
                   Forgot password?
                 </a>
               </div>
@@ -143,7 +143,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 type="password"
                 required
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
 
@@ -160,7 +160,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
             </button>
           </form>
 
-          <div className="mt-6 space-y-2 border-t border-background-secondary pt-4 text-center text-xs">
+          <div className="mt-6 space-y-3 border-t border-background-secondary pt-4 text-center text-xs leading-relaxed">
             {audience === 'school' ? (
               <>
                 <p className="text-slate-500">
@@ -199,7 +199,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
       ) : (
         <>
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label htmlFor="name" className="block text-xs font-semibold text-navy-800">
                 Full Name
               </label>
@@ -209,10 +209,10 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 type="text"
                 required
                 placeholder="e.g. Chief Mrs. Alabi"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label htmlFor="register-email" className="block text-xs font-semibold text-navy-800">
                 Official Email
               </label>
@@ -222,10 +222,10 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 type="email"
                 required
                 placeholder="proprietor@yourschool.com"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label htmlFor="phone" className="block text-xs font-semibold text-navy-800">
                 Contact Phone Number
               </label>
@@ -238,10 +238,10 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 title="Enter a real phone number, e.g. +234 803 123 4567"
                 required
                 placeholder="e.g. +234 803 123 4567"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label htmlFor="register-password" className="block text-xs font-semibold text-navy-800">
                 Password
               </label>
@@ -251,7 +251,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 type="password"
                 required
                 placeholder="Minimum 8 characters"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
 
@@ -262,16 +262,16 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 required
                 checked={hasAcceptedTerms}
                 onChange={(event) => setHasAcceptedTerms(event.currentTarget.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800"
+                className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800 cursor-pointer"
               />
-              <label htmlFor="consent" className="text-xs leading-relaxed text-slate-500">
+              <label htmlFor="consent" className="text-xs leading-relaxed text-slate-500 cursor-pointer select-none">
                 I agree to the{' '}
                 <Link href="/privacy" className="font-semibold text-navy-900 hover:underline" target="_blank">
                   privacy statement
                 </Link>{' '}
                 and{' '}
                 <Link href="/terms" className="font-semibold text-navy-900 hover:underline" target="_blank">
-                  terms of school-to-school cluster network compliance
+                  terms of service for school clearance network compliance
                 </Link>.
               </label>
             </div>
@@ -289,7 +289,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
             </button>
           </form>
 
-          <div className="mt-6 border-t border-background-secondary pt-4 text-center text-xs">
+          <div className="mt-6 border-t border-background-secondary pt-4 text-center text-xs leading-relaxed">
             <p className="text-slate-500">
               Already have a proprietor account?{' '}
               <Link href="/login" className="font-semibold text-navy-900 hover:underline">
