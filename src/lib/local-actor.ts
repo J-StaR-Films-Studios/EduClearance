@@ -46,8 +46,12 @@ export async function resolveLocalSchoolActor(): Promise<LocalSchoolActor | null
   };
 }
 
+export function isActiveSchoolActor(actor: LocalActor | LocalSchoolActor | null): actor is LocalSchoolActor {
+  return Boolean(actor && actor.schoolStatus === 'active' && actor.schoolId);
+}
+
 export function canManageSchoolWallet(actor: LocalActor | LocalSchoolActor | null): actor is LocalSchoolActor {
-  return Boolean(actor && actor.schoolStatus === 'active' && (actor.sessionRole === 'school_owner' || actor.sessionRole === 'school_admin'));
+  return Boolean(isActiveSchoolActor(actor) && (actor.sessionRole === 'school_owner' || actor.sessionRole === 'school_admin'));
 }
 
 export function isPlatformAdminActor(actor: LocalActor | null) {

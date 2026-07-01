@@ -8,6 +8,7 @@ import { makeEntityId } from '@/lib/ids';
 import { getAuthenticatedUser } from '@/lib/auth-session';
 import { SUPPORT_EMAIL } from '@/lib/site';
 import { isValidPhoneNumber, normalizeSearchText } from '@/lib/text';
+import { isSafeUploadDataUrl } from '@/lib/upload-security';
 
 export const runtime = 'nodejs';
 
@@ -54,6 +55,10 @@ export async function POST(request: Request) {
 
   if (!payload.success) {
     return NextResponse.json({ ok: false, message: 'Please complete the school claim form before submitting.', issues: payload.error.flatten() }, { status: 400 });
+  }
+
+  if (!isSafeUploadDataUrl(payload.data.proofFileDataUrl, payload.data.proofFileType)) {
+    return NextResponse.json({ ok: false, message: 'Proof files must be valid PDF, PNG, or JPEG files.' }, { status: 400 });
   }
 
   if (!isValidPhoneNumber(payload.data.officialPhone)) {

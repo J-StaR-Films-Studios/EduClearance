@@ -15,6 +15,16 @@ loadEnv();
 const makeId = () => randomUUID();
 const verificationEmail = (slug: string) => `verification+${slug}@educlearance.local`;
 
+function assertLocalSeedTarget() {
+  const databaseUrl = process.env.DATABASE_URL ?? '';
+  const allowDestructiveSeed = process.env.ALLOW_DESTRUCTIVE_SEED === 'true';
+  const isLocalDatabase = /localhost|127\.0\.0\.1|54321/i.test(databaseUrl);
+
+  if (!isLocalDatabase && !allowDestructiveSeed) {
+    throw new Error('Refusing to run destructive seed against a non-local DATABASE_URL. Set ALLOW_DESTRUCTIVE_SEED=true only for an intentional, backed-up reset.');
+  }
+}
+
 type AbujaDirectorySeed = {
   schools: Array<{
     name: string;
@@ -36,6 +46,8 @@ function loadAbujaDirectorySchools() {
 }
 
 async function seed() {
+  assertLocalSeedTarget();
+
   const { connection, db } = await import('./client');
 
   try {

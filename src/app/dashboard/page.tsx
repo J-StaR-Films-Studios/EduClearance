@@ -8,7 +8,6 @@ import { db } from '@/db/client';
 import { clearanceRequests, schools } from '@/db/schema';
 import {
   buildWhatsAppHref,
-  schoolProfile,
   withRoleQuery,
 } from '@/lib/local-school-data';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
@@ -72,7 +71,7 @@ export default async function DashboardPage() {
         <header className="flex flex-col items-start justify-between gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-bold text-navy-900">{schoolName}</h1>
-            <p className="text-xs text-slate-500">Cluster: {schoolProfile.cluster}</p>
+            <p className="text-xs text-slate-500">Private dashboard for verified school clearance workflows.</p>
           </div>
 
           {currentRole === 'school_staff' ? (

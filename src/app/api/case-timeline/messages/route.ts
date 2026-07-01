@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes, schools } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
-import { isPlatformAdminActor, resolveOptionalLocalActor } from '@/lib/local-actor';
+import { isActiveSchoolActor, isPlatformAdminActor, resolveOptionalLocalActor } from '@/lib/local-actor';
+import { isSafeUploadDataUrl } from '@/lib/upload-security';
 
 export const runtime = 'nodejs';
 
@@ -94,6 +95,14 @@ export async function POST(request: Request) {
 
   if (!payload.success) {
     return NextResponse.json({ ok: false, message: 'Please add a message or valid evidence file.', issues: payload.error.flatten() }, { status: 400 });
+  }
+
+  if (!isPlatformAdminActor(actor) && !isActiveSchoolActor(actor)) {
+    return NextResponse.json({ ok: false, message: 'Only active schools can add case messages or evidence.' }, { status: 403 });
+  }
+
+  if (payload.data.attachmentDataUrl && !isSafeUploadDataUrl(payload.data.attachmentDataUrl, payload.data.attachmentFileType)) {
+    return NextResponse.json({ ok: false, message: 'Evidence files must be valid PDF, PNG, or JPEG files.' }, { status: 400 });
   }
 
   const allowed = isPlatformAdminActor(actor) || (actor.schoolId ? await canAccessEntity(payload.data.entityType, payload.data.entityId, actor.schoolId) : false);

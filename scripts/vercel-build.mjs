@@ -41,9 +41,16 @@ if (shouldRunMigrations) {
     process.exit(1);
   }
 
+  if (process.env.VERCEL_ENV !== 'production') {
+    console.error('RUN_DB_MIGRATIONS must only be enabled inside the Vercel Production environment. Set VERCEL_ENV=production for that deployment target.');
+    process.exit(1);
+  }
+
   runPackageManager('Running database migrations', ['run', 'db:migrate']);
 } else {
   console.log('Skipping database migrations. Set RUN_DB_MIGRATIONS=true in the target Vercel environment to enable them.');
 }
 
+runPackageManager('Linting', ['run', 'lint']);
+runPackageManager('Typechecking', ['run', 'typecheck']);
 runPackageManager('Building Next.js app', ['exec', 'next', 'build']);

@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests, disputes } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
-import { resolveLocalSchoolActor } from '@/lib/local-actor';
+import { isActiveSchoolActor, resolveLocalSchoolActor } from '@/lib/local-actor';
+import { isSafeUploadDataUrl } from '@/lib/upload-security';
 
 const disputeReportSchema = z.object({
   clearanceRequestId: z.string().trim().min(1),
@@ -23,10 +24,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Please sign in with an active school account.' }, { status: 401 });
   }
 
+  if (!isActiveSchoolActor(actor)) {
+    return NextResponse.json({ ok: false, message: 'Only active schools can open disputes.' }, { status: 403 });
+  }
+
   const payload = disputeReportSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
     return NextResponse.json({ ok: false, message: 'Please enter a dispute reason.', issues: payload.error.flatten() }, { status: 400 });
+  }
+
+  if (payload.data.evidenceDataUrl && !isSafeUploadDataUrl(payload.data.evidenceDataUrl, payload.data.evidenceFileType)) {
+    return NextResponse.json({ ok: false, message: 'Evidence files must be valid PDF, PNG, or JPEG files.' }, { status: 400 });
   }
 
   const disputeId = makeEntityId('dispute');

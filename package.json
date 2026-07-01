@@ -13,6 +13,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
+    "db:create-admin": "tsx scripts/create-platform-admin.ts",
     "db:import:abuja-schools": "tsx scripts/import-abuja-schools.ts"
   },
   "dependencies": {

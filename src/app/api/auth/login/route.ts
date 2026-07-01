@@ -4,7 +4,8 @@ import { z } from 'zod';
 
 import { db } from '@/db/client';
 import { schoolClaims, users } from '@/db/schema';
-import { createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
+import { AUTH_SESSION_COOKIE, createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { verifyPassword } from '@/lib/auth-password';
 import { getSafeInternalPath } from '@/lib/local-session';
 
@@ -25,6 +26,13 @@ export async function POST(request: Request) {
   }
 
   const email = payload.data.email.toLowerCase();
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(`login:${ip}:${email}`, 8, 15 * 60 * 1000);
+
+  if (!limit.allowed) {
+    return rateLimitResponse(limit.retryAfterSeconds);
+  }
+
   const [user] = await db
     .select({ id: users.id, role: users.role, passwordHash: users.passwordHash, schoolId: users.schoolId })
     .from(users)
@@ -59,7 +67,7 @@ export async function POST(request: Request) {
   const session = await createUserSession(user.id);
   const response = NextResponse.json({ ok: true, redirectTo });
 
-  response.cookies.set('ec_session', session.token, getAuthCookieOptions());
+  response.cookies.set(AUTH_SESSION_COOKIE, session.token, getAuthCookieOptions());
   response.cookies.delete('ec_local_role');
 
   return response;

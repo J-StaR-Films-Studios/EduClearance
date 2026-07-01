@@ -4,25 +4,9 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { caseTimelineEntries, clearanceIssues, clearanceRequests, disputes } from '@/db/schema';
 import { isPlatformAdminActor, resolveOptionalLocalActor } from '@/lib/local-actor';
+import { decodeSafeUploadDataUrl, safeAttachmentHeaders } from '@/lib/upload-security';
 
 export const runtime = 'nodejs';
-
-function decodeDataUrl(dataUrl: string) {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    contentType: match[1],
-    bytes: Buffer.from(match[2], 'base64'),
-  };
-}
-
-function safeFilename(value: string) {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'case-evidence';
-}
 
 async function canAccessEntry(entityType: string, entityId: string, schoolId: string) {
   if (entityType === 'clearance_request') {
@@ -135,17 +119,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, message: 'You do not have access to this attachment.' }, { status: 403 });
   }
 
-  const decoded = decodeDataUrl(entry.attachmentDataUrl);
+  const decoded = decodeSafeUploadDataUrl(entry.attachmentDataUrl, entry.attachmentFileType);
 
   if (!decoded) {
-    return NextResponse.json({ ok: false, message: 'Stored attachment is invalid.' }, { status: 500 });
+    return NextResponse.json({ ok: false, message: 'Stored attachment is invalid or unsafe.' }, { status: 500 });
   }
 
-  return new Response(decoded.bytes, {
-    headers: {
-      'Content-Type': entry.attachmentFileType ?? decoded.contentType,
-      'Content-Disposition': `inline; filename="${safeFilename(entry.attachmentFileName)}"`,
-      'Cache-Control': 'private, no-store',
-    },
+  return new Response(new Uint8Array(decoded.bytes), {
+    headers: safeAttachmentHeaders(entry.attachmentFileName, decoded.contentType),
   });
 }

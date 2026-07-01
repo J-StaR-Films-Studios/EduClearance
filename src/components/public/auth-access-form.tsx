@@ -133,9 +133,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 <label htmlFor="password" className="block text-xs font-semibold text-navy-800">
                   Password
                 </label>
-                <a href="#" className="text-xs text-slate-500 hover:text-navy-900 transition-colors hover:underline">
-                  Forgot password?
-                </a>
+                <span className="text-xs text-slate-500">Password reset is handled by support.</span>
               </div>
               <input
                 id="password"
@@ -148,7 +146,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
             </div>
 
             {errorMessage ? (
-              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+              <div role="alert" className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
             ) : null}
 
             <button
@@ -277,7 +275,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
             </div>
 
             {errorMessage ? (
-              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
+              <div role="alert" className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{errorMessage}</div>
             ) : null}
 
             <button

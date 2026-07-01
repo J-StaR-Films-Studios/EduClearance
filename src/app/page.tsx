@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { buildHomepageStructuredData } from '@/lib/seo';
-import { APP_KEYWORDS, APP_NAME, OG_IMAGE_PATH } from '@/lib/site';
+import { APP_KEYWORDS, APP_NAME, OG_IMAGE_PATH, SUPPORT_EMAIL } from '@/lib/site';
 
 const homepageDescription =
   'Run private student transfer clearance checks, report unresolved issues, and coordinate school-to-school verification workflows across Nigerian admissions teams.';
@@ -219,9 +219,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-background-secondary bg-white py-12 text-center text-sm text-slate-500 px-4">
+      <footer className="border-t border-background-secondary bg-white px-4 py-12 text-center text-sm text-slate-500">
         <p className="mb-2 font-display font-semibold text-navy-900">EduClearance Network</p>
         <p>© 2026 EduClearance. All rights reserved. Private school-to-school student transfer clearance network.</p>
+        <nav aria-label="Footer" className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-navy-800">
+          <Link href="/privacy" className="hover:underline">Privacy</Link>
+          <Link href="/terms" className="hover:underline">Terms</Link>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:underline">Support: {SUPPORT_EMAIL}</a>
+        </nav>
       </footer>
     </main>
   );

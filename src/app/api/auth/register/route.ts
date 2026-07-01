@@ -5,9 +5,10 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { users } from '@/db/schema';
 import { hashPassword } from '@/lib/auth-password';
-import { createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
+import { AUTH_SESSION_COOKIE, createUserSession, getAuthCookieOptions } from '@/lib/auth-session';
 import { makeEntityId } from '@/lib/ids';
 import { getSafeInternalPath } from '@/lib/local-session';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { isValidPhoneNumber, normalizePhoneNumber } from '@/lib/text';
 
 export const runtime = 'nodejs';
@@ -29,6 +30,13 @@ export async function POST(request: Request) {
 
   const email = payload.data.email.toLowerCase();
   const phone = normalizePhoneNumber(payload.data.phone);
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(`register:${ip}:${email}`, 5, 60 * 60 * 1000);
+
+  if (!limit.allowed) {
+    return rateLimitResponse(limit.retryAfterSeconds);
+  }
+
 
   if (!isValidPhoneNumber(payload.data.phone)) {
     return NextResponse.json({ ok: false, message: 'Enter a real contact phone number using digits, e.g. +234 803 123 4567.' }, { status: 400 });
@@ -62,7 +70,7 @@ export async function POST(request: Request) {
 
   const session = await createUserSession(userId);
   const response = NextResponse.json({ ok: true, redirectTo: getSafeInternalPath(payload.data.redirect, '/claim-school') });
-  response.cookies.set('ec_session', session.token, getAuthCookieOptions());
+  response.cookies.set(AUTH_SESSION_COOKIE, session.token, getAuthCookieOptions());
   response.cookies.delete('ec_local_role');
 
   return response;

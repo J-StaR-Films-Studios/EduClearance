@@ -4,25 +4,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { schoolClaims } from '@/db/schema';
 import { resolveOptionalLocalActor } from '@/lib/local-actor';
+import { decodeSafeUploadDataUrl, safeAttachmentHeaders } from '@/lib/upload-security';
 
 export const runtime = 'nodejs';
-
-function decodeDataUrl(dataUrl: string) {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-
-  if (!match) {
-    return null;
-  }
-
-  return {
-    contentType: match[1],
-    bytes: Buffer.from(match[2], 'base64'),
-  };
-}
-
-function safeFilename(value: string) {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'school-claim-proof';
-}
 
 export async function GET(request: Request) {
   const actor = await resolveOptionalLocalActor();
@@ -55,17 +39,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, message: 'No proof file is stored for this claim.' }, { status: 404 });
   }
 
-  const decoded = decodeDataUrl(claim.proofFileDataUrl);
+  const decoded = decodeSafeUploadDataUrl(claim.proofFileDataUrl, claim.proofFileType);
 
   if (!decoded) {
-    return NextResponse.json({ ok: false, message: 'Stored proof file is invalid.' }, { status: 500 });
+    return NextResponse.json({ ok: false, message: 'Stored proof file is invalid or unsafe.' }, { status: 500 });
   }
 
-  return new Response(decoded.bytes, {
-    headers: {
-      'Content-Type': claim.proofFileType ?? decoded.contentType,
-      'Content-Disposition': `inline; filename="${safeFilename(claim.proofFileName)}"`,
-      'Cache-Control': 'private, no-store',
-    },
+  return new Response(new Uint8Array(decoded.bytes), {
+    headers: safeAttachmentHeaders(claim.proofFileName, decoded.contentType),
   });
 }

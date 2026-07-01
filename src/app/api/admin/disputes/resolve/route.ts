@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, caseTimelineEntries, clearanceIssues, disputes } from '@/db/schema';
+import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests, disputes } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveOptionalLocalActor } from '@/lib/local-actor';
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       .update(disputes)
       .set({ status: payload.data.action, adminNote, resolvedAt: new Date() })
       .where(eq(disputes.id, payload.data.disputeId))
-      .returning({ id: disputes.id, clearanceIssueId: disputes.clearanceIssueId });
+      .returning({ id: disputes.id, clearanceRequestId: disputes.clearanceRequestId, clearanceIssueId: disputes.clearanceIssueId });
 
     if (!updated) {
       return null;
@@ -47,6 +47,13 @@ export async function POST(request: Request) {
         .update(clearanceIssues)
         .set({ status: payload.data.action === 'resolved' ? 'resolved' : 'disputed', resolvedAt: payload.data.action === 'resolved' ? new Date() : null })
         .where(eq(clearanceIssues.id, updated.clearanceIssueId));
+    }
+
+    if (updated.clearanceRequestId) {
+      await tx
+        .update(clearanceRequests)
+        .set({ status: payload.data.action === 'resolved' ? 'cleared_by_previous_school' : 'outstanding_balance_reported', updatedAt: new Date() })
+        .where(eq(clearanceRequests.id, updated.clearanceRequestId));
     }
 
     await tx.insert(caseTimelineEntries).values({
@@ -70,7 +77,7 @@ export async function POST(request: Request) {
       action: 'admin_dispute_resolved',
       entityType: 'dispute',
       entityId: updated.id,
-      metadataJson: { action: payload.data.action, clearanceIssueId: updated.clearanceIssueId, adminNote },
+      metadataJson: { action: payload.data.action, clearanceRequestId: updated.clearanceRequestId, clearanceIssueId: updated.clearanceIssueId, adminNote },
       ipAddress,
     });
 

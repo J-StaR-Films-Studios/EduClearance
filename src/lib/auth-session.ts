@@ -9,7 +9,7 @@ import { db } from '@/db/client';
 import { schools, userSessions, users } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 
-export const AUTH_SESSION_COOKIE = 'ec_session';
+export const AUTH_SESSION_COOKIE = process.env.NODE_ENV === 'production' ? '__Host-ec_session' : 'ec_session';
 export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export function hashSessionToken(token: string) {
@@ -24,7 +24,7 @@ export function getAuthCookieOptions() {
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://') ?? false,
+    secure: process.env.NODE_ENV === 'production' || (process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://') ?? false),
     path: '/',
     maxAge: AUTH_SESSION_MAX_AGE_SECONDS,
   };

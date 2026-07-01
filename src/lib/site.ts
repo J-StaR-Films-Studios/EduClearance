@@ -12,7 +12,7 @@ export const APP_KEYWORDS = [
   'private school transfer workflow',
 ] as const;
 export const OG_IMAGE_PATH = '/opengraph-image';
-export const PUBLIC_SITE_ROUTES = ['/'] as const;
+export const PUBLIC_SITE_ROUTES = ['/', '/privacy', '/terms'] as const;
 export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || 'support@educlearance.meloschool.com';
 
 const DEFAULT_APP_URL = 'http://localhost:3000';
@@ -23,10 +23,21 @@ function normalizeAppUrl(url: string) {
 
 export function getAppUrl() {
   const candidate = process.env.NEXT_PUBLIC_APP_URL?.trim() || DEFAULT_APP_URL;
+  const isVercelProduction = process.env.VERCEL_ENV === 'production';
 
   try {
-    return normalizeAppUrl(new URL(candidate).toString());
-  } catch {
+    const parsed = new URL(candidate);
+
+    if (isVercelProduction && (parsed.protocol !== 'https:' || parsed.hostname === 'localhost')) {
+      throw new Error('NEXT_PUBLIC_APP_URL must be the production HTTPS URL on Vercel production.');
+    }
+
+    return normalizeAppUrl(parsed.toString());
+  } catch (error) {
+    if (isVercelProduction) {
+      throw error;
+    }
+
     return DEFAULT_APP_URL;
   }
 }

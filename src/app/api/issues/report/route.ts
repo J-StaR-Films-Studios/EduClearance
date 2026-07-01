@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
-import { resolveLocalSchoolActor } from '@/lib/local-actor';
+import { isActiveSchoolActor, resolveLocalSchoolActor } from '@/lib/local-actor';
+import { isSafeUploadDataUrl } from '@/lib/upload-security';
 import { buildStudentDisplayName, isValidPhoneNumber, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
 const issueReportSchema = z.object({
@@ -38,12 +39,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Please sign in with an active school account.' }, { status: 401 });
   }
 
+  if (!isActiveSchoolActor(actor)) {
+    return NextResponse.json({ ok: false, message: 'Only active schools can report issues.' }, { status: 403 });
+  }
+
   const payload = issueReportSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
     const issues = payload.error.flatten();
     const firstIssue = Object.values(issues.fieldErrors).flat().find(Boolean);
     return NextResponse.json({ ok: false, message: firstIssue ?? 'Please complete the issue report before saving.', issues }, { status: 400 });
+  }
+
+  if (payload.data.evidenceDataUrl && !isSafeUploadDataUrl(payload.data.evidenceDataUrl, payload.data.evidenceFileType)) {
+    return NextResponse.json({ ok: false, message: 'Evidence files must be valid PDF, PNG, or JPEG files.' }, { status: 400 });
   }
 
   const studentName = buildStudentDisplayName(payload.data.studentFirstName ?? '', payload.data.studentMiddleName, payload.data.studentLastName) || payload.data.studentName?.trim() || '';

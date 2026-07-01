@@ -8,6 +8,8 @@ const disallowRoutes = [
   '/claim-school',
   '/auth',
   '/auth/',
+  '/account',
+  '/account/',
   '/dashboard',
   '/clearance',
   '/clearance/',

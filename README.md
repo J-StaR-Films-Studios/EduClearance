@@ -45,13 +45,15 @@ EduClearance is a private school-to-school student transfer clearance network.
 
 ## Notes
 
-- Fake demo data only.
+- `pnpm db:seed` is destructive local/demo setup only and refuses non-local databases unless `ALLOW_DESTRUCTIVE_SEED=true` is explicitly set.
 - Private routes are configured with `noindex, nofollow` metadata and `X-Robots-Tag` headers.
 - Wallet values are stored in kobo.
+- Uploaded proof/evidence files are restricted to PDF, PNG, and JPEG and served as attachments with `nosniff`.
 
-## Demo limitations / production follow-up
+## Production launch notes
 
-- School and admin private routes currently use demo cookie-based session guards. Replace them with real authentication and active school membership checks before production.
-- Clearance creation, wallet debit, and Paystack flows in the UI are prototype simulations only. Client callbacks do **not** credit wallets.
-- Server placeholder endpoints now exist at `/api/clearance/start`, `/api/wallet/debit`, `/api/paystack/initialize`, and `/api/paystack/verify`. They intentionally return `501` until real transactional and idempotent implementations are added.
-- Production payment work must initialize Paystack server-side, verify references or signed webhooks server-side, and credit/debit wallets only after successful verification.
+- Keep production secrets only in Vercel environment variables; do not store live credentials in `.env.production.local`.
+- Use `pnpm db:migrate` for production schema setup. Do **not** run `pnpm db:seed` against production.
+- Create the first production platform admin with `pnpm db:create-admin` and the `PLATFORM_ADMIN_*` env vars from `.env.production.example`.
+- Vercel should use `pnpm vercel-build` (codified in `vercel.json`). Set `RUN_DB_MIGRATIONS=true` only for the Vercel Production environment.
+- Confirm production uses live Paystack keys, `NEXT_PUBLIC_APP_URL=https://educlearance.meloschool.com`, and a production database before publishing.
