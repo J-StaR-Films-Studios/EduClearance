@@ -880,9 +880,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   View Verification Status
                 </Link>
               </div>
-              <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900 transition-colors">
-                Submit another {pendingSubmission.claimType === 'existing_school' ? 'claim' : 'school request'}
-              </button>
+              <p className="mx-auto max-w-xl text-xs leading-relaxed text-slate-500">
+                This account can only have one school claim under review at a time. If you need a different school, sign out and use the correct account, or wait for admin feedback.
+              </p>
             </div>
           ) : null}
         </>

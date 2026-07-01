@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
@@ -73,6 +73,19 @@ export async function POST(request: Request) {
   const claimId = makeEntityId('school_claim');
 
   const result = await db.transaction(async (tx) => {
+    const applicantClaims = await tx
+      .select({ status: schoolClaims.status, requestedSchoolName: schoolClaims.requestedSchoolName })
+      .from(schoolClaims)
+      .where(eq(schoolClaims.applicantUserId, user.userId))
+      .orderBy(desc(schoolClaims.createdAt))
+      .limit(20);
+
+    const activeApplicantClaim = applicantClaims.find((claim) => claim.status !== 'rejected');
+
+    if (activeApplicantClaim) {
+      return NextResponse.json({ ok: false, message: 'This account already has a school claim under review. Check your verification status instead of starting another claim.' }, { status: 409 });
+    }
+
     if (payload.data.claimType === 'existing_school') {
       if (!payload.data.schoolId) {
         return NextResponse.json({ ok: false, message: 'Select a school to claim.' }, { status: 400 });
@@ -90,6 +103,12 @@ export async function POST(request: Request) {
 
       if (school.status !== 'unclaimed') {
         return NextResponse.json({ ok: false, message: 'Only unclaimed directory schools can be claimed from this page.' }, { status: 409 });
+      }
+
+      const mismatchedPriorClaim = applicantClaims.find((claim) => normalizeSearchText(claim.requestedSchoolName) !== normalizeSearchText(school.name));
+
+      if (mismatchedPriorClaim) {
+        return NextResponse.json({ ok: false, message: `This account already started verification for ${mismatchedPriorClaim.requestedSchoolName}. Sign out and use the correct account if you need to claim a different school.` }, { status: 409 });
       }
 
       const existingSchoolClaims = await tx
@@ -134,15 +153,14 @@ export async function POST(request: Request) {
         adminNote: null,
       });
     } else {
-      const existingClaims = await tx
-        .select({ id: schoolClaims.id, status: schoolClaims.status, requestedSchoolName: schoolClaims.requestedSchoolName })
-        .from(schoolClaims)
-        .where(and(eq(schoolClaims.applicantUserId, user.userId), eq(schoolClaims.type, 'new_school')))
-        .orderBy(desc(schoolClaims.createdAt))
-        .limit(20);
-
       const normalizedRequestedName = normalizeSearchText(payload.data.requestedSchoolName);
-      const sameSchoolAttempts = existingClaims.filter((claim) => normalizeSearchText(claim.requestedSchoolName) === normalizedRequestedName);
+      const mismatchedPriorClaim = applicantClaims.find((claim) => normalizeSearchText(claim.requestedSchoolName) !== normalizedRequestedName);
+
+      if (mismatchedPriorClaim) {
+        return NextResponse.json({ ok: false, message: `This account already started verification for ${mismatchedPriorClaim.requestedSchoolName}. Sign out and use the correct account if you need to register a different school.` }, { status: 409 });
+      }
+
+      const sameSchoolAttempts = applicantClaims.filter((claim) => normalizeSearchText(claim.requestedSchoolName) === normalizedRequestedName);
 
       if (sameSchoolAttempts.length >= MAX_SCHOOL_CLAIM_APPEALS) {
         return NextResponse.json({ ok: false, message: supportMessage(payload.data.requestedSchoolName) }, { status: 429 });

@@ -1,8 +1,9 @@
-import { asc } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
 
 import { ClaimSchoolFlow } from '@/components/public/claim-school-flow';
 import { db } from '@/db/client';
-import { schools } from '@/db/schema';
+import { schoolClaims, schools } from '@/db/schema';
 import { getAuthenticatedUser } from '@/lib/auth-session';
 import { APP_NAME } from '@/lib/site';
 import { noIndexMetadata } from '@/lib/seo';
@@ -10,20 +11,42 @@ import { noIndexMetadata } from '@/lib/seo';
 export const metadata = noIndexMetadata(`Claim / Register School | ${APP_NAME}`, 'Claim an existing school directory profile or request a new school listing.');
 
 export default async function ClaimSchoolPage() {
-  const [directorySchools, currentUser] = await Promise.all([
-    db
-      .select({
-        id: schools.id,
-        name: schools.name,
-        area: schools.area,
-        address: schools.address,
-        status: schools.status,
-      })
-      .from(schools)
-      .orderBy(asc(schools.name))
-      .limit(250),
-    getAuthenticatedUser(),
-  ]);
+  const currentUser = await getAuthenticatedUser();
+
+  if (currentUser?.userRole === 'platform_admin') {
+    redirect('/admin');
+  }
+
+  if (currentUser?.schoolId) {
+    redirect('/dashboard');
+  }
+
+  if (currentUser) {
+    const latestClaims = await db
+      .select({ status: schoolClaims.status })
+      .from(schoolClaims)
+      .where(eq(schoolClaims.applicantUserId, currentUser.userId))
+      .orderBy(desc(schoolClaims.createdAt))
+      .limit(10);
+
+    const hasClaimUnderReview = latestClaims.some((claim) => claim.status !== 'rejected');
+
+    if (hasClaimUnderReview) {
+      redirect('/account/pending-verification');
+    }
+  }
+
+  const directorySchools = await db
+    .select({
+      id: schools.id,
+      name: schools.name,
+      area: schools.area,
+      address: schools.address,
+      status: schools.status,
+    })
+    .from(schools)
+    .orderBy(asc(schools.name))
+    .limit(250);
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8 text-navy-800">

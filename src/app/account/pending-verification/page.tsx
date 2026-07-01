@@ -54,7 +54,7 @@ export default async function PendingVerificationPage() {
             <span className="rounded-lg bg-navy-900 px-2.5 py-1 text-white">EC</span>
             <span className="truncate">EduClearance</span>
           </Link>
-          <Link href="/claim-school" className="text-xs font-semibold text-navy-900 hover:underline">Submit another claim</Link>
+          <span className="text-xs font-semibold text-slate-500">One school claim per account</span>
         </div>
 
         <div className="space-y-3 text-center">
@@ -65,7 +65,7 @@ export default async function PendingVerificationPage() {
           </div>
           <h1 className="text-xl sm:text-2xl font-bold">Your school account is waiting for verification</h1>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-600">
-            You can sign in, but clearance tools stay locked until a submitted school claim is approved. If your claim has been rejected three times, contact support directly so a human can verify ownership.
+            You can sign in, but clearance tools stay locked until a submitted school claim is approved. If a claim is rejected, you can submit updated proof from this account until the online appeal limit is reached.
           </p>
         </div>
 
@@ -73,7 +73,8 @@ export default async function PendingVerificationPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Submitted claims</h2>
           {claims.length === 0 ? (
             <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
-              No claim has been submitted from this account yet. Search the directory or request a new school profile to begin verification.
+              No claim has been submitted from this account yet. Start the school claim flow to begin verification.
+              <Link href="/claim-school" className="ml-1 font-semibold text-navy-900 hover:underline">Claim your school</Link>.
             </div>
           ) : claims.map((claim) => {
             const attemptCount = claims.filter((item) => item.requestedSchoolName === claim.requestedSchoolName).length;
@@ -97,9 +98,15 @@ export default async function PendingVerificationPage() {
                   <p className="break-words">Online attempts: {Math.min(attemptCount, MAX_SCHOOL_CLAIM_APPEALS)} of {MAX_SCHOOL_CLAIM_APPEALS}</p>
                 </div>
                 {claim.adminNote ? <p className="mt-3 rounded-lg bg-white p-3 text-xs text-slate-600 break-words">Admin note: {claim.adminNote}</p> : null}
+                {claim.status === 'rejected' && !reachedAppealLimit ? (
+                  <div className="mt-3 rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs leading-relaxed text-terracotta-800">
+                    Your claim was rejected. Review the admin note, then submit updated proof from the same account.{' '}
+                    <Link href="/claim-school" className="font-semibold underline">Resubmit verification</Link>
+                  </div>
+                ) : null}
                 {reachedAppealLimit ? (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
-                    If you are the real owner of this school, contact support directly so we can review your documents manually.{' '}
+                    This account has reached the online appeal limit for this school. Contact support directly so we can review your documents manually.{' '}
                     <a href={supportHref(claim.requestedSchoolName)} className="font-semibold underline">Email support</a>
                   </div>
                 ) : null}

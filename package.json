@@ -15,6 +15,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:create-admin": "tsx scripts/create-platform-admin.ts",
     "db:reset-production": "tsx scripts/reset-production-db.ts",
+    "db:clone-prod-to-local": "node scripts/clone-prod-to-local.mjs",
     "db:import:abuja-schools": "tsx scripts/import-abuja-schools.ts"
   },
   "dependencies": {
