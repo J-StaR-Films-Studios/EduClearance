@@ -18,14 +18,19 @@ const registerSchema = z.object({
   email: z.string().trim().email(),
   phone: z.string().trim().min(6),
   password: z.string().min(8),
+  confirmPassword: z.string().min(8),
   redirect: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  path: ['confirmPassword'],
+  message: 'The two password fields do not match.',
 });
 
 export async function POST(request: Request) {
   const payload = registerSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Enter valid registration details.' }, { status: 400 });
+    const firstIssue = Object.values(payload.error.flatten().fieldErrors).flat().find(Boolean);
+    return NextResponse.json({ ok: false, message: firstIssue ?? 'Enter valid registration details.', issues: payload.error.flatten() }, { status: 400 });
   }
 
   const email = payload.data.email.toLowerCase();

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from '@/db/client';
 import { auditLogs, payments } from '@/db/schema';
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv, hasPaystackTestKeys, isVercelProduction } from '@/lib/env';
 import { makeEntityId, makePaymentReference } from '@/lib/ids';
 import { canManageSchoolWallet, resolveLocalSchoolActor } from '@/lib/local-actor';
 
@@ -97,6 +97,11 @@ export async function POST(request: Request) {
   }
 
   const env = getServerEnv();
+
+  if (isVercelProduction() && hasPaystackTestKeys(env)) {
+    return NextResponse.json({ ok: false, message: 'Checkout is unavailable because production Paystack keys are not configured.' }, { status: 503 });
+  }
+
   const reference = makePaymentReference();
   const paymentId = makeEntityId('payment');
   const callbackUrl = getSafeCallbackUrl(env.NEXT_PUBLIC_APP_URL, payload.data.callbackUrl, reference);

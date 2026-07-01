@@ -60,9 +60,16 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
       return;
     }
 
-    if (mode === 'register' && !hasAcceptedTerms) {
-      setErrorMessage('Please agree to the privacy statement and terms before registering.');
-      return;
+    if (mode === 'register') {
+      if (String(new FormData(form).get('password') ?? '') !== String(new FormData(form).get('confirmPassword') ?? '')) {
+        setErrorMessage('The two password fields do not match. Please re-enter them.');
+        return;
+      }
+
+      if (!hasAcceptedTerms) {
+        setErrorMessage('Please agree to the privacy statement and terms before registering.');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -83,6 +90,7 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
             email: String(formData.get('email') ?? ''),
             phone: String(formData.get('phone') ?? ''),
             password: String(formData.get('password') ?? ''),
+            confirmPassword: String(formData.get('confirmPassword') ?? ''),
             redirect: registerContent.destination,
           };
 
@@ -133,7 +141,9 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 <label htmlFor="password" className="block text-xs font-semibold text-navy-800">
                   Password
                 </label>
-                <span className="text-xs text-slate-500">Password reset is handled by support.</span>
+                <Link href="/forgot-password" className="text-xs font-semibold text-slate-500 transition-colors hover:text-navy-900 hover:underline">
+                  Forgot password?
+                </Link>
               </div>
               <input
                 id="password"
@@ -248,7 +258,24 @@ export function AuthAccessForm({ mode, audience = 'school', destination }: AuthA
                 name="password"
                 type="password"
                 required
+                minLength={8}
+                autoComplete="new-password"
                 placeholder="Minimum 8 characters"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="confirm-password" className="block text-xs font-semibold text-navy-800">
+                Confirm Password
+              </label>
+              <input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                placeholder="Re-enter password"
                 className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>

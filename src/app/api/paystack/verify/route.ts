@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from '@/db/client';
 import { payments } from '@/db/schema';
-import { getServerEnv } from '@/lib/env';
+import { getServerEnv, hasPaystackTestKeys, isVercelProduction } from '@/lib/env';
 import { canManageSchoolWallet, canVerifyPaymentForSchool, resolveOptionalLocalActor } from '@/lib/local-actor';
 import { creditSuccessfulPaystackPayment, markPaystackPaymentTerminal, verifyPaystackReference } from '@/lib/paystack-payments';
 
@@ -42,6 +42,10 @@ export async function POST(request: Request) {
 
   const reference = payload.data.reference;
   const env = getServerEnv();
+
+  if (isVercelProduction() && hasPaystackTestKeys(env)) {
+    return NextResponse.json({ ok: false, message: 'Payment confirmation is unavailable because production Paystack keys are not configured.' }, { status: 503 });
+  }
 
   if (!env.PAYSTACK_SECRET_KEY && !(isLocalAppUrl(env.NEXT_PUBLIC_APP_URL) && isLocalRequest(request))) {
     return NextResponse.json({ ok: false, message: 'Payment confirmation is temporarily unavailable. Please contact support.' }, { status: 503 });
