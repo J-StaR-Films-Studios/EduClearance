@@ -156,23 +156,23 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
   return (
     <>
       {paymentReference ? (
-        <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-900">
-          <p>Welcome back. We are checking your payment automatically. If it does not update after a moment, you can try again.</p>
+        <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-xs leading-relaxed text-emerald-900">
+          <p className="break-words">Welcome back. We are checking your payment automatically. If it does not update after a moment, you can try again.</p>
           <button
             type="button"
             onClick={() => void verifyPayment()}
             disabled={isVerifying}
-            className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-lg bg-navy-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
           >
             {isVerifying ? 'Checking…' : 'Try again'}
           </button>
         </div>
       ) : null}
 
-      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm md:col-span-2">
+      <div className="space-y-5 rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 shadow-sm md:col-span-2">
         <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-navy-900">Purchase Clearance Credits</h3>
-          <p className="text-[10px] leading-relaxed text-slate-500">
+          <h3 className="text-sm font-bold text-navy-900">Purchase Clearance Credits</h3>
+          <p className="text-[10px] leading-relaxed text-slate-500 break-words">
             Choose an amount and continue to secure checkout. Your balance updates after payment confirmation.
           </p>
         </div>
@@ -184,8 +184,10 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
               type="button"
               onClick={() => setAmount(String(quickAmount))}
               className={cn(
-                'rounded-lg border border-background-secondary py-2.5 text-xs font-semibold transition hover:bg-background-secondary',
-                amount === String(quickAmount) ? 'bg-background text-navy-900' : 'bg-white text-slate-600',
+                'rounded-lg border py-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-navy-800 focus:ring-offset-2',
+                amount === String(quickAmount)
+                  ? 'border-navy-900 bg-navy-50 text-navy-900 shadow-sm'
+                  : 'border-background-secondary bg-white text-slate-600 hover:border-slate-300',
               )}
             >
               {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(quickAmount)}
@@ -193,8 +195,8 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
-          <label className="space-y-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[150px_1fr_auto] sm:items-end">
+          <label className="flex flex-col gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
             Amount
             <input
               type="number"
@@ -206,7 +208,7 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
               className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-xs font-normal normal-case tracking-normal text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-800"
             />
           </label>
-          <label className="space-y-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <label className="flex flex-col gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
             Billing email for receipt
             <input
               type="email"
@@ -224,19 +226,21 @@ export function WalletTopUpPanel({ role }: { role: SchoolUserRole }) {
             onClick={initializeTopUp}
             disabled={!canOpenCheckout}
             title={!hasValidBillingEmail ? 'Enter a valid billing email before checkout.' : undefined}
-            className="rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full sm:col-span-2 lg:col-span-1 rounded-lg bg-navy-900 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-navy-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 whitespace-nowrap shadow-sm min-h-[38px] flex items-center justify-center"
           >
             {isInitializing ? 'Opening checkout…' : 'Continue to secure checkout'}
           </button>
         </div>
 
-        {!hasValidBillingEmail ? <p className="text-xs font-medium text-slate-500">Enter a billing email to continue to checkout.</p> : null}
-        {errorMessage ? <p className="text-xs font-medium text-terracotta-700">{errorMessage}</p> : null}
-        {statusMessage ? <p className="text-xs font-medium text-emerald-700">{statusMessage}</p> : null}
+        <div className="space-y-1.5 pt-1">
+          {!hasValidBillingEmail ? <p className="text-xs font-medium text-slate-500">Enter a billing email to continue to checkout.</p> : null}
+          {errorMessage ? <p className="text-xs font-medium text-terracotta-700 break-words">{errorMessage}</p> : null}
+          {statusMessage ? <p className="text-xs font-medium text-emerald-700 break-words">{statusMessage}</p> : null}
 
-        <p className="text-[10px] leading-relaxed text-slate-500">
-          Selected amount: <strong>{formattedAmount}</strong>. Your wallet balance updates once payment is confirmed.
-        </p>
+          <p className="text-[10px] leading-relaxed text-slate-500 break-words">
+            Selected amount: <strong>{formattedAmount}</strong>. Your wallet balance updates once payment is confirmed.
+          </p>
+        </div>
       </div>
     </>
   );
