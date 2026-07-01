@@ -87,9 +87,11 @@ export default async function AdminClearancePage() {
 
   return (
     <AdminAppShell activeKey="clearance">
-      <header className="border-b border-background-secondary pb-4">
-        <h1 className="text-2xl font-bold text-navy-900">Platform Clearances &amp; Wallet Controls</h1>
-        <p className="text-xs text-slate-500">Track clearance requests and adjust school wallet balances</p>
+      <header className="flex flex-col gap-1 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-navy-900">Platform Clearances &amp; Wallet Controls</h1>
+          <p className="text-xs text-slate-500">Track clearance requests and adjust school wallet balances</p>
+        </div>
       </header>
 
       <AdminClearanceWorkspace initialClearanceRecords={clearanceRecords} initialIssueSummaries={issueSummaries} initialWalletWatchSchools={walletWatch} />

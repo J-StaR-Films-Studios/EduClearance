@@ -344,7 +344,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-6 sm:space-y-8">
       <div className="flex items-center justify-between border-b border-background-secondary pb-4">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900 font-display font-bold text-white shadow-sm">EC</div>
@@ -352,7 +352,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
         </Link>
         {currentUser ? (
           <div className="flex items-center gap-3 text-xs">
-            <span className="hidden text-slate-500 sm:inline">{currentUser.name}</span>
+            <span className="hidden text-slate-500 sm:inline truncate max-w-[120px]">{currentUser.name}</span>
             <button
               type="button"
               onClick={() => void handleSignOut()}
@@ -369,14 +369,14 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
         )}
       </div>
 
-      <div className="grid grid-cols-3 border-b border-background-secondary pb-4 text-center text-xs font-semibold uppercase tracking-wider">
+      <div className="grid grid-cols-3 border-b border-background-secondary pb-4 text-center text-[10px] sm:text-xs font-semibold uppercase tracking-wider gap-2">
         <StepLabel currentStep={currentStep} step={1} label="Find School" />
         <StepLabel currentStep={currentStep} step={2} label="Submit Proof" />
         <StepLabel currentStep={currentStep} step={3} label="Review" />
       </div>
 
       {flowState === 'search' ? (
-        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="step-1">
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 shadow-sm" id="step-1">
           <h1 className="text-2xl font-bold text-navy-900">Search the School Directory</h1>
           <p className="text-sm leading-relaxed text-slate-500">
             Find your school in the directory. Only schools with an <strong>Unclaimed</strong> status can be claimed here.
@@ -394,7 +394,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Type school name or location (e.g. American, Garki, Abuja)"
-                className="w-full rounded-lg border border-background-secondary bg-background py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
               <svg
                 className="absolute left-3 top-3.5 h-5 w-5 text-slate-400"
@@ -421,16 +421,16 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                         onClick={() => handleSchoolSelect(school)}
                         disabled={!isClaimable}
                         className={[
-                          'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition',
+                          'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition gap-3 sm:gap-4',
                           index < filteredSchools.length - 1 ? 'border-b border-background-secondary' : '',
                           isClaimable ? 'hover:bg-white' : 'cursor-not-allowed opacity-80',
                         ].join(' ')}
                       >
-                        <div>
-                          <p className="font-semibold text-navy-900">{school.name}</p>
-                          <p className="text-xs text-slate-500">{school.location}</p>
+                        <div className="min-w-0 flex-1 pr-2">
+                          <p className="font-semibold text-navy-900 break-words">{school.name}</p>
+                          <p className="text-xs text-slate-500 break-words mt-0.5">{school.location}</p>
                         </div>
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[school.status]}`}>
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap flex-shrink-0 ${statusStyles[school.status]}`}>
                           {statusLabels[school.status]}
                         </span>
                       </button>
@@ -454,7 +454,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       ) : null}
 
       {flowState === 'auth-required' ? (
-        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 shadow-sm">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-navy-900">Sign in to continue</h2>
             <p className="text-sm leading-relaxed text-slate-500">
@@ -464,8 +464,8 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
 
           {selectedSchool ? (
             <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
-              <p className="font-semibold text-navy-900">Claiming: {selectedSchool.name}</p>
-              <p className="mt-1 text-xs text-slate-500">{selectedSchool.location}</p>
+              <p className="font-semibold text-navy-900 break-words text-sm">Claiming: {selectedSchool.name}</p>
+              <p className="mt-1 text-xs text-slate-500 break-words">{selectedSchool.location}</p>
             </div>
           ) : null}
 
@@ -478,29 +478,29 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
             </Link>
           </div>
 
-          <button type="button" onClick={resetFlow} className="text-sm font-medium text-slate-500 hover:text-navy-900">
+          <button type="button" onClick={resetFlow} className="text-sm font-medium text-slate-500 hover:text-navy-900 transition-colors">
             ← Back to search
           </button>
         </div>
       ) : null}
 
       {flowState === 'claim' && selectedSchool && applicantUser ? (
-        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="claim-form">
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 shadow-sm" id="claim-form">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-navy-900">Claim School Profile</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-navy-900">Claim School Profile</h2>
             <button type="button" onClick={resetFlow} className="text-xs text-slate-500 hover:underline">
               ← Back
             </button>
           </div>
 
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 break-words">
             You are submitting this claim as <strong className="text-navy-900">{applicantUser.name}</strong> ({applicantUser.email}).
           </p>
 
           <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
-            <p className="font-semibold text-navy-900">School being claimed</p>
-            <p className="mt-1">{selectedSchool.name}</p>
-            <p className="text-xs text-slate-500">{selectedSchool.location}</p>
+            <p className="font-semibold text-navy-900 break-words">School being claimed</p>
+            <p className="mt-1 break-words font-medium">{selectedSchool.name}</p>
+            <p className="text-xs text-slate-500 break-words mt-0.5">{selectedSchool.location}</p>
           </div>
 
           <form className="space-y-4" onSubmit={submitClaimForm}>
@@ -515,7 +515,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="text"
                   required
                   placeholder="e.g. Chief Mrs. Alabi"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -528,7 +528,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="email"
                   required
                   placeholder="clearance@yourschool.edu.ng"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -546,7 +546,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   title="Enter a real phone number, e.g. +234 803 123 4567"
                   required
                   placeholder="e.g. +234 803 123 4567"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -563,14 +563,14 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   required={!claimWhatsappSameAsPhone}
                   disabled={claimWhatsappSameAsPhone}
                   placeholder="e.g. +234 803 123 4567"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 disabled:bg-slate-100 disabled:text-slate-400"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-400"
                 />
-                <label className="flex items-center gap-2 text-xs text-slate-600">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={claimWhatsappSameAsPhone}
                     onChange={(event) => setClaimWhatsappSameAsPhone(event.currentTarget.checked)}
-                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900"
+                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900 cursor-pointer"
                   />
                   Same number for WhatsApp
                 </label>
@@ -586,7 +586,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 required
                 rows={3}
                 placeholder="Briefly explain what this document proves and who can verify it."
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
             <div className="space-y-1">
@@ -600,16 +600,16 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 accept=".pdf,.png,.jpg,.jpeg"
                 required
                 onChange={(event) => setClaimProofFileName(event.currentTarget.files?.[0]?.name ?? '')}
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-navy-50 file:text-navy-900 hover:file:bg-navy-100"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-1">
                 PDF, PNG, or JPG. Max 2MB. Admins can view the submitted file during review.
               </p>
-              {claimProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {claimProofFileName}</p> : null}
+              {claimProofFileName ? <p className="text-xs font-medium text-navy-900 break-all mt-1">Proof document selected: {claimProofFileName}</p> : null}
             </div>
 
             {submissionError ? (
-              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{submissionError}</div>
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700 break-words">{submissionError}</div>
             ) : null}
 
             <button
@@ -624,15 +624,15 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       ) : null}
 
       {flowState === 'new-school' && applicantUser ? (
-        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8" id="new-school-form">
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 shadow-sm" id="new-school-form">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-navy-900">Register New School Profile</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-navy-900">Register New School Profile</h2>
             <button type="button" onClick={resetFlow} className="text-xs text-slate-500 hover:underline">
               ← Back
             </button>
           </div>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 leading-relaxed">
             Your account stays the applicant. Add the school&apos;s official contact details so the admin team can review the request.
           </p>
 
@@ -649,7 +649,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 value={newSchoolNameQuery}
                 onChange={(event) => setNewSchoolNameQuery(event.currentTarget.value)}
                 placeholder="e.g. New Abuja Model School"
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
               {similarNewSchoolMatches.length > 0 ? (
                 <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
@@ -663,9 +663,9 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                           setSelectedSchool(school);
                           setFlowState('claim');
                         }}
-                        className="block w-full rounded-lg bg-white px-3 py-2 text-left text-navy-900 hover:bg-background-secondary"
+                        className="block w-full rounded-lg bg-white px-3 py-2 text-left text-navy-900 hover:bg-background-secondary break-words"
                       >
-                        {school.name} <span className="text-slate-500">· {school.location}</span>
+                        <span className="font-semibold">{school.name}</span> <span className="text-slate-500">· {school.location}</span>
                       </button>
                     ))}
                   </div>
@@ -684,7 +684,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="text"
                   required
                   placeholder="e.g. Alimosho"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -697,7 +697,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="text"
                   required
                   placeholder="e.g. 15, Airport Road"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -712,7 +712,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="text"
                   required
                   placeholder="e.g. Mrs. Alabi"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -725,7 +725,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   type="email"
                   required
                   placeholder="records@yourschool.edu.ng"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -743,7 +743,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   title="Enter a real phone number, e.g. +234 803 123 4567"
                   required
                   placeholder="e.g. +234 803 123 4567"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -760,14 +760,14 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                   required={!newSchoolWhatsappSameAsPhone}
                   disabled={newSchoolWhatsappSameAsPhone}
                   placeholder="e.g. +234 803 123 4567"
-                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 disabled:bg-slate-100 disabled:text-slate-400"
+                  className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-400"
                 />
-                <label className="flex items-center gap-2 text-xs text-slate-600">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={newSchoolWhatsappSameAsPhone}
                     onChange={(event) => setNewSchoolWhatsappSameAsPhone(event.currentTarget.checked)}
-                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900"
+                    className="h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-900 cursor-pointer"
                   />
                   Same number for WhatsApp
                 </label>
@@ -783,7 +783,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 required
                 rows={3}
                 placeholder="Summarize the licence, incorporation, or letterhead included."
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all"
               />
             </div>
             <div className="space-y-1">
@@ -797,14 +797,14 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
                 accept=".pdf,.png,.jpg,.jpeg"
                 required
                 onChange={(event) => setNewSchoolProofFileName(event.currentTarget.files?.[0]?.name ?? '')}
-                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+                className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 focus:bg-white transition-all cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-navy-50 file:text-navy-900 hover:file:bg-navy-100"
               />
-              <p className="text-xs text-slate-500">PDF, PNG, or JPG. Max 2MB. Admins can view the submitted file during review.</p>
-              {newSchoolProofFileName ? <p className="text-xs font-medium text-navy-900">Proof document selected: {newSchoolProofFileName}</p> : null}
+              <p className="text-xs text-slate-500 mt-1">PDF, PNG, or JPG. Max 2MB. Admins can view the submitted file during review.</p>
+              {newSchoolProofFileName ? <p className="text-xs font-medium text-navy-900 break-all mt-1">Proof document selected: {newSchoolProofFileName}</p> : null}
             </div>
 
             {submissionError ? (
-              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700">{submissionError}</div>
+              <div className="rounded-lg border border-terracotta-200 bg-terracotta-50 p-3 text-xs font-medium text-terracotta-700 break-words">{submissionError}</div>
             ) : null}
 
             <button
@@ -819,7 +819,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
       ) : null}
 
       {flowState === 'pending' && pendingSubmission ? (
-        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-8 text-center shadow-sm" id="pending-page">
+        <div className="space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 text-center shadow-sm" id="pending-page">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700">
             <svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
@@ -833,14 +833,14 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
             </p>
           </div>
           <div className="mx-auto max-w-xl rounded-lg border border-background-secondary bg-background p-4 text-left text-xs text-slate-500">
-            <span className="mb-1 block font-semibold uppercase tracking-widest text-navy-900">Submission summary</span>
-            <p className="text-slate-600">Applicant: {pendingSubmission.applicantName} ({pendingSubmission.applicantEmail})</p>
-            <p className="mt-2 text-slate-600">Official contact: {pendingSubmission.officialContactName}</p>
-            <p className="mt-2 text-slate-600">Official email: {pendingSubmission.officialEmail}</p>
-            <p className="mt-2 text-slate-600">Clearance phone: {pendingSubmission.officialPhone}</p>
-            <p className="mt-2 text-slate-600">WhatsApp line: {pendingSubmission.officialWhatsappPhone}</p>
-            <p className="mt-2 text-slate-600">Proof document selected: {pendingSubmission.proofFileName}</p>
-            <p className="mt-2 text-slate-600">Proof note: {pendingSubmission.proofNote}</p>
+            <span className="mb-2 block font-semibold uppercase tracking-widest text-navy-900">Submission summary</span>
+            <p className="text-slate-600 break-words">Applicant: {pendingSubmission.applicantName} ({pendingSubmission.applicantEmail})</p>
+            <p className="mt-2 text-slate-600 break-words">Official contact: {pendingSubmission.officialContactName}</p>
+            <p className="mt-2 text-slate-600 break-all">Official email: {pendingSubmission.officialEmail}</p>
+            <p className="mt-2 text-slate-600 break-words">Clearance phone: {pendingSubmission.officialPhone}</p>
+            <p className="mt-2 text-slate-600 break-words">WhatsApp line: {pendingSubmission.officialWhatsappPhone}</p>
+            <p className="mt-2 text-slate-600 break-all">Proof document selected: {pendingSubmission.proofFileName}</p>
+            <p className="mt-2 text-slate-600 break-words">Proof note: {pendingSubmission.proofNote}</p>
             <p className="mt-3 text-slate-500">Wallet/top-up/payment setup may still be required before clearance checks are enabled.</p>
           </div>
           <div className="pt-4">
@@ -848,7 +848,7 @@ export function ClaimSchoolFlow({ directorySchools, currentUser }: ClaimSchoolFl
               View Verification Status
             </Link>
           </div>
-          <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900">
+          <button type="button" onClick={resetFlow} className="mx-auto text-sm font-medium text-slate-500 hover:text-navy-900 transition-colors">
             Submit another {pendingSubmission.claimType === 'existing_school' ? 'claim' : 'school request'}
           </button>
         </div>

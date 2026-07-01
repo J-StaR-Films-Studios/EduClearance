@@ -110,32 +110,36 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
       </div>
 
       {activeTab === 'outbound' ? (
-        <div className="overflow-x-auto whitespace-nowrap">
+        <div className="overflow-x-auto whitespace-normal">
           <table className="w-full border-collapse text-left text-xs">
             <thead>
               <tr className="border-b border-background-secondary bg-background font-bold uppercase tracking-wider text-slate-500">
-                <th className="px-6 py-3">Student</th>
-                <th className="px-6 py-3">Previous School</th>
-                <th className="px-6 py-3">Result</th>
-                <th className="px-6 py-3">Charged</th>
-                <th className="px-6 py-3">Action</th>
+                <th className="px-3 sm:px-6 py-3">Student</th>
+                <th className="px-3 sm:px-6 py-3">Previous School</th>
+                <th className="px-3 sm:px-6 py-3">Result</th>
+                <th className="px-3 sm:px-6 py-3">Charged</th>
+                <th className="px-3 sm:px-6 py-3">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-background-secondary text-slate-600">
               {outboundClearances.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={5} className="px-3 sm:px-6 py-8 text-center text-sm text-slate-500">
                     No clearance checks have been started yet.
                   </td>
                 </tr>
               ) : outboundClearances.map((clearance) => (
                 <tr key={clearance.id}>
-                  <td className="px-6 py-4 font-semibold text-navy-900">{clearance.studentName}</td>
-                  <td className="px-6 py-4">{clearance.previousSchoolName}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-navy-900 whitespace-normal break-words min-w-[120px] max-w-[180px] sm:max-w-none">
+                    {clearance.studentName}
+                  </td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal break-words min-w-[140px] max-w-[200px] sm:max-w-none">
+                    {clearance.previousSchoolName}
+                  </td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <span
                       className={cn(
-                        'rounded-full border px-2 py-0.5 font-semibold',
+                        'inline-block rounded-full border px-2 py-0.5 font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[150px] sm:max-w-none',
                         clearance.resultState === 'match'
                           ? 'border-terracotta-100 bg-terracotta-50 text-terracotta-600'
                           : clearance.resultState === 'no_record' || clearance.resultState === 'cleared'
@@ -146,8 +150,10 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                       {clearance.statusLabel}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{formatNairaFromKobo(clearance.amountChargedKobo)}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                    {formatNairaFromKobo(clearance.amountChargedKobo)}
+                  </td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <Link
                       href={withRoleQuery(`/clearance/${clearance.id}`, role)}
                       className="font-semibold text-navy-900 hover:underline"
@@ -163,41 +169,43 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
       ) : (
         <div>
           {activeInboundCount === 0 ? (
-            <div className="border-t border-background-secondary px-6 py-8 text-sm text-slate-500">
+            <div className="border-t border-background-secondary px-3 sm:px-6 py-8 text-sm text-slate-500">
               All inbound requests have a recorded response.
             </div>
           ) : null}
-          <div className="overflow-x-auto whitespace-nowrap">
+          <div className="overflow-x-auto whitespace-normal">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
                 <tr className="border-b border-background-secondary bg-background font-bold uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3">Student</th>
-                  <th className="px-6 py-3">Requesting School</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Requested</th>
-                  <th className="px-6 py-3">Action</th>
+                  <th className="px-3 sm:px-6 py-3">Student</th>
+                  <th className="px-3 sm:px-6 py-3">Requesting School</th>
+                  <th className="px-3 sm:px-6 py-3">Status</th>
+                  <th className="px-3 sm:px-6 py-3">Requested</th>
+                  <th className="px-3 sm:px-6 py-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-background-secondary text-slate-600">
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                    <td colSpan={5} className="px-3 sm:px-6 py-8 text-center text-sm text-slate-500">
                       No inbound clearance requests are assigned to your school.
                     </td>
                   </tr>
                 ) : requests.map((request) => (
                   <tr key={request.id}>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal break-words min-w-[120px] max-w-[180px] sm:max-w-none">
                       <Link href={withRoleQuery(`/clearance/${request.id}`, role)} className="font-semibold text-navy-900 hover:underline">
                         {request.status === 'potential_response' ? 'Potential student match' : request.studentName}
                       </Link>
                       <p className="mt-1 text-[10px] text-slate-400">View case history</p>
                     </td>
-                    <td className="px-6 py-4">{request.requestingSchool}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal break-words min-w-[140px] max-w-[200px] sm:max-w-none">
+                      {request.requestingSchool}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <span
                         className={cn(
-                          'rounded-full border px-2 py-0.5 font-semibold',
+                          'inline-block rounded-full border px-2 py-0.5 font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[180px] sm:max-w-none',
                           request.status === 'resolved'
                             ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
                             : request.status === 'potential_response'
@@ -208,30 +216,32 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                         {request.status === 'resolved' ? 'Cleared by previous school · no outstanding records remain' : request.status === 'potential_response' ? 'Potential match review' : 'Response needed'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{request.requestedAt}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal min-w-[90px]">
+                      {request.requestedAt}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {request.status === 'resolved' ? (
-                        <span className="font-medium text-emerald-700">Clearance recorded</span>
+                        <span className="font-medium text-emerald-700 whitespace-nowrap">Clearance recorded</span>
                       ) : request.status === 'potential_response' ? (
                         <Link
                           href={withRoleQuery(`/clearance/${request.id}`, role)}
-                          className="rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white"
+                          className="inline-block rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white text-center whitespace-normal sm:whitespace-nowrap"
                         >
                           Review Potential Match
                         </Link>
                       ) : (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-1.5">
                           <button
                             type="button"
                             onClick={() => void markNoIssue(request.id)}
                             disabled={updatingId === request.id}
-                            className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white text-center disabled:cursor-not-allowed disabled:bg-slate-400 whitespace-normal sm:whitespace-nowrap"
                           >
                             {updatingId === request.id ? 'Recording…' : 'No Outstanding Issue'}
                           </button>
                           <Link
                             href={withRoleQuery(`/issues/new?source=inbound&requestId=${encodeURIComponent(request.id)}`, role)}
-                            className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-navy-900"
+                            className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-navy-900 text-center whitespace-normal sm:whitespace-nowrap"
                           >
                             Report Issue
                           </Link>

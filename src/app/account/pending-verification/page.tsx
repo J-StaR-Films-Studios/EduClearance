@@ -47,12 +47,12 @@ export default async function PendingVerificationPage() {
     .limit(10);
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-navy-900">
-      <section className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8 text-navy-900">
+      <section className="mx-auto max-w-3xl space-y-6 rounded-2xl border border-background-secondary bg-white p-5 sm:p-8 shadow-sm">
         <div className="flex items-center justify-between gap-4 border-b border-background-secondary pb-4">
           <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-navy-900 hover:opacity-80">
             <span className="rounded-lg bg-navy-900 px-2.5 py-1 text-white">EC</span>
-            EduClearance
+            <span className="truncate">EduClearance</span>
           </Link>
           <Link href="/claim-school" className="text-xs font-semibold text-navy-900 hover:underline">Submit another claim</Link>
         </div>
@@ -63,14 +63,14 @@ export default async function PendingVerificationPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold">Your school account is waiting for verification</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Your school account is waiting for verification</h1>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-600">
             You can sign in, but clearance tools stay locked until a submitted school claim is approved. If your claim has been rejected three times, contact support directly so a human can verify ownership.
           </p>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Submitted claims</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Submitted claims</h2>
           {claims.length === 0 ? (
             <div className="rounded-xl border border-background-secondary bg-background p-4 text-sm text-slate-600">
               No claim has been submitted from this account yet. Search the directory or request a new school profile to begin verification.
@@ -82,21 +82,21 @@ export default async function PendingVerificationPage() {
             return (
               <div key={claim.id} className="rounded-xl border border-background-secondary bg-background p-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-bold text-navy-900">{claim.requestedSchoolName}</p>
-                    <p className="text-xs text-slate-500">{claim.requestedArea}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-navy-900 break-words">{claim.requestedSchoolName}</p>
+                    <p className="text-xs text-slate-500 break-words">{claim.requestedArea}</p>
                   </div>
-                  <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold uppercase text-amber-700">{claim.status}</span>
+                  <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold uppercase text-amber-700 whitespace-nowrap flex-shrink-0">{claim.status}</span>
                 </div>
                 <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-                  <p>Official email: {claim.officialEmail}</p>
-                  <p>Official phone: {claim.officialPhone}</p>
-                  <p>WhatsApp line: {claim.officialWhatsappPhone ?? claim.officialPhone}</p>
-                  <p>Proof file: {claim.proofFileName}</p>
-                  <p>Submitted: {claim.createdAt.toISOString().slice(0, 10)}</p>
-                  <p>Online attempts: {Math.min(attemptCount, MAX_SCHOOL_CLAIM_APPEALS)} of {MAX_SCHOOL_CLAIM_APPEALS}</p>
+                  <p className="break-all">Official email: {claim.officialEmail}</p>
+                  <p className="break-words">Official phone: {claim.officialPhone}</p>
+                  <p className="break-words">WhatsApp line: {claim.officialWhatsappPhone ?? claim.officialPhone}</p>
+                  <p className="break-all">Proof file: {claim.proofFileName}</p>
+                  <p className="break-words">Submitted: {claim.createdAt.toISOString().slice(0, 10)}</p>
+                  <p className="break-words">Online attempts: {Math.min(attemptCount, MAX_SCHOOL_CLAIM_APPEALS)} of {MAX_SCHOOL_CLAIM_APPEALS}</p>
                 </div>
-                {claim.adminNote ? <p className="mt-3 rounded-lg bg-white p-3 text-xs text-slate-600">Admin note: {claim.adminNote}</p> : null}
+                {claim.adminNote ? <p className="mt-3 rounded-lg bg-white p-3 text-xs text-slate-600 break-words">Admin note: {claim.adminNote}</p> : null}
                 {reachedAppealLimit ? (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
                     If you are the real owner of this school, contact support directly so we can review your documents manually.{' '}

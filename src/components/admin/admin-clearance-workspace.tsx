@@ -89,8 +89,8 @@ export function AdminClearanceWorkspace({
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm lg:col-span-2">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm lg:col-span-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
           <h3 className="text-sm font-bold text-navy-900">Global Clearance Logs</h3>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
@@ -98,7 +98,7 @@ export function AdminClearanceWorkspace({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search student or school"
-              className="rounded-lg border border-background-secondary bg-white px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800"
+              className="rounded-lg border border-background-secondary bg-white px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800 min-w-[180px]"
             />
             <select
               value={statusFilter}
@@ -114,27 +114,27 @@ export function AdminClearanceWorkspace({
           </div>
         </div>
 
-        <div className="overflow-x-auto whitespace-nowrap">
+        <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-[11px]">
             <thead>
               <tr className="border-b border-background-secondary bg-background font-bold uppercase text-slate-500">
-                <th className="px-4 py-2">Student</th>
-                <th className="px-4 py-2">Admitting School</th>
-                <th className="px-4 py-2">Previous School</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Date Checked</th>
+                <th className="px-4 py-2.5 min-w-[120px]">Student</th>
+                <th className="px-4 py-2.5 min-w-[140px]">Admitting School</th>
+                <th className="px-4 py-2.5 min-w-[140px]">Previous School</th>
+                <th className="px-4 py-2.5 min-w-[110px]">Status</th>
+                <th className="px-4 py-2.5 min-w-[90px]">Date Checked</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-background-secondary text-slate-600">
               {filteredRecords.map((record) => (
-                <tr key={record.id}>
-                  <td className="px-4 py-3 font-semibold text-navy-900">{record.studentName}</td>
-                  <td className="px-4 py-3">{record.admittingSchool}</td>
-                  <td className="px-4 py-3">{record.previousSchool}</td>
+                <tr key={record.id} className="hover:bg-background/40 transition-colors">
+                  <td className="px-4 py-3 font-semibold text-navy-900 break-words whitespace-normal">{record.studentName}</td>
+                  <td className="px-4 py-3 break-words whitespace-normal">{record.admittingSchool}</td>
+                  <td className="px-4 py-3 break-words whitespace-normal">{record.previousSchool}</td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10px] font-semibold',
+                        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
                         record.status === 'no_record'
                           ? 'border-emerald-600/20 bg-emerald-50/40 text-emerald-700'
                           : record.status === 'owed_balance'
@@ -155,7 +155,7 @@ export function AdminClearanceWorkspace({
                       {statusChip(record.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{record.checkedAt}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{record.checkedAt}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,14 +169,14 @@ export function AdminClearanceWorkspace({
               {initialIssueSummaries.length === 0 ? (
                 <p className="text-slate-500">No unresolved issue reports yet.</p>
               ) : initialIssueSummaries.map((issue) => (
-                <div key={issue.id} className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-navy-900">{issue.studentName}</p>
-                    <p className="text-slate-500">{issue.reportingSchool}</p>
+                <div key={issue.id} className="flex items-start justify-between gap-3 border-b border-background-secondary/50 pb-2 last:border-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-navy-900 break-words">{issue.studentName}</p>
+                    <p className="text-slate-500 break-words">{issue.reportingSchool}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="font-semibold text-navy-900">{issue.amountLabel}</p>
-                    <p className="text-slate-400">{issue.updatedAt}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{issue.updatedAt}</p>
                   </div>
                 </div>
               ))}
@@ -191,18 +191,18 @@ export function AdminClearanceWorkspace({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+      <div className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm">
         <h3 className="text-sm font-bold text-navy-900">Manual Wallet Adjustment</h3>
         <p className="text-xs text-slate-500">Platform admin tool to adjust school credits. All manual adjustments must be audit logged.</p>
 
         {notice ? <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-700">{notice}</div> : null}
 
-        <form className="space-y-3" onSubmit={adjustWallet}>
+        <form className="space-y-3.5" onSubmit={adjustWallet}>
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-navy-800" htmlFor="wallet-school">
               Select Target School
             </label>
-            <select id="wallet-school" name="schoolId" required className="w-full rounded-lg border border-background-secondary bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
+            <select id="wallet-school" name="schoolId" required className="w-full rounded-lg border border-background-secondary bg-background px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
               {initialWalletWatchSchools.map((school) => (
                 <option key={school.id} value={school.id}>{school.schoolName}</option>
               ))}
@@ -213,7 +213,7 @@ export function AdminClearanceWorkspace({
               <label className="block text-xs font-semibold text-navy-800" htmlFor="wallet-type">
                 Type
               </label>
-              <select id="wallet-type" name="type" className="w-full rounded-lg border border-background-secondary bg-background px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
+              <select id="wallet-type" name="type" className="w-full rounded-lg border border-background-secondary bg-background px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-navy-800">
                 <option value="credit">Credit</option>
                 <option value="debit">Debit</option>
               </select>
@@ -251,7 +251,7 @@ export function AdminClearanceWorkspace({
             Refund helper note: clearing an inaccurate dispute should post a separate ₦100 credit refund for the admitting school.
           </div>
 
-          <button type="submit" className="w-full rounded-lg bg-navy-900 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800">
+          <button type="submit" className="w-full rounded-lg bg-navy-900 py-2.5 text-xs font-semibold text-white transition hover:bg-navy-800">
             Apply Balance Adjustment
           </button>
         </form>
@@ -259,12 +259,12 @@ export function AdminClearanceWorkspace({
         <div className="space-y-3 border-t border-background-secondary pt-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">Wallet watchlist</h4>
           {initialWalletWatchSchools.map((school) => (
-            <div key={school.id} className="rounded-xl border border-background-secondary bg-background p-3 text-xs">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-navy-900">{school.schoolName}</p>
-                <p className="font-bold text-navy-900">{school.balanceLabel}</p>
+            <div key={school.id} className="rounded-xl border border-background-secondary bg-background p-3 text-xs hover:border-slate-300 transition-colors">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                <p className="font-semibold text-navy-900 break-words">{school.schoolName}</p>
+                <p className="font-bold text-navy-900 shrink-0">{school.balanceLabel}</p>
               </div>
-              <p className="mt-1 text-slate-500">{school.hint}</p>
+              <p className="mt-1 text-slate-500 text-[10px] uppercase tracking-wider">{school.hint}</p>
             </div>
           ))}
         </div>

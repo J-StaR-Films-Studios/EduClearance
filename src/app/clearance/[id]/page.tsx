@@ -275,12 +275,12 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
   return (
     <SchoolAppShell activeKey="dashboard" mobileMode="detail" role={currentRole}>
       <div className="mx-auto w-full max-w-5xl space-y-6">
-        <div className="flex items-center justify-between border-b border-background-secondary pb-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Clearance Request Result</p>
-            <h1 className="mt-1 text-2xl font-bold text-navy-900">{studentName}</h1>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Clearance Request Result</p>
+            <h1 className="mt-1 text-xl sm:text-2xl font-bold text-navy-900 break-words">{studentName}</h1>
           </div>
-          <Link href={notificationHref} className="text-xs text-slate-500 hover:text-navy-900">
+          <Link href={notificationHref} className="text-xs font-medium text-slate-500 hover:text-navy-900 self-start sm:self-center">
             ← Close
           </Link>
         </div>
@@ -374,38 +374,38 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
 
                 <div className="space-y-4 rounded-xl border border-background-secondary bg-white p-6 shadow-sm">
                   <h3 className="border-b border-background-secondary pb-2 text-lg font-bold text-navy-900">Outstanding Obligation Details</h3>
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Reporting School</p>
-                      <p className="text-sm font-semibold text-navy-900">{clearance.issue?.reportingSchool}</p>
+                      <p className="text-sm font-semibold text-navy-900 break-words">{clearance.issue?.reportingSchool}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Outstanding Amount Owed</p>
-                      <p className="text-sm font-bold text-terracotta-700">
+                      <p className="text-sm font-bold text-terracotta-700 break-words">
                         {clearance.issue ? formatNairaFromKobo(clearance.issue.amountOwedKobo) : null}
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Issue Category</p>
-                      <p className="font-semibold text-navy-900">{clearance.issue?.category}</p>
+                      <p className="font-semibold text-navy-900 break-words">{clearance.issue?.category}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Academic Term</p>
-                      <p className="font-medium text-slate-700">{clearance.issue?.sessionTerm}</p>
+                      <p className="font-medium text-slate-700 break-words">{clearance.issue?.sessionTerm}</p>
                     </div>
-                    <div className="col-span-2 pt-2">
+                    <div className="sm:col-span-2 pt-2">
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Official School Note</p>
-                      <p className="mt-1 rounded-lg border border-background-secondary bg-background p-3 leading-relaxed text-slate-600">
+                      <p className="mt-1 rounded-lg border border-background-secondary bg-background p-3 leading-relaxed text-slate-600 break-words">
                         &quot;{clearance.issue?.note}&quot;
                       </p>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Parent / Guardian</p>
-                      <p className="font-semibold text-navy-900">{parentName}</p>
+                      <p className="font-semibold text-navy-900 break-words">{parentName}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase text-slate-400">Parent Phone</p>
-                      <p className="font-medium text-slate-700">{parentPhone}</p>
+                      <p className="font-medium text-slate-700 break-words">{parentPhone}</p>
                     </div>
                   </div>
                 </div>
@@ -464,7 +464,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     <>
                       <a
                         href={`tel:${clearance.previousSchoolPhone.replace(/\s+/g, '')}`}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-3 text-center text-xs font-medium text-white transition hover:bg-navy-800 whitespace-normal break-words"
                       >
                         <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -476,7 +476,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                           href={noRecordWhatsappHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white px-4 py-3 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary whitespace-normal break-words"
                         >
                           <svg className="h-4 w-4 flex-shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.57 1.98 14.103.953 11.5.953c-5.447 0-9.875 4.377-9.879 9.807-.002 1.812.483 3.582 1.405 5.176l-.922 3.37 3.453-.902zm12.39-7.143c-.327-.162-1.933-.941-2.232-1.049-.3-.11-.519-.165-.737.163-.218.328-.84.841-1.03 1.059-.19.218-.379.245-.705.082-.327-.162-1.378-.501-2.625-1.603-.97-.854-1.624-1.909-1.814-2.234-.19-.328-.02-.505.143-.668.147-.146.327-.379.49-.569.164-.189.219-.328.327-.547.11-.218.055-.41-.027-.573-.082-.164-.737-1.758-1.01-2.407-.265-.63-.53-.545-.73-.555-.19-.01-.408-.01-.625-.01-.218 0-.573.082-.873.41-.3.328-1.147 1.109-1.147 2.7 0 1.591 1.173 3.129 1.336 3.348.163.218 2.308 3.483 5.592 4.887.781.334 1.39.533 1.867.683.784.246 1.498.211 2.06.126.628-.094 1.933-.78 2.205-1.53.272-.751.272-1.396.19-1.53-.081-.135-.298-.217-.625-.379z" />
@@ -486,7 +486,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                       ) : null}
                     </>
                   ) : null}
-                  <button type="button" className="w-full rounded-lg border border-background-secondary bg-background py-2.5 text-xs font-semibold text-navy-900 transition hover:bg-background-secondary">
+                  <button type="button" className="w-full rounded-lg border border-background-secondary bg-background px-4 py-3 text-xs font-semibold text-navy-900 transition hover:bg-background-secondary whitespace-normal break-words">
                     Close After Manual Verification
                   </button>
                 </div>
@@ -552,7 +552,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     {clearance.requestingSchoolPhone ? (
                       <a
                         href={`tel:${clearance.requestingSchoolPhone.replace(/\s+/g, '')}`}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-3 text-center text-xs font-medium text-white transition hover:bg-navy-800 whitespace-normal break-words"
                       >
                         Call Requesting School
                       </a>
@@ -562,7 +562,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                         href={requestingSchoolWhatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white px-4 py-3 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary whitespace-normal break-words"
                       >
                         WhatsApp Requesting School
                       </a>
@@ -573,7 +573,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     {clearance.previousSchoolPhone ? (
                       <a
                         href={`tel:${clearance.previousSchoolPhone.replace(/\s+/g, '')}`}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-3 text-center text-xs font-medium text-white transition hover:bg-navy-800 whitespace-normal break-words"
                       >
                         Call Potential Previous School
                       </a>
@@ -583,7 +583,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                         href={potentialPreviousSchoolWhatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white px-4 py-3 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary whitespace-normal break-words"
                       >
                         WhatsApp Potential Previous School
                       </a>
@@ -624,7 +624,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                     {clearance.issue?.phone ? (
                       <a
                         href={`tel:${clearance.issue.phone.replace(/\s+/g, '')}`}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 py-2.5 text-center text-xs font-medium text-white transition hover:bg-navy-800"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-900 px-4 py-3 text-center text-xs font-medium text-white transition hover:bg-navy-800 whitespace-normal break-words"
                       >
                         {`Contact ${previousSchoolName}`}
                       </a>
@@ -634,7 +634,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
                         href={matchWhatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white py-2.5 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-background-secondary bg-white px-4 py-3 text-center text-xs font-medium text-navy-900 transition hover:bg-background-secondary whitespace-normal break-words"
                       >
                         Message Previous School on WhatsApp
                       </a>

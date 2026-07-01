@@ -103,7 +103,7 @@ export default async function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 shadow-sm">
             <div>
               <h2 className="text-xl font-bold text-navy-900">Incoming Student Verification</h2>
               <p className="mt-1 text-sm text-slate-600">
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 shadow-sm">
             <div>
               <h2 className="text-xl font-bold text-navy-900">Report Unresolved Issue</h2>
               <p className="mt-1 text-sm text-slate-600">
@@ -153,16 +153,37 @@ export default async function DashboardPage() {
                 <p>
                   <strong>{pendingInboundClearance.requestingSchool}</strong> opened a clearance check that looks similar to a record associated with your school. This is a fuzzy match, not a confirmed student obligation, so review privately before responding.
                 </p>
-                <div className="rounded-lg border border-amber-200 bg-white/70 p-3">
-                  <p className="font-semibold text-amber-950">Contact the school that filed this request</p>
-                  <ul className="mt-1 space-y-1">
-                    <li>
-                      {pendingInboundClearance.requestingSchool}
-                      {pendingInboundRequestPhone ? ` · ${pendingInboundRequestPhone}` : ''}
-                      {pendingInboundClearance.requestingSchoolWhatsappPhone ? ` · WhatsApp: ${pendingInboundClearance.requestingSchoolWhatsappPhone}` : ''}
-                      {pendingInboundClearance.requestingSchoolEmail ? ` · ${pendingInboundClearance.requestingSchoolEmail}` : ''}
-                    </li>
-                  </ul>
+                <div className="rounded-lg border border-amber-200 bg-white/70 p-3 text-xs">
+                  <p className="font-semibold text-amber-950 mb-2">Contact the school that filed this request</p>
+                  <div className="space-y-2">
+                    <p className="font-medium text-amber-900">{pendingInboundClearance.requestingSchool}</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 text-[11px]">
+                      {pendingInboundRequestPhone && (
+                        <div className="flex items-center gap-1.5 text-amber-800">
+                          <svg className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <span>{pendingInboundRequestPhone}</span>
+                        </div>
+                      )}
+                      {pendingInboundClearance.requestingSchoolWhatsappPhone && (
+                        <div className="flex items-center gap-1.5 text-amber-800">
+                          <svg className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <span>WhatsApp: {pendingInboundClearance.requestingSchoolWhatsappPhone}</span>
+                        </div>
+                      )}
+                      {pendingInboundClearance.requestingSchoolEmail && (
+                        <div className="flex items-center gap-1.5 text-amber-800">
+                          <svg className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <span className="truncate">{pendingInboundClearance.requestingSchoolEmail}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -170,7 +191,7 @@ export default async function DashboardPage() {
                 <strong>{pendingInboundClearance.requestingSchool}</strong> has opened a confirmed clearance verification check involving your school. Please verify or update the clearance status.
               </p>
             )}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link
                 href={withRoleQuery('/clearance?tab=inbound', currentRole)}
                 className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition', pendingInboundIsPotential ? 'bg-amber-600 hover:bg-amber-700' : 'bg-terracotta-600 hover:bg-terracotta-700')}
@@ -215,26 +236,26 @@ export default async function DashboardPage() {
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-background-secondary bg-background text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3">Student Name</th>
-                  <th className="px-6 py-3">Previous School</th>
-                  <th className="px-6 py-3">Date Checked</th>
-                  <th className="px-6 py-3">System Match Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-3 sm:px-6 py-3">Student Name</th>
+                  <th className="px-3 sm:px-6 py-3">Previous School</th>
+                  <th className="px-3 sm:px-6 py-3">Date Checked</th>
+                  <th className="px-3 sm:px-6 py-3">System Match Status</th>
+                  <th className="px-3 sm:px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-background-secondary">
                 {recentClearances.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
+                    <td colSpan={5} className="px-3 sm:px-6 py-8 text-center text-sm text-slate-500">
                       No clearance checks have been started yet.
                     </td>
                   </tr>
                 ) : recentClearances.map((clearance) => (
                   <tr key={clearance.id}>
-                    <td className="px-6 py-4 font-semibold text-navy-900">{clearance.studentName}</td>
-                    <td className="px-6 py-4 text-slate-600">{clearance.previousSchoolName}</td>
-                    <td className="px-6 py-4 text-slate-500">{clearance.createdAt.toISOString().slice(0, 10)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3.5 sm:py-4 font-semibold text-navy-900">{clearance.studentName}</td>
+                    <td className="px-3 sm:px-6 py-3.5 sm:py-4 text-slate-600">{clearance.previousSchoolName}</td>
+                    <td className="px-3 sm:px-6 py-3.5 sm:py-4 text-slate-500">{clearance.createdAt.toISOString().slice(0, 10)}</td>
+                    <td className="px-3 sm:px-6 py-3.5 sm:py-4">
                       <span
                         className={cn(
                           'inline-flex items-center rounded-md border border-background-secondary border-l-4 bg-white py-1 pl-2.5 pr-3.5 text-[10px] font-bold uppercase tracking-wider text-navy-900 shadow-sm',
@@ -244,7 +265,7 @@ export default async function DashboardPage() {
                         {clearance.searchResult === 'confirmed_match' ? 'Owed Balance' : clearance.searchResult === 'possible_match' ? 'Review Needed' : 'No Record'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 sm:px-6 py-3.5 sm:py-4 text-right">
                       <Link
                         href={withRoleQuery(`/clearance/${clearance.id}`, currentRole)}
                         className="text-xs font-semibold text-navy-900 hover:underline"

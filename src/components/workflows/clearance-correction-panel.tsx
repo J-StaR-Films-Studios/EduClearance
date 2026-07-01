@@ -121,7 +121,7 @@ export function ClearanceCorrectionPanel({ clearanceRequestId, studentName, prev
             If this was a typo, you can correct the student name order/spelling or previous school once. The same request is rechecked; broad edits require a new check.
           </p>
         </div>
-        <span className="rounded-full border border-background-secondary bg-background px-2 py-1 text-[10px] font-bold text-slate-500">
+        <span className="rounded-full border border-background-secondary bg-background px-2 py-1 text-[10px] font-bold text-slate-500 flex-shrink-0 whitespace-nowrap">
           {Math.max(0, 1 - correctionCount)} edit left
         </span>
       </div>
@@ -177,8 +177,10 @@ export function ClearanceCorrectionPanel({ clearanceRequestId, studentName, prev
                   }}
                   className={`block w-full rounded-lg px-2 py-1.5 text-left text-[11px] transition ${selectedSchoolId === school.id ? 'bg-navy-900 text-white' : 'text-slate-600 hover:bg-white'}`}
                 >
-                  <span className="font-semibold">{school.name}</span>
-                  <span className="ml-2 opacity-75">{school.area ?? school.address ?? 'Area not listed'}</span>
+                  <span className="block font-semibold sm:inline">{school.name}</span>
+                  <span className="block text-[10px] opacity-75 sm:inline sm:ml-2 sm:text-[11px]">
+                    {school.area ?? school.address ?? 'Area not listed'}
+                  </span>
                 </button>
               ))}
             </div>

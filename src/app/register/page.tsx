@@ -6,7 +6,7 @@ export const metadata = noIndexMetadata(`Sign Up | ${APP_NAME}`, 'Create a schoo
 
 export default function RegisterPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-8">
       <AuthAccessForm mode="register" />
     </main>
   );

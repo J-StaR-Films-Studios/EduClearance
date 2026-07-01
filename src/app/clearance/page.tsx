@@ -139,7 +139,7 @@ export default async function ClearanceHistoryPage({ searchParams }: ClearanceHi
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <header className="flex flex-col gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-navy-900">Clearance History</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-navy-900">Clearance History</h1>
             <p className="text-xs text-slate-500">Track checks your school started and requests sent to your school by others.</p>
           </div>
           <Link

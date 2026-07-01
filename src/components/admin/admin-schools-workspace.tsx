@@ -214,8 +214,8 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2 border-b border-background-secondary text-sm font-semibold">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-background-secondary pb-2">
+        <div className="flex flex-wrap gap-2 text-sm font-semibold">
           {([
             ['pending', 'Pending Review', pendingCount],
             ['approved', 'Approved Claims', approvedCount],
@@ -229,8 +229,8 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                 type="button"
                 onClick={() => setActiveTab(key)}
                 className={cn(
-                  'px-4 py-2.5',
-                  isActive ? 'border-b-2 border-navy-900 text-navy-900' : 'text-slate-500 hover:text-navy-900',
+                  'px-3 sm:px-4 py-2.5 transition-colors border-b-2',
+                  isActive ? 'border-navy-900 text-navy-900' : 'border-transparent text-slate-500 hover:text-navy-900',
                 )}
               >
                 <span>{label}</span>
@@ -240,7 +240,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
           })}
         </div>
 
-        <label className="block w-full max-w-sm">
+        <label className="block w-full lg:max-w-sm">
           <span className="sr-only">Search claims</span>
           <input
             type="search"
@@ -275,28 +275,28 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                 )}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-navy-900">{claim.requestedSchoolName}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{claim.requestedArea}</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-400">{claimTypeLabels[claim.type]}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-navy-900 break-words whitespace-normal">{claim.requestedSchoolName}</p>
+                    <p className="mt-0.5 text-xs text-slate-500 break-words whitespace-normal">{claim.requestedArea}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{claimTypeLabels[claim.type]}</p>
                   </div>
                   <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', claimStatusStyles[claim.status])}>
                     {claimStatusLabels[claim.status]}
                   </span>
                 </div>
 
-                <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
-                  <p className="truncate"><span className="font-semibold text-navy-800">Applicant:</span> {claim.applicantName}</p>
-                  <p className="truncate"><span className="font-semibold text-navy-800">Contact:</span> {claim.officialContactName}</p>
-                  <p className="truncate"><span className="font-semibold text-navy-800">Proof:</span> {claim.proofFileName}</p>
+                <div className="mt-3 grid gap-x-4 gap-y-2 text-xs text-slate-500 sm:grid-cols-2">
+                  <p className="break-words whitespace-normal"><span className="font-semibold text-navy-800">Applicant:</span> {claim.applicantName}</p>
+                  <p className="break-words whitespace-normal"><span className="font-semibold text-navy-800">Contact:</span> {claim.officialContactName}</p>
+                  <p className="break-all whitespace-normal"><span className="font-semibold text-navy-800">Proof:</span> {claim.proofFileName}</p>
                   <p><span className="font-semibold text-navy-800">Submitted:</span> {claim.createdAt.slice(0, 10)}</p>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(claim.status === 'pending' || claim.status === 'rejected') ? (
-                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">Can approve</span>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">Can approve</span>
                   ) : null}
-                  {claim.hasProofFile ? <span className="rounded-full bg-background-secondary px-2 py-1 text-[10px] font-semibold text-slate-500">Proof attached</span> : null}
+                  {claim.hasProofFile ? <span className="rounded-full bg-background-secondary px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">Proof attached</span> : null}
                 </div>
               </button>
             ))}
@@ -305,52 +305,52 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
 
         {selectedClaim ? (
           <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-            <section className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm">
               <div className="flex flex-col gap-2 border-b border-background-secondary pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-navy-900">Claim Review</h2>
                   <p className="text-xs text-slate-500">Review the selected claim without losing your place in the list.</p>
                 </div>
-                <span className={cn('inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider', claimStatusStyles[selectedClaim.status])}>
+                <span className={cn('inline-flex w-fit rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider', claimStatusStyles[selectedClaim.status])}>
                   {claimStatusLabels[selectedClaim.status]}
                 </span>
               </div>
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
-                  <p className="font-semibold uppercase tracking-wider text-navy-900">Requested school</p>
-                  <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.requestedSchoolName}</p>
-                  <p className="mt-1">{selectedClaim.requestedArea}</p>
-                  <p className="mt-1">{selectedClaim.requestedAddress}</p>
+                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 whitespace-normal break-words">
+                  <p className="font-semibold uppercase tracking-wider text-navy-900 text-[10px]">Requested school</p>
+                  <p className="mt-2 text-sm font-semibold text-navy-900 break-words">{selectedClaim.requestedSchoolName}</p>
+                  <p className="mt-1 break-words">{selectedClaim.requestedArea}</p>
+                  <p className="mt-1 break-words">{selectedClaim.requestedAddress}</p>
                 </div>
-                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
-                  <p className="font-semibold uppercase tracking-wider text-navy-900">Applicant</p>
-                  <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.applicantName}</p>
+                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 whitespace-normal break-words">
+                  <p className="font-semibold uppercase tracking-wider text-navy-900 text-[10px]">Applicant</p>
+                  <p className="mt-2 text-sm font-semibold text-navy-900 break-words">{selectedClaim.applicantName}</p>
                   <p className="mt-1 break-all">{selectedClaim.applicantEmail}</p>
-                  <p className="mt-2 text-[10px] uppercase tracking-wider text-slate-400">{claimTypeLabels[selectedClaim.type]}</p>
+                  <p className="mt-2 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{claimTypeLabels[selectedClaim.type]}</p>
                 </div>
-                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
-                  <p className="font-semibold uppercase tracking-wider text-navy-900">Official contact</p>
-                  <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.officialContactName}</p>
+                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 whitespace-normal break-words">
+                  <p className="font-semibold uppercase tracking-wider text-navy-900 text-[10px]">Official contact</p>
+                  <p className="mt-2 text-sm font-semibold text-navy-900 break-words">{selectedClaim.officialContactName}</p>
                   <p className="mt-1 break-all">{selectedClaim.officialEmail}</p>
-                  <p className="mt-1">{selectedClaim.officialPhone}</p>
-                  <p className="mt-1">WhatsApp: {selectedClaim.officialWhatsappPhone ?? selectedClaim.officialPhone}</p>
+                  <p className="mt-1 break-words">{selectedClaim.officialPhone}</p>
+                  <p className="mt-1 break-words">WhatsApp: {selectedClaim.officialWhatsappPhone ?? selectedClaim.officialPhone}</p>
                 </div>
-                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500">
-                  <p className="font-semibold uppercase tracking-wider text-navy-900">Proof document</p>
-                  <p className="mt-2 text-sm font-semibold text-navy-900">{selectedClaim.proofFileName}</p>
-                  <p className="mt-1 leading-relaxed">{selectedClaim.proofNote}</p>
-                  <p className="mt-2 text-slate-500">{selectedClaim.proofFileType ?? 'Uploaded proof'} · {proofSizeLabel(selectedClaim.proofFileSize)}</p>
+                <div className="rounded-xl border border-background-secondary bg-background p-4 text-xs text-slate-500 whitespace-normal break-words">
+                  <p className="font-semibold uppercase tracking-wider text-navy-900 text-[10px]">Proof document</p>
+                  <p className="mt-2 text-sm font-semibold text-navy-900 break-words">{selectedClaim.proofFileName}</p>
+                  <p className="mt-1 leading-relaxed break-words whitespace-normal">{selectedClaim.proofNote}</p>
+                  <p className="mt-2 text-slate-400">{selectedClaim.proofFileType ?? 'Uploaded proof'} · {proofSizeLabel(selectedClaim.proofFileSize)}</p>
                   {selectedClaim.hasProofFile ? (
-                    <Link href={proofHref(selectedClaim.id)} target="_blank" className="mt-2 inline-flex rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary">
+                    <Link href={proofHref(selectedClaim.id)} target="_blank" className="mt-3.5 inline-flex items-center justify-center rounded-lg border border-background-secondary bg-white px-3 py-2 text-xs font-semibold text-navy-900 hover:bg-background-secondary transition-colors">
                       View proof document
                     </Link>
                   ) : null}
-                  <p className="mt-2 text-[10px] uppercase tracking-wider text-slate-400">Reviewed at: {selectedClaim.reviewedAt ?? 'Not yet reviewed'}</p>
+                  <p className="mt-3.5 text-[10px] uppercase tracking-wider text-slate-400">Reviewed at: {selectedClaim.reviewedAt ?? 'Not yet reviewed'}</p>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-3 rounded-2xl border border-background-secondary bg-background p-4">
+              <div className="mt-4 space-y-3.5 rounded-2xl border border-background-secondary bg-background p-4">
                 <label className="block text-xs font-semibold text-navy-800" htmlFor="review-note">
                   Admin note
                 </label>
@@ -367,7 +367,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                     type="button"
                     onClick={() => void reviewClaim(selectedClaim, 'approve')}
                     disabled={!canApproveSelected}
-                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 w-full sm:w-auto text-center"
                   >
                     {selectedClaim.status === 'rejected' ? 'Approve rejected claim' : 'Approve claim'}
                   </button>
@@ -375,7 +375,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                     type="button"
                     onClick={() => void reviewClaim(selectedClaim, 'reject')}
                     disabled={!canRejectSelected}
-                    className="rounded-lg border border-background-secondary bg-white px-4 py-2.5 text-xs font-medium text-slate-600 transition hover:bg-background-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg border border-background-secondary bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-background-secondary disabled:cursor-not-allowed disabled:opacity-60 w-full sm:w-auto text-center"
                   >
                     Reject claim
                   </button>
@@ -383,7 +383,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
               </div>
             </section>
 
-            <section className="space-y-4 rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+            <section className="space-y-4 rounded-2xl border border-background-secondary bg-white p-5 sm:p-6 shadow-sm">
               <h3 className="text-sm font-bold text-navy-900">Linked school profile</h3>
               {selectedClaim.schoolId ? (
                 <form className="space-y-4" onSubmit={saveLinkedSchoolProfile}>
@@ -477,7 +477,7 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="w-full rounded-lg bg-navy-900 px-4 py-2.5 text-xs font-medium text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-80"
+                    className="w-full rounded-lg bg-navy-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-navy-800 disabled:cursor-wait disabled:opacity-80"
                   >
                     {isSavingProfile ? 'Saving…' : 'Save School Profile'}
                   </button>
@@ -490,11 +490,11 @@ export function AdminSchoolsWorkspace({ initialClaims }: AdminSchoolsWorkspacePr
               )}
 
               <div className="space-y-2 rounded-xl border border-background-secondary bg-background p-4 text-xs leading-relaxed text-slate-500">
-                <p className="font-semibold text-navy-900">Review checklist</p>
-                <p>• Open the proof document and confirm it matches the contact details.</p>
-                <p>• Rejected claims may be approved later when the same evidence becomes acceptable.</p>
-                <p>• New school requests create a pending school profile after approval.</p>
-                <p>• Update the linked school status from this panel when onboarding changes.</p>
+                <p className="font-semibold text-navy-900 mb-1">Review checklist</p>
+                <p className="border-l-2 border-navy-900/10 pl-2">• Open the proof document and confirm it matches the contact details.</p>
+                <p className="border-l-2 border-navy-900/10 pl-2">• Rejected claims may be approved later when the same evidence becomes acceptable.</p>
+                <p className="border-l-2 border-navy-900/10 pl-2">• New school requests create a pending school profile after approval.</p>
+                <p className="border-l-2 border-navy-900/10 pl-2">• Update the linked school status from this panel when onboarding changes.</p>
               </div>
             </section>
           </aside>

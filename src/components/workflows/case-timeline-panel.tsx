@@ -155,7 +155,7 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
   }
 
   return (
-    <section className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 shadow-sm">
       <div className="border-b border-background-secondary pb-4">
         <h2 className="text-lg font-bold text-navy-900">{title}</h2>
         <p className="mt-1 text-xs text-slate-500">Messages, evidence, and status context for this student case.</p>
@@ -167,13 +167,22 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
         ) : timelineEntries.map((entry) => (
           <div key={entry.id} className="rounded-xl border border-background-secondary bg-background p-4 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-semibold text-navy-900">{entry.authorLabel}</p>
+              <p className="font-semibold text-navy-900 break-words max-w-full">{entry.authorLabel}</p>
               <p className="text-xs text-slate-400">{entry.entryType.replace('_', ' ')} · {entry.createdAt}</p>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-slate-600">{entry.body}</p>
+            <p className="mt-2 whitespace-pre-wrap break-words text-slate-600">{entry.body}</p>
             {entry.attachmentFileName ? (
-              <a href={attachmentHref(entry.id)} target="_blank" className="mt-3 inline-flex rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary">
-                View evidence: {entry.attachmentFileName} ({sizeLabel(entry.attachmentFileSize)})
+              <a
+                href={attachmentHref(entry.id)}
+                target="_blank"
+                title={entry.attachmentFileName}
+                className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-lg border border-background-secondary bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-background-secondary"
+              >
+                <span className="flex-shrink-0">View evidence:</span>
+                <span className="truncate max-w-[120px] sm:max-w-[320px] md:max-w-[450px]" title={entry.attachmentFileName}>
+                  {entry.attachmentFileName}
+                </span>
+                <span className="flex-shrink-0">({sizeLabel(entry.attachmentFileSize)})</span>
               </a>
             ) : null}
           </div>
@@ -181,8 +190,8 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
       </div>
 
       {canComment ? (
-        <form className="mt-4 space-y-3 rounded-xl border border-background-secondary bg-background p-4" onSubmit={submitMessage}>
-          <label className="block text-xs font-semibold text-navy-800" htmlFor={`timeline-message-${entityId}`}>
+        <form className="mt-4 space-y-3 rounded-xl border border-background-secondary bg-background p-3 sm:p-4" onSubmit={submitMessage}>
+          <label className="block text-xs font-semibold text-navy-800 cursor-pointer" htmlFor={`timeline-message-${entityId}`}>
             Add message or evidence
           </label>
           <textarea
@@ -197,19 +206,19 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
             name="attachmentFile"
             type="file"
             accept=".pdf,.png,.jpg,.jpeg"
-            className="w-full rounded-lg border border-background-secondary bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+            className="w-full rounded-lg border border-background-secondary bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 file:mr-3 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] sm:file:text-xs file:font-semibold file:bg-navy-50 file:text-navy-700 hover:file:bg-navy-100 cursor-pointer"
           />
           <p className="text-xs text-slate-500">Optional PDF, PNG, or JPG. Max 2MB.</p>
           {resolutionAction ? (
-            <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-800">
+            <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-800 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={shouldResolveIssue || isResolved}
                 disabled={isResolved}
                 onChange={(event) => setShouldResolveIssue(event.currentTarget.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-emerald-300 text-emerald-700 focus:ring-emerald-700"
+                className="mt-0.5 h-4 w-4 rounded border-emerald-300 text-emerald-700 focus:ring-emerald-700 cursor-pointer"
               />
-              <span>
+              <span className="flex-1">
                 {isResolved
                   ? 'This issue has been confirmed resolved / no outstanding issue remains.'
                   : 'Also confirm payment received / no outstanding issue remains and clear the linked request.'}
@@ -227,7 +236,7 @@ export function CaseTimelinePanel({ title = 'Case timeline', entityType, entityI
                 <summary className="flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-emerald-200 bg-white text-[10px] font-bold text-emerald-700">
                   i
                 </summary>
-                <div className="absolute bottom-7 right-0 z-10 w-72 rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg">
+                <div className="absolute bottom-7 right-0 z-10 w-72 max-w-[calc(100vw-60px)] rounded-xl border border-background-secondary bg-white p-3 text-[11px] leading-relaxed text-slate-600 shadow-lg break-words">
                   {blockedResolutionAction.reason}
                 </div>
               </details>

@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const defaultRedirect = isAdmin ? '/admin' : '/dashboard';
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-8">
       <AuthAccessForm
         mode="login"
         audience={isAdmin ? 'admin' : 'school'}

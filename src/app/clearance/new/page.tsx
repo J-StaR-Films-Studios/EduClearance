@@ -35,12 +35,12 @@ export default async function ClearanceNewPage() {
   return (
     <SchoolAppShell activeKey="clearance-new" role={currentRole}>
       <div className="mx-auto w-full max-w-2xl space-y-6">
-        <header className="flex items-center justify-between border-b border-background-secondary pb-4">
+        <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
           <div>
-            <h1 className="text-2xl font-bold text-navy-900">Start Clearance Request</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-navy-900">Start Clearance Request</h1>
             <p className="text-xs text-slate-500">Initiate a transfer verification for an incoming student</p>
           </div>
-          <Link href={withRoleQuery('/dashboard', currentRole)} className="text-xs text-slate-500 hover:text-navy-900">
+          <Link href={withRoleQuery('/dashboard', currentRole)} className="text-xs font-medium text-slate-500 hover:text-navy-900 self-start sm:self-center">
             ← Back
           </Link>
         </header>
