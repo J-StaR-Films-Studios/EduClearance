@@ -157,7 +157,7 @@ export async function SchoolAppShell({ activeKey, mobileMode = 'default', role =
 
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile Top Header / School Context */}
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-background-secondary bg-white px-4 py-3 md:hidden">
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-background-secondary bg-white px-2.5 sm:px-4 py-3 md:hidden">
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-navy-900 p-1.5 font-display font-bold text-xs text-white">EC</div>
             <span className="font-display text-sm font-bold text-navy-900">EduClearance</span>
@@ -173,7 +173,7 @@ export async function SchoolAppShell({ activeKey, mobileMode = 'default', role =
         </header>
 
         <main className={cn(
-          'flex-1 px-4 pt-6 md:px-8 md:pb-8 md:pt-8',
+          'flex-1 px-2 sm:px-4 pt-6 md:px-8 md:pb-8 md:pt-8',
           mobileNavItems.length > 0 ? 'pb-24' : 'pb-6'
         )}>
           {children}

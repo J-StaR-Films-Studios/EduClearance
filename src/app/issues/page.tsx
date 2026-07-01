@@ -101,62 +101,86 @@ export default async function IssuesPage() {
               {/* Mobile Card List (hidden on md and larger) */}
               <div className="block md:hidden divide-y divide-background-secondary">
                 {issues.map((issue) => (
-                  <div key={issue.id} className="p-4 space-y-4">
-                    <div className="flex items-start justify-between gap-3">
+                  <details key={issue.id} className="group border-b border-background-secondary last:border-b-0">
+                    <summary className="flex items-center justify-between gap-3 p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none hover:bg-slate-50/50">
                       <div className="min-w-0 flex-1">
-                        <Link href={`/issues/${issue.id}`} className="font-semibold text-sm text-navy-900 hover:underline block truncate">
+                        <span className="font-semibold text-sm text-navy-900 block truncate">
                           {issue.studentName}
+                        </span>
+                        <p className="mt-0.5 text-[11px] text-slate-500 truncate">
+                          {getIssueCategoryLabel(issue.issueType)} · Parent: {issue.parentName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="text-right">
+                          <span className="text-navy-900 font-bold text-xs block">{formatNairaFromKobo(issue.amountOwed)}</span>
+                          <span
+                            className={cn(
+                              'inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold mt-1',
+                              issue.status === 'resolved'
+                                ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                : issue.status === 'disputed'
+                                  ? 'border-amber-100 bg-amber-50 text-amber-700'
+                                  : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
+                            )}
+                          >
+                            {getIssueStatusLabel(issue.status)}
+                          </span>
+                        </div>
+                        <svg
+                          className="h-4 w-4 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </summary>
+
+                    <div className="px-4 pb-4 pt-1 space-y-4 border-t border-slate-100/50 bg-slate-50/20">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3 bg-white rounded-xl p-3 border border-background-secondary text-[11px] text-slate-600 shadow-sm">
+                        <div>
+                          <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Category</span>
+                          <span className="text-slate-800 font-medium block truncate">{getIssueCategoryLabel(issue.issueType)}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Session / Term</span>
+                          <span className="text-slate-800 block truncate">{issue.academicSession} · {issue.term}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Reported Date</span>
+                          <span className="text-slate-800 block">{issue.createdAt.toISOString().slice(0, 10)}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Source</span>
+                          <span className="text-slate-800 block truncate" title={actor?.schoolName ?? 'Your school'}>
+                            {actor?.schoolName ?? 'Your school'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {issue.note && (
+                        <div className="space-y-1">
+                          <span className="font-semibold text-slate-400 uppercase tracking-wider text-[8px] block">Note</span>
+                          <p className="text-[11px] leading-relaxed text-slate-600 bg-white rounded-lg p-2.5 border border-background-secondary/60 whitespace-pre-wrap shadow-sm">
+                            {issue.note}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end pt-1">
+                        <Link
+                          href={`/issues/${issue.id}`}
+                          className="inline-flex items-center justify-center rounded-lg border border-navy-900 bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 shadow-sm transition hover:bg-navy-50"
+                        >
+                          View Case
                         </Link>
-                        <p className="mt-0.5 text-[11px] text-slate-500 truncate">Parent: {issue.parentName}</p>
-                      </div>
-                      <span
-                        className={cn(
-                          'rounded-full border px-2 py-0.5 text-[10px] font-semibold flex-shrink-0',
-                          issue.status === 'resolved'
-                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                            : issue.status === 'disputed'
-                              ? 'border-amber-100 bg-amber-50 text-amber-700'
-                              : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
-                        )}
-                      >
-                        {getIssueStatusLabel(issue.status)}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] text-slate-600 bg-slate-50/50 rounded-xl p-3 border border-background-secondary">
-                      <div>
-                        <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Category</span>
-                        <span className="text-slate-800 font-medium block truncate">{getIssueCategoryLabel(issue.issueType)}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Amount</span>
-                        <span className="text-navy-900 font-bold block">{formatNairaFromKobo(issue.amountOwed)}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Session / Term</span>
-                        <span className="text-slate-800 block truncate">{issue.academicSession} · {issue.term}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-slate-400 block uppercase tracking-wider text-[8px]">Reported</span>
-                        <span className="text-slate-800 block">{issue.createdAt.toISOString().slice(0, 10)}</span>
                       </div>
                     </div>
-
-                    {issue.note && (
-                      <p className="text-[11px] leading-relaxed text-slate-600 bg-slate-50/30 rounded-lg p-2.5 border border-background-secondary/40 whitespace-pre-wrap line-clamp-3">
-                        {issue.note}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
-                      <span className="text-slate-400 truncate max-w-[180px]" title={actor?.schoolName ?? 'Your school'}>
-                        Source: {actor?.schoolName ?? 'Your school'}
-                      </span>
-                      <Link href={`/issues/${issue.id}`} className="font-semibold text-navy-900 hover:underline inline-flex items-center gap-0.5">
-                        View case history →
-                      </Link>
-                    </div>
-                  </div>
+                  </details>
                 ))}
               </div>
 

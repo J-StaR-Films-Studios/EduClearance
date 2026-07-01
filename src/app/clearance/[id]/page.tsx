@@ -273,7 +273,7 @@ export default async function ClearanceDetailPage({ params, searchParams }: Clea
     : undefined;
 
   return (
-    <SchoolAppShell activeKey="dashboard" mobileMode="detail" role={currentRole}>
+    <SchoolAppShell activeKey="clearance" mobileMode="history" role={currentRole}>
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-background-secondary pb-4">
           <div>

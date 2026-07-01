@@ -131,15 +131,19 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
               ) : outboundClearances.map((clearance) => (
                 <tr key={clearance.id}>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-navy-900 whitespace-normal break-words min-w-[120px] max-w-[180px] sm:max-w-none">
-                    {clearance.studentName}
+                    <Link href={withRoleQuery(`/clearance/${clearance.id}`, role)} className="hover:underline">
+                      {clearance.studentName}
+                    </Link>
                   </td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal break-words min-w-[140px] max-w-[200px] sm:max-w-none">
-                    {clearance.previousSchoolName}
+                    <Link href={withRoleQuery(`/clearance/${clearance.id}`, role)} className="hover:underline">
+                      {clearance.previousSchoolName}
+                    </Link>
                   </td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <span
                       className={cn(
-                        'inline-block rounded-full border px-2 py-0.5 font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[150px] sm:max-w-none',
+                        'inline-block rounded-md border px-1.5 py-0.5 text-[10px] leading-tight sm:text-xs font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[150px] sm:max-w-none',
                         clearance.resultState === 'match'
                           ? 'border-terracotta-100 bg-terracotta-50 text-terracotta-600'
                           : clearance.resultState === 'no_record' || clearance.resultState === 'cleared'
@@ -200,12 +204,14 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                       <p className="mt-1 text-[10px] text-slate-400">View case history</p>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-normal break-words min-w-[140px] max-w-[200px] sm:max-w-none">
-                      {request.requestingSchool}
+                      <Link href={withRoleQuery(`/clearance/${request.id}`, role)} className="hover:underline text-slate-600 hover:text-navy-900">
+                        {request.requestingSchool}
+                      </Link>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <span
                         className={cn(
-                          'inline-block rounded-full border px-2 py-0.5 font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[180px] sm:max-w-none',
+                          'inline-block rounded-md border px-1.5 py-0.5 text-[10px] leading-tight sm:text-xs font-semibold text-center whitespace-normal sm:whitespace-nowrap max-w-[180px] sm:max-w-none',
                           request.status === 'resolved'
                             ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
                             : request.status === 'potential_response'
@@ -221,13 +227,15 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       {request.status === 'resolved' ? (
-                        <span className="font-medium text-emerald-700 whitespace-nowrap">Clearance recorded</span>
+                        <span className="inline-block rounded border border-emerald-100 bg-emerald-50/50 text-emerald-700 px-2 py-1 text-[10px] sm:text-xs font-semibold whitespace-nowrap">
+                          Clearance recorded
+                        </span>
                       ) : request.status === 'potential_response' ? (
                         <Link
                           href={withRoleQuery(`/clearance/${request.id}`, role)}
-                          className="inline-block rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white text-center whitespace-normal sm:whitespace-nowrap"
+                          className="inline-block rounded border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 px-2 py-1 text-[10px] sm:text-xs font-semibold text-center whitespace-normal sm:whitespace-nowrap transition-colors"
                         >
-                          Review Potential Match
+                          Review Match
                         </Link>
                       ) : (
                         <div className="flex flex-col sm:flex-row gap-1.5">
@@ -235,13 +243,13 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                             type="button"
                             onClick={() => void markNoIssue(request.id)}
                             disabled={updatingId === request.id}
-                            className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white text-center disabled:cursor-not-allowed disabled:bg-slate-400 whitespace-normal sm:whitespace-nowrap"
+                            className="inline-block rounded border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2 py-1 text-[10px] sm:text-xs font-semibold text-center disabled:cursor-not-allowed disabled:bg-slate-50 disabled:border-slate-200 disabled:text-slate-400 whitespace-normal sm:whitespace-nowrap transition-colors"
                           >
-                            {updatingId === request.id ? 'Recording…' : 'No Outstanding Issue'}
+                            {updatingId === request.id ? 'Recording…' : 'No Issue'}
                           </button>
                           <Link
                             href={withRoleQuery(`/issues/new?source=inbound&requestId=${encodeURIComponent(request.id)}`, role)}
-                            className="rounded-lg border border-background-secondary bg-white px-3 py-1.5 font-semibold text-navy-900 text-center whitespace-normal sm:whitespace-nowrap"
+                            className="inline-block rounded border border-terracotta-200 bg-terracotta-50 hover:bg-terracotta-100 text-terracotta-600 px-2 py-1 text-[10px] sm:text-xs font-semibold text-center whitespace-normal sm:whitespace-nowrap transition-colors"
                           >
                             Report Issue
                           </Link>
