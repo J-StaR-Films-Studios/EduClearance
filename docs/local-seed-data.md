@@ -41,7 +41,7 @@ The seed creates password-backed users for local development. Use password `EduC
 To populate an existing production/staging database without wiping users/payments/test records, run the non-destructive importer instead:
 
 ```bash
-pnpm db:import:abuja-schools -- --env=.env.production.local
+pnpm db:import:abuja-schools -- --env=.env.prod-import
 ```
 
 The importer inserts missing candidate schools by unique slug and skips records that already exist.

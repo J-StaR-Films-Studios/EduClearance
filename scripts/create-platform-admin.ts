@@ -1,7 +1,15 @@
+import { existsSync } from 'node:fs';
+
 import { config as loadEnv } from 'dotenv';
 import { sql } from 'drizzle-orm';
 
-loadEnv({ path: process.env.ENV_FILE || '.env.local' });
+const envFile = process.env.ENV_FILE || '.env.local';
+
+if (!existsSync(envFile)) {
+  throw new Error(`Env file not found: ${envFile}`);
+}
+
+loadEnv({ path: envFile, override: true });
 loadEnv();
 
 function required(name: string) {
@@ -14,7 +22,19 @@ function required(name: string) {
   return value;
 }
 
+function databaseTargetLabel() {
+  const databaseUrl = required('DATABASE_URL');
+
+  try {
+    const parsed = new URL(databaseUrl);
+    return `${parsed.hostname}${parsed.pathname}`;
+  } catch {
+    return '<unparseable DATABASE_URL>';
+  }
+}
+
 async function main() {
+  const target = databaseTargetLabel();
   const name = required('PLATFORM_ADMIN_NAME');
   const email = required('PLATFORM_ADMIN_EMAIL').toLowerCase();
   const password = required('PLATFORM_ADMIN_PASSWORD');
@@ -57,6 +77,7 @@ async function main() {
       });
 
     console.log(`Platform admin ready: ${email}`);
+    console.log(`Database target: ${target}`);
   } finally {
     await connection.end();
   }

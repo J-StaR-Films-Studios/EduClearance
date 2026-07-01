@@ -53,5 +53,5 @@ Do not run `pnpm db:seed` against production unless you intentionally want to wi
 To populate candidate schools without deleting existing production data:
 
 ```bash
-pnpm db:import:abuja-schools -- --env=.env.production.local
+pnpm db:import:abuja-schools -- --env=.env.prod-import
 ```

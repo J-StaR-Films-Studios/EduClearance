@@ -35,7 +35,7 @@ function schoolAddress(school: AbujaDirectorySeed['schools'][number]) {
 
 async function main() {
   if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is required. Use --env=.env.production.local or set DATABASE_URL before running.');
+    throw new Error('DATABASE_URL is required. Use --env=.env.prod-import or set DATABASE_URL before running.');
   }
 
   const { db, connection } = await import('../src/db/client');

@@ -96,7 +96,7 @@ All routes must require platform admin session.
 Current non-destructive importer:
 
 ```bash
-pnpm db:import:abuja-schools -- --env=.env.production.local
+pnpm db:import:abuja-schools -- --env=.env.prod-import
 ```
 
 Current seed dataset:

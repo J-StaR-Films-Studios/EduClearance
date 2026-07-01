@@ -52,8 +52,8 @@ EduClearance is a private school-to-school student transfer clearance network.
 
 ## Production launch notes
 
-- Keep production secrets only in Vercel environment variables; do not store live credentials in `.env.production.local`.
+- Keep production secrets only in Vercel environment variables; `.env.example` is the only committed env template.
 - Use `pnpm db:migrate` for production schema setup. Do **not** run `pnpm db:seed` against production.
-- Create the first production platform admin with `pnpm db:create-admin` and the `PLATFORM_ADMIN_*` env vars from `.env.production.example`.
+- Create the first production platform admin with `pnpm db:create-admin` and the `PLATFORM_ADMIN_*` env vars listed in `.env.example`.
 - Vercel should use `pnpm vercel-build` (codified in `vercel.json`). Set `RUN_DB_MIGRATIONS=true` only for the Vercel Production environment.
 - Confirm production uses live Paystack keys, `NEXT_PUBLIC_APP_URL=https://educlearance.meloschool.com`, and a production database before publishing.

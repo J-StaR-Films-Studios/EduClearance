@@ -14,12 +14,19 @@ __pycache__/
 *$py.class
 venv/
 .venv/
-.env
 *.pkl
 *.pth
 *.safetensors
+
+# --- Env files ---
+# Keep .env.example tracked as the single template.
+.env
 .env.local
 .env.*.local
+.env.prod-*
+.env.production
+.env.preview
+.env.development
 
 # --- Node / Web ---
 node_modules/
@@ -36,3 +43,4 @@ coverage/
 .idea/
 *.swp
 .pi/
+.vercel

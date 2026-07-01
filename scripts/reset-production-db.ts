@@ -1,7 +1,15 @@
+import { existsSync } from 'node:fs';
+
 import { config as loadEnv } from 'dotenv';
 import { sql } from 'drizzle-orm';
 
-loadEnv({ path: process.env.ENV_FILE || '.env.prod-reset' });
+const envFile = process.env.ENV_FILE || '.env.prod-reset';
+
+if (!existsSync(envFile)) {
+  throw new Error(`Env file not found: ${envFile}`);
+}
+
+loadEnv({ path: envFile, override: true });
 loadEnv();
 
 const CONFIRMATION = 'RESET_EDUCLEARANCE_PRODUCTION';
