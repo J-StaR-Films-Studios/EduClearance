@@ -42,17 +42,17 @@ export default async function IssuesNewPage({ searchParams }: IssuesNewPageProps
 
   return (
     <SchoolAppShell activeKey="issues-new" role={currentRole}>
-      <div className="mx-auto w-full max-w-2xl space-y-6">
-        <header className="flex items-center justify-between border-b border-background-secondary pb-4">
+      <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 space-y-6">
+        <header className="flex flex-col gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-navy-900">Report Unresolved Issue</h1>
             <p className="text-xs text-slate-500">Record outstanding balances for departing students</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/issues" className="text-xs font-semibold text-navy-900 hover:underline">
+          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+            <Link href="/issues" className="text-xs font-semibold text-navy-900 hover:underline whitespace-nowrap">
               View Reported Issues
             </Link>
-            <Link href={withRoleQuery('/dashboard', currentRole)} className="text-xs text-slate-500 hover:text-navy-900">
+            <Link href={withRoleQuery('/dashboard', currentRole)} className="text-xs text-slate-500 hover:text-navy-900 whitespace-nowrap">
               ← Back
             </Link>
           </div>

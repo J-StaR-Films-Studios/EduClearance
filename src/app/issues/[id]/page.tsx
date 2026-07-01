@@ -111,50 +111,58 @@ export default async function IssueDetailPage({ params }: IssueDetailPageProps) 
 
   return (
     <SchoolAppShell activeKey="issues-new" mobileMode="detail" role={(isPlatformAdminActor(actor) ? 'school_admin' : actor.sessionRole) as SchoolUserRole}>
-      <div className="mx-auto w-full max-w-5xl space-y-6">
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 space-y-6">
         <header className="flex flex-col gap-4 border-b border-background-secondary pb-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Student issue case</p>
-            <h1 className="mt-1 text-2xl font-bold text-navy-900">{issue.studentName}</h1>
-            <p className="mt-1 text-xs text-slate-500">Parent: {issue.parentName} · {issue.parentPhone}</p>
+            <h1 className="mt-1 text-2xl font-bold text-navy-900 break-words">{issue.studentName}</h1>
+            <p className="mt-1 text-xs text-slate-500 break-words">Parent: {issue.parentName} · {issue.parentPhone}</p>
           </div>
-          <div className="flex items-center gap-3">
-            {linkedRequest ? <Link href={`/clearance/${linkedRequest.id}`} className="text-xs font-semibold text-navy-900 hover:underline">View linked request context</Link> : null}
-            <Link href="/issues" className="text-xs text-slate-500 hover:text-navy-900">← Back</Link>
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+            {linkedRequest ? (
+              <Link href={`/clearance/${linkedRequest.id}`} className="text-xs font-semibold text-navy-900 hover:underline whitespace-nowrap">
+                View linked request context
+              </Link>
+            ) : null}
+            <Link href="/issues" className="text-xs text-slate-500 hover:text-navy-900 whitespace-nowrap">
+              ← Back
+            </Link>
           </div>
         </header>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-background-secondary bg-white p-4 sm:p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</p>
-            <span className={cn(
-              'mt-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold',
-              issue.status === 'resolved'
-                ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                : issue.status === 'disputed'
-                  ? 'border-amber-100 bg-amber-50 text-amber-700'
-                  : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
-            )}>{statusLabel(issue.status)}</span>
+            <div className="mt-1">
+              <span className={cn(
+                'inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold',
+                issue.status === 'resolved'
+                  ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                  : issue.status === 'disputed'
+                    ? 'border-amber-100 bg-amber-50 text-amber-700'
+                    : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
+              )}>{statusLabel(issue.status)}</span>
+            </div>
           </div>
-          <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-background-secondary bg-white p-4 sm:p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Amount</p>
-            <p className="mt-1 text-2xl font-bold text-navy-900">{formatNairaFromKobo(issue.amountOwed)}</p>
+            <p className="mt-1 text-2xl font-bold text-navy-900 whitespace-nowrap">{formatNairaFromKobo(issue.amountOwed)}</p>
           </div>
-          <div className="rounded-xl border border-background-secondary bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-background-secondary bg-white p-4 sm:p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Reporting school</p>
-            <p className="mt-1 text-sm font-semibold text-navy-900">{reportingSchool?.name ?? 'Reporting school'}</p>
+            <p className="mt-1 text-sm font-semibold text-navy-900 break-words leading-tight">{reportingSchool?.name ?? 'Reporting school'}</p>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 shadow-sm">
           <h2 className="text-lg font-bold text-navy-900">Issue details</h2>
-          <div className="mt-4 grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
-            <p><span className="font-semibold text-navy-900">Category:</span> {issueTypeLabel(issue.issueType)}</p>
-            <p><span className="font-semibold text-navy-900">Session:</span> {issue.academicSession} · {issue.term}</p>
-            <p><span className="font-semibold text-navy-900">Reported:</span> {issue.createdAt.toISOString().slice(0, 10)}</p>
-            <p><span className="font-semibold text-navy-900">Requesting school:</span> {incomingSchool?.name ?? 'Not linked'}</p>
+          <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+            <p className="break-words"><span className="font-semibold text-navy-900">Category:</span> {issueTypeLabel(issue.issueType)}</p>
+            <p className="break-words"><span className="font-semibold text-navy-900">Session:</span> {issue.academicSession} · {issue.term}</p>
+            <p className="break-words"><span className="font-semibold text-navy-900">Reported:</span> {issue.createdAt.toISOString().slice(0, 10)}</p>
+            <p className="break-words"><span className="font-semibold text-navy-900">Requesting school:</span> {incomingSchool?.name ?? 'Not linked'}</p>
           </div>
-          <p className="mt-4 rounded-xl border border-background-secondary bg-background p-4 text-sm leading-relaxed text-slate-600">{issue.note}</p>
+          <p className="mt-4 rounded-xl border border-background-secondary bg-background p-4 text-sm leading-relaxed text-slate-600 whitespace-pre-wrap break-words">{issue.note}</p>
         </section>
 
         <CaseTimelinePanel

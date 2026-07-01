@@ -135,7 +135,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
   }
 
   return (
-    <div className="rounded-2xl border border-background-secondary bg-white p-6 shadow-sm sm:p-8">
+    <div className="rounded-2xl border border-background-secondary bg-white p-4 sm:p-6 md:p-8 shadow-sm">
       {submitted ? (
         <div className="mb-4 space-y-2 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-700">
           <p>Issue reported successfully. The record is marked unresolved and will remain available for school-scoped review and follow-up.</p>
@@ -146,7 +146,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
       ) : null}
 
       {fromInboundRequest ? (
-        <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800">
+        <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800 break-words">
           {inboundRequest ? (
             <>
               <p className="font-semibold text-navy-900">Reporting against inbound request from {inboundRequest.requestingSchoolName}</p>
@@ -207,7 +207,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
           <p className="text-[10px] text-slate-500">Split names help future checks catch swapped or partially entered names without auto-confirming the wrong student.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label htmlFor="issueClass" className="block text-xs font-semibold text-navy-800">
               Last Class Attended
@@ -258,7 +258,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label htmlFor="academicSession" className="block text-xs font-semibold text-navy-800">
               Academic Session
@@ -348,7 +348,7 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
             name="evidenceFile"
             type="file"
             accept=".pdf,.png,.jpg,.jpeg"
-            className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+            className="w-full rounded-lg border border-background-secondary bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800 file:mr-3 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-navy-50 file:text-navy-700 hover:file:bg-navy-100 cursor-pointer"
           />
           <p className="text-xs text-slate-500">Optional PDF, PNG, or JPG. Max 2MB. It will appear in the case timeline.</p>
         </div>
@@ -360,9 +360,9 @@ export function IssueReportForm({ fromInboundRequest = false, inboundRequest = n
             required
             checked={isCertified}
             onChange={(event) => setIsCertified(event.currentTarget.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800"
+            className="mt-0.5 h-4 w-4 rounded border-background-secondary text-navy-900 focus:ring-navy-800 cursor-pointer"
           />
-          <label htmlFor="ethicalCheck" className="text-xs leading-relaxed text-slate-500">
+          <label htmlFor="ethicalCheck" className="text-xs leading-relaxed text-slate-500 cursor-pointer select-none">
             I certify under penalty of account suspension that this record is accurate, matches our physical accounts ledger, and complies with cluster data privacy policies.
           </label>
         </div>
