@@ -85,7 +85,7 @@ function getDesktopNavItems(role: SchoolUserRole) {
 
 function getMobileNavItems(mode: SchoolAppShellMobileMode, role: SchoolUserRole) {
   if (mode === 'detail') {
-    return baseNavItems.filter((item) => item.key === 'dashboard');
+    return [];
   }
 
   if (mode === 'history') {
@@ -155,26 +155,57 @@ export async function SchoolAppShell({ activeKey, mobileMode = 'default', role =
         </div>
       </aside>
 
-      <main className="flex-1 px-6 pb-24 pt-6 md:px-8 md:pb-8 md:pt-8">
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Mobile Top Header / School Context */}
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-background-secondary bg-white px-4 py-3 md:hidden">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-navy-900 p-1.5 font-display font-bold text-xs text-white">EC</div>
+            <span className="font-display text-sm font-bold text-navy-900">EduClearance</span>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-medium text-slate-500 truncate max-w-[160px]" title={schoolName}>
+              {schoolName}
+            </p>
+            <p className="text-[9px] font-semibold text-navy-800 mt-0.5">
+              {role === 'school_staff' ? 'Role: School Staff' : `Verification: ${schoolStatus}`}
+            </p>
+          </div>
+        </header>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-background-secondary bg-white md:hidden">
-        {mobileNavItems.map((item) => {
-          const isActive = item.key === activeKey;
+        <main className={cn(
+          'flex-1 px-4 pt-6 md:px-8 md:pb-8 md:pt-8',
+          mobileNavItems.length > 0 ? 'pb-24' : 'pb-6'
+        )}>
+          {children}
+        </main>
+      </div>
 
-          return (
-            <Link
-              key={item.key}
-              href={withRoleQuery(item.href, role)}
-              className={cn('flex flex-col items-center', isActive ? 'text-navy-900' : 'text-slate-500')}
-            >
-              {iconForNav(item.key)}
-              <span className={cn('mt-0.5 text-[10px]', isActive ? 'font-semibold' : 'font-medium')}>{item.mobileLabel}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {mobileNavItems.length > 0 && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-background-secondary bg-white md:hidden">
+          {mobileNavItems.map((item) => {
+            const isActive = item.key === activeKey;
+
+            return (
+              <Link
+                key={item.key}
+                href={withRoleQuery(item.href, role)}
+                className={cn(
+                  'flex h-full flex-1 flex-col items-center justify-center py-1 transition-colors active:bg-slate-50',
+                  isActive ? 'text-navy-900' : 'text-slate-500',
+                )}
+              >
+                <div className="flex flex-col items-center justify-center">
+                  {iconForNav(item.key)}
+                  <span className={cn('mt-1 text-[10px] tracking-tight', isActive ? 'font-semibold' : 'font-medium')}>
+                    {item.mobileLabel}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
+
