@@ -46,6 +46,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Platform admin accounts cannot submit school claims.' }, { status: 403 });
   }
 
+  if (user.schoolId) {
+    return NextResponse.json({ ok: false, message: 'This account is already linked to a school. Use a separate account if you need to claim a different school.' }, { status: 409 });
+  }
+
   const payload = schoolClaimSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {

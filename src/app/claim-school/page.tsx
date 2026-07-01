@@ -28,7 +28,14 @@ export default async function ClaimSchoolPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12 lg:px-8 text-navy-800">
       <ClaimSchoolFlow
-        currentUser={currentUser ? { name: currentUser.userName, email: currentUser.userEmail, role: currentUser.userRole } : null}
+        currentUser={currentUser ? {
+          name: currentUser.userName,
+          email: currentUser.userEmail,
+          role: currentUser.userRole,
+          schoolId: currentUser.schoolId,
+          schoolName: currentUser.schoolName,
+          schoolStatus: currentUser.schoolStatus,
+        } : null}
         directorySchools={directorySchools.map((school) => ({
           id: school.id,
           name: school.name,

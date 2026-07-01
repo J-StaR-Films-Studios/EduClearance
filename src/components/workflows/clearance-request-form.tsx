@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
 import { CHECK_PRICE_KOBO, formatChecksFromKobo, formatNairaFromKobo } from '@/lib/money';
@@ -31,10 +31,33 @@ function schoolSearchText(school: DirectorySchoolOption) {
 
 export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: ClearanceRequestFormProps) {
   const router = useRouter();
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(schools[0]?.id ?? null);
-  const [schoolSearch, setSchoolSearch] = useState(schools[0] ? schoolLabel(schools[0]) : '');
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const [schoolSearch, setSchoolSearch] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const remainingBalanceKobo = useMemo(() => Math.max(walletBalanceKobo - CHECK_PRICE_KOBO, 0), [walletBalanceKobo]);
   const selectedDirectorySchool = useMemo(() => schools.find((school) => school.id === selectedSchoolId) ?? null, [schools, selectedSchoolId]);
@@ -72,8 +95,7 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
     const studentName = buildStudentDisplayName(studentFirstName, studentMiddleName, studentLastName);
     const parentName = String(formData.get('parentName') ?? '').trim();
     const parentPhone = String(formData.get('parentPhone') ?? '').trim();
-    const manualSchoolName = String(formData.get('manualSchoolName') ?? '').trim();
-    const previousSchoolLabel = selectedDirectorySchool ? selectedDirectorySchool.name : manualSchoolName || schoolSearch.trim();
+    const previousSchoolLabel = selectedDirectorySchool ? selectedDirectorySchool.name : schoolSearch.trim();
 
     if (!previousSchoolLabel) {
       setErrorMessage('Search for a previous school or enter the school name manually.');
@@ -176,52 +198,79 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
 
       <div className="space-y-2">
         <label htmlFor="previousSchoolSearch" className="block text-xs font-semibold text-navy-800">Previous Attending School</label>
-        <input
-          id="previousSchoolSearch"
-          type="search"
-          value={schoolSearch}
-          onChange={(event) => {
-            setSchoolSearch(event.target.value);
-            setSelectedSchoolId(null);
-          }}
-          placeholder="Search by school name, area, or address"
-          className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-        />
-        <div className="max-h-56 overflow-y-auto rounded-xl border border-background-secondary bg-white p-2">
-          {suggestedSchools.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-slate-500">No close directory match yet. Use the manual name below.</p>
-          ) : suggestedSchools.map((school) => (
-            <button
-              key={school.id}
-              type="button"
-              onClick={() => {
-                setSelectedSchoolId(school.id);
-                setSchoolSearch(schoolLabel(school));
+        
+        <div ref={containerRef} className="relative">
+          <div className="relative">
+            <input
+              id="previousSchoolSearch"
+              type="search"
+              value={schoolSearch}
+              onChange={(event) => {
+                setSchoolSearch(event.target.value);
+                setSelectedSchoolId(null);
+                setIsOpen(true);
               }}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-xs transition ${selectedSchoolId === school.id ? 'bg-navy-900 text-white' : 'text-slate-600 hover:bg-background'}`}
+              onFocus={() => setIsOpen(true)}
+              placeholder="Search by school name, area, or address"
+              className="w-full rounded-lg border border-background-secondary bg-background pl-4 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
+              role="combobox"
+              aria-expanded={isOpen}
+              aria-autocomplete="list"
+              aria-controls="previousSchoolSuggestions"
+            />
+            <button
+              type="button"
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+              aria-label={isOpen ? "Close suggestions" : "Open suggestions"}
             >
-              <span className="block font-semibold sm:inline">{school.name}</span>
-              <span className="block text-[10px] opacity-75 sm:inline sm:ml-2 sm:text-xs">
-                {school.area ?? school.address ?? 'Area not listed'} · {school.status}
-              </span>
+              <svg
+                className={`h-5 w-5 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-          ))}
+          </div>
+
+          {isOpen && (
+            <div
+              id="previousSchoolSuggestions"
+              role="listbox"
+              className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-background-secondary bg-white p-2 shadow-lg"
+            >
+              {suggestedSchools.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-slate-500">No matching schools found in directory. Keep typing to use your entry.</p>
+              ) : suggestedSchools.map((school) => (
+                <button
+                  key={school.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selectedSchoolId === school.id}
+                  onClick={() => {
+                    setSelectedSchoolId(school.id);
+                    setSchoolSearch(schoolLabel(school));
+                    setIsOpen(false);
+                  }}
+                  className={`block w-full rounded-lg px-3 py-2 text-left text-xs transition ${selectedSchoolId === school.id ? 'bg-navy-900 text-white' : 'text-slate-600 hover:bg-background'}`}
+                >
+                  <span className="block font-semibold sm:inline">{school.name}</span>
+                  <span className="block text-[10px] opacity-75 sm:inline sm:ml-2 sm:text-xs">
+                    {school.area ?? school.address ?? 'Area not listed'} · {school.status}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <input
-          name="manualSchoolName"
-          type="text"
-          value={selectedDirectorySchool ? '' : schoolSearch}
-          onChange={(event) => {
-            setSelectedSchoolId(null);
-            setSchoolSearch(event.target.value);
-          }}
-          placeholder="If not listed, type the previous school name here"
-          className="w-full rounded-lg border border-background-secondary bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-800"
-        />
+
         {selectedDirectorySchool ? (
           <p className="rounded-lg bg-emerald-50 px-3 py-2 text-[10px] text-emerald-700">Selected directory school: {schoolLabel(selectedDirectorySchool)}</p>
         ) : (
-          <p className="text-[10px] text-slate-500">If the exact school is not listed, keep the typed name. EduClearance will still create the request and flag it as not fully matched.</p>
+          <p className="text-[10px] text-slate-500">If the exact school is not listed, you can keep the typed name.</p>
         )}
       </div>
 

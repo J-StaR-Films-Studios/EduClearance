@@ -48,7 +48,7 @@ function iconForNav(key: AdminNavKey) {
 export function AdminAppShell({ activeKey, children }: AdminAppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-navy-800 md:flex-row">
-      <aside className="hidden min-h-screen w-64 flex-shrink-0 flex-col space-y-8 border-r border-background-secondary bg-white p-6 md:flex">
+      <aside className="hidden md:flex md:sticky md:top-0 md:h-screen w-64 flex-shrink-0 flex-col space-y-8 border-r border-background-secondary bg-white p-6">
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-navy-900 p-2 font-display font-bold text-white">EC</div>
           <span className="font-display text-lg font-bold text-navy-900">EduClearance Admin</span>
@@ -76,7 +76,7 @@ export function AdminAppShell({ activeKey, children }: AdminAppShellProps) {
       </aside>
 
       <div className="flex-1">
-        <div className="border-b border-background-secondary bg-white px-4 py-4 md:hidden">
+        <div className="sticky top-0 z-50 border-b border-background-secondary bg-white px-4 py-4 md:hidden">
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-navy-900 p-2 font-display font-bold text-white">EC</div>
             <span className="font-display text-base font-bold text-navy-900">EduClearance Admin</span>

@@ -258,15 +258,17 @@ export function AdminClearanceWorkspace({
 
         <div className="space-y-3 border-t border-background-secondary pt-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-navy-900">Wallet watchlist</h4>
-          {initialWalletWatchSchools.map((school) => (
-            <div key={school.id} className="rounded-xl border border-background-secondary bg-background p-3 text-xs hover:border-slate-300 transition-colors">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                <p className="font-semibold text-navy-900 break-words">{school.schoolName}</p>
-                <p className="font-bold text-navy-900 shrink-0">{school.balanceLabel}</p>
+          <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
+            {initialWalletWatchSchools.map((school) => (
+              <div key={school.id} className="rounded-xl border border-background-secondary bg-background p-3 text-xs hover:border-slate-300 transition-colors">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <p className="font-semibold text-navy-900 break-words">{school.schoolName}</p>
+                  <p className="font-bold text-navy-900 shrink-0">{school.balanceLabel}</p>
+                </div>
+                <p className="mt-1 text-slate-500 text-[10px] uppercase tracking-wider">{school.hint}</p>
               </div>
-              <p className="mt-1 text-slate-500 text-[10px] uppercase tracking-wider">{school.hint}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

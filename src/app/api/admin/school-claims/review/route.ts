@@ -90,6 +90,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, claimId: claim.id, status: 'rejected' as const });
     }
 
+    if (claim.applicantUserId) {
+      const [applicant] = await tx
+        .select({ schoolId: users.schoolId })
+        .from(users)
+        .where(eq(users.id, claim.applicantUserId))
+        .limit(1);
+
+      if (applicant?.schoolId && applicant.schoolId !== claim.schoolId) {
+        return NextResponse.json({ ok: false, message: 'This applicant account is already linked to another school. Reject this claim or ask them to use a separate account.' }, { status: 409 });
+      }
+    }
+
     const schoolStatus = claim.type === 'new_school' ? 'pending' : 'active';
     let schoolId = claim.schoolId;
 
