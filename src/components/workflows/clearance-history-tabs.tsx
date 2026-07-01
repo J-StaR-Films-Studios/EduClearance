@@ -66,7 +66,7 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
           request.id === requestId ? { ...request, status: 'resolved', requestedAt: `${request.requestedAt} · Responded` } : request,
         ),
       );
-      setNotice('Inbound clearance request updated to “No Outstanding Issue”.');
+      setNotice('Cleared by previous school. No outstanding records remain.');
     } catch {
       setErrorMessage('Unable to record this response. Please try again.');
     } finally {
@@ -202,13 +202,13 @@ export function ClearanceHistoryTabs({ initialTab = 'outbound', role, outboundCl
                               : 'border-terracotta-100 bg-terracotta-50 text-terracotta-700',
                         )}
                       >
-                        {request.status === 'resolved' ? 'No outstanding issue confirmed' : request.status === 'potential_response' ? 'Potential match review' : 'Response needed'}
+                        {request.status === 'resolved' ? 'Cleared by previous school · no outstanding records remain' : request.status === 'potential_response' ? 'Potential match review' : 'Response needed'}
                       </span>
                     </td>
                     <td className="px-6 py-4">{request.requestedAt}</td>
                     <td className="px-6 py-4">
                       {request.status === 'resolved' ? (
-                        <span className="font-medium text-slate-500">Response recorded</span>
+                        <span className="font-medium text-emerald-700">Clearance recorded</span>
                       ) : request.status === 'potential_response' ? (
                         <Link
                           href={withRoleQuery(`/clearance/${request.id}`, role)}

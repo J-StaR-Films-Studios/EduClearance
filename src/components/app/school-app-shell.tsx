@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
-import { schoolProfile, type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
+import { type SchoolUserRole, withRoleQuery } from '@/lib/local-school-data';
+import { resolveLocalSchoolActor } from '@/lib/local-actor';
 
 export type SchoolAppShellNavKey = 'dashboard' | 'clearance-new' | 'clearance' | 'issues-new' | 'wallet';
 export type SchoolAppShellMobileMode = 'default' | 'history' | 'detail';
@@ -94,13 +95,16 @@ function getMobileNavItems(mode: SchoolAppShellMobileMode, role: SchoolUserRole)
   return baseNavItems.filter((item) => item.key !== 'clearance' && (role !== 'school_staff' || item.key !== 'wallet'));
 }
 
-export function SchoolAppShell({ activeKey, mobileMode = 'default', role = 'school_admin', children }: SchoolAppShellProps) {
+export async function SchoolAppShell({ activeKey, mobileMode = 'default', role = 'school_admin', children }: SchoolAppShellProps) {
+  const actor = await resolveLocalSchoolActor();
   const desktopNavItems = getDesktopNavItems(role);
   const mobileNavItems = getMobileNavItems(mobileMode, role);
+  const schoolName = actor?.schoolName ?? 'School dashboard';
+  const schoolStatus = actor?.schoolStatus ? actor.schoolStatus.charAt(0).toUpperCase() + actor.schoolStatus.slice(1) : 'Unknown';
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-navy-800 md:flex-row">
-      <aside className="hidden w-64 flex-shrink-0 flex-col space-y-8 border-r border-background-secondary bg-white p-6 md:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col space-y-8 overflow-y-auto border-r border-background-secondary bg-white p-6 md:flex">
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-navy-900 p-2 font-display font-bold text-white">EC</div>
           <span className="font-display text-lg font-bold text-navy-900">EduClearance</span>
@@ -144,9 +148,9 @@ export function SchoolAppShell({ activeKey, mobileMode = 'default', role = 'scho
         </nav>
 
         <div className="border-t border-background-secondary pt-4 text-xs text-slate-400">
-          <p>{schoolProfile.name}, {schoolProfile.area}</p>
+          <p className="font-medium text-slate-500">{schoolName}</p>
           <p className="mt-1 font-semibold text-navy-800">
-            {role === 'school_staff' ? 'Role: School Staff' : `Status: ${schoolProfile.status}`}
+            {role === 'school_staff' ? 'Role: School Staff' : `Verification: ${schoolStatus}`}
           </p>
         </div>
       </aside>

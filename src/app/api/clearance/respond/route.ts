@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
-import { auditLogs, clearanceRequests } from '@/db/schema';
+import { auditLogs, caseTimelineEntries, clearanceIssues, clearanceRequests } from '@/db/schema';
 import { makeEntityId } from '@/lib/ids';
 import { resolveLocalSchoolActor } from '@/lib/local-actor';
 
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
 
   const result = await db.transaction(async (tx) => {
+    const resolvedAt = new Date();
     const [request] = await tx
       .select({ id: clearanceRequests.id, searchResult: clearanceRequests.searchResult })
       .from(clearanceRequests)
@@ -52,13 +53,35 @@ export async function POST(request: Request) {
         status: 'cleared_by_previous_school',
         searchResult: 'no_match',
         notificationStatus: 'dashboard',
-        updatedAt: new Date(),
+        updatedAt: resolvedAt,
       })
       .where(and(eq(clearanceRequests.id, payload.data.clearanceRequestId), eq(clearanceRequests.previousSchoolId, actor.schoolId)))
       .returning({ id: clearanceRequests.id });
 
     if (!updated) {
       return null;
+    }
+
+    const resolvedIssues = await tx
+      .update(clearanceIssues)
+      .set({ status: 'resolved', resolvedAt })
+      .where(and(eq(clearanceIssues.clearanceRequestId, updated.id), eq(clearanceIssues.reportingSchoolId, actor.schoolId)))
+      .returning({ id: clearanceIssues.id });
+
+    if (resolvedIssues.length > 0) {
+      await tx.insert(caseTimelineEntries).values(resolvedIssues.map((issue) => ({
+        id: makeEntityId('case_timeline'),
+        entityType: 'clearance_issue' as const,
+        entityId: issue.id,
+        authorUserId: actor.userId,
+        authorSchoolId: actor.schoolId,
+        entryType: 'status_change' as const,
+        body: 'Previous school confirmed that no outstanding obligation remains. Linked clearance request marked cleared.',
+        attachmentFileName: null,
+        attachmentFileType: null,
+        attachmentFileSize: null,
+        attachmentDataUrl: null,
+      })));
     }
 
     await tx.insert(auditLogs).values({
@@ -68,7 +91,7 @@ export async function POST(request: Request) {
       action: 'clearance_no_outstanding_issue_confirmed',
       entityType: 'clearance_request',
       entityId: updated.id,
-      metadataJson: { response: payload.data.response },
+      metadataJson: { response: payload.data.response, resolvedIssueIds: resolvedIssues.map((issue) => issue.id) },
       ipAddress,
     });
 
