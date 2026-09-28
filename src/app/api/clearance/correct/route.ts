@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { and, eq, ilike, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
@@ -80,21 +80,24 @@ export async function POST(request: Request) {
       : await tx
           .select({ id: schools.id, name: schools.name, status: schools.status })
           .from(schools)
-          .where(ilike(schools.name, `%${payload.data.previousSchoolName}%`))
+          .where(sql`lower(${schools.name}) = lower(${payload.data.previousSchoolName})`)
           .limit(1);
 
     const parentPhoneNormalized = normalizePhoneNumber(existingRequest.parentPhone);
-    const unresolvedIssues = await tx
-      .select({
-        id: clearanceIssues.id,
-        reportingSchoolId: clearanceIssues.reportingSchoolId,
-        studentName: clearanceIssues.studentName,
-        studentNameNormalized: clearanceIssues.studentNameNormalized,
-        parentPhone: clearanceIssues.parentPhone,
-      })
-      .from(clearanceIssues)
-      .where(eq(clearanceIssues.status, 'unresolved'))
-      .limit(100);
+    const unresolvedIssues = selectedPreviousSchool
+      ? await tx
+          .select({
+            id: clearanceIssues.id,
+            studentName: clearanceIssues.studentName,
+            studentNameNormalized: clearanceIssues.studentNameNormalized,
+            parentPhone: clearanceIssues.parentPhone,
+          })
+          .from(clearanceIssues)
+          .where(and(
+            eq(clearanceIssues.status, 'unresolved'),
+            eq(clearanceIssues.reportingSchoolId, selectedPreviousSchool.id),
+          ))
+      : [];
 
     const submittedTokenCount = getNameTokens(studentName).length;
     const candidateIssues = unresolvedIssues
@@ -104,26 +107,17 @@ export async function POST(request: Request) {
         const overlap = getNameTokenOverlap(issue.studentName, studentName);
         const enoughOverlap = submittedTokenCount <= 1 ? overlap >= 1 : overlap >= 2;
         const phoneMatch = normalizePhoneNumber(issue.parentPhone) === parentPhoneNormalized;
-        const schoolMatch = selectedPreviousSchool ? issue.reportingSchoolId === selectedPreviousSchool.id : false;
         const qualifies = exactName || signatureMatch || enoughOverlap;
-        const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + (schoolMatch ? 10 : 0) + overlap;
+        const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + overlap;
 
-        return { ...issue, exactName, signatureMatch, phoneMatch, schoolMatch, qualifies, score };
+        return { ...issue, exactName, signatureMatch, phoneMatch, qualifies, score };
       })
       .filter((issue) => issue.qualifies)
       .sort((a, b) => b.score - a.score);
 
-    const confirmedIssue = candidateIssues.find((issue) => issue.schoolMatch && (issue.exactName || issue.signatureMatch || issue.qualifies)) ?? null;
+    const confirmedIssue = candidateIssues.find((issue) => issue.phoneMatch && (issue.exactName || issue.signatureMatch)) ?? null;
     const possibleIssue = confirmedIssue ? null : candidateIssues[0] ?? null;
-    const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
-    const [matchedIssueSchool] = issueSchoolId && issueSchoolId !== selectedPreviousSchool?.id
-      ? await tx
-          .select({ id: schools.id, name: schools.name, status: schools.status })
-          .from(schools)
-          .where(eq(schools.id, issueSchoolId))
-          .limit(1)
-      : [null];
-    const previousSchool = matchedIssueSchool ?? selectedPreviousSchool ?? null;
+    const previousSchool = selectedPreviousSchool ?? null;
     const searchResult = confirmedIssue ? 'confirmed_match' : possibleIssue ? 'possible_match' : 'no_match';
     const status = confirmedIssue
       ? 'outstanding_balance_reported'
@@ -133,7 +127,8 @@ export async function POST(request: Request) {
           ? 'previous_school_notified'
           : 'no_platform_record_found';
     const notificationStatus = confirmedIssue || previousSchool?.status === 'active' ? 'dashboard' : possibleIssue ? 'not_sent' : 'whatsapp_generated';
-    const linkedIssue = confirmedIssue ?? possibleIssue;
+    // An unconfirmed name match is only a prompt to contact the previous school.
+    const linkedIssue = confirmedIssue;
 
     await tx
       .update(clearanceIssues)
@@ -150,7 +145,7 @@ export async function POST(request: Request) {
     await tx
       .update(clearanceRequests)
       .set({
-        previousSchoolId: issueSchoolId ?? previousSchool?.id ?? null,
+        previousSchoolId: previousSchool?.id ?? null,
         previousSchoolNameSnapshot: previousSchool?.name ?? payload.data.previousSchoolName,
         studentName,
         studentNameNormalized,

@@ -37,6 +37,7 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestKey = useRef<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: PointerEvent) {
@@ -102,12 +103,16 @@ export function ClearanceRequestForm({ role, walletBalanceKobo, schools }: Clear
       return;
     }
 
+    // Keep the same key after a timeout: a retry must return the first check, not charge again.
+    requestKey.current ??= crypto.randomUUID();
+
     try {
       setIsSubmitting(true);
       const response = await fetch('/api/clearance/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestKey: requestKey.current,
           studentName,
           studentFirstName,
           studentMiddleName,

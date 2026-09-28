@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { and, eq, gte, ilike, sql } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db/client';
@@ -9,7 +10,14 @@ import { resolveLocalSchoolActor } from '@/lib/local-actor';
 import { CHECK_PRICE_KOBO } from '@/lib/money';
 import { buildStudentDisplayName, getNameTokenOverlap, getNameTokens, isValidPhoneNumber, normalizeNameSignature, normalizePhoneNumber, normalizeSearchText } from '@/lib/text';
 
+class InsufficientFundsError extends Error {
+  constructor(readonly balanceKobo: number) {
+    super('Insufficient wallet balance.');
+  }
+}
+
 const clearanceStartSchema = z.object({
+  requestKey: z.string().uuid(),
   studentName: z.string().trim().optional(),
   studentFirstName: z.string().trim().min(1).optional(),
   studentMiddleName: z.string().trim().optional(),
@@ -36,7 +44,11 @@ export async function POST(request: Request) {
   const payload = clearanceStartSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {
-    return NextResponse.json({ ok: false, message: 'Invalid clearance request payload.', issues: payload.error.flatten() }, { status: 400 });
+    const issues = payload.error.flatten();
+    const message = issues.fieldErrors.requestKey
+      ? 'Please refresh the page before starting a clearance request.'
+      : 'Invalid clearance request payload.';
+    return NextResponse.json({ ok: false, message, issues }, { status: 400 });
   }
 
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip');
@@ -53,6 +65,15 @@ export async function POST(request: Request) {
   const studentNameNormalized = normalizeSearchText(studentName);
   const studentNameSignature = normalizeNameSignature(studentName);
   const parentPhoneNormalized = normalizePhoneNumber(payload.data.parentPhone);
+  const requestFingerprint = createHash('sha256').update(JSON.stringify({
+    studentName,
+    parentName: payload.data.parentName,
+    parentPhone: parentPhoneNormalized,
+    previousSchoolId: payload.data.previousSchoolId ?? null,
+    previousSchoolName: payload.data.previousSchoolName,
+    gender: payload.data.gender ?? null,
+    lastClass: payload.data.lastClass ?? null,
+  })).digest('hex');
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -62,16 +83,22 @@ export async function POST(request: Request) {
         .where(eq(wallets.schoolId, actor.schoolId))
         .limit(1);
 
-      const [updatedWallet] = await tx
-        .update(wallets)
-        .set({
-          balanceKobo: sql`${wallets.balanceKobo} - ${CHECK_PRICE_KOBO}`,
-          updatedAt: new Date(),
+      const [existingRequest] = await tx
+        .select({
+          id: clearanceRequests.id,
+          status: clearanceRequests.status,
+          searchResult: clearanceRequests.searchResult,
+          amountCharged: clearanceRequests.amountCharged,
+          requestFingerprint: clearanceRequests.requestFingerprint,
         })
-        .where(and(eq(wallets.schoolId, actor.schoolId), gte(wallets.balanceKobo, CHECK_PRICE_KOBO)))
-        .returning({ id: wallets.id, balanceKobo: wallets.balanceKobo });
+        .from(clearanceRequests)
+        .where(and(eq(clearanceRequests.incomingSchoolId, actor.schoolId), eq(clearanceRequests.requestKey, payload.data.requestKey)))
+        .limit(1);
 
-      if (!updatedWallet) {
+      if (existingRequest) {
+        return { kind: 'existing' as const, request: existingRequest, balanceKobo: currentWallet?.balanceKobo ?? 0 };
+      }
+      if (!currentWallet || currentWallet.balanceKobo < CHECK_PRICE_KOBO) {
         return { kind: 'insufficient_funds' as const, balanceKobo: currentWallet?.balanceKobo ?? 0 };
       }
 
@@ -84,20 +111,25 @@ export async function POST(request: Request) {
         : await tx
             .select({ id: schools.id, name: schools.name, status: schools.status })
             .from(schools)
-            .where(ilike(schools.name, `%${payload.data.previousSchoolName}%`))
+            .where(sql`lower(${schools.name}) = lower(${payload.data.previousSchoolName})`)
             .limit(1);
 
-      const unresolvedIssues = await tx
-        .select({
-          id: clearanceIssues.id,
-          reportingSchoolId: clearanceIssues.reportingSchoolId,
-          studentName: clearanceIssues.studentName,
-          studentNameNormalized: clearanceIssues.studentNameNormalized,
-          parentPhone: clearanceIssues.parentPhone,
-        })
-        .from(clearanceIssues)
-        .where(eq(clearanceIssues.status, 'unresolved'))
-        .limit(100);
+      // Only the named previous school can supply a candidate. An unlisted school cannot
+      // establish a match by a similar name elsewhere in the network.
+      const unresolvedIssues = selectedPreviousSchool
+        ? await tx
+            .select({
+              id: clearanceIssues.id,
+              studentName: clearanceIssues.studentName,
+              studentNameNormalized: clearanceIssues.studentNameNormalized,
+              parentPhone: clearanceIssues.parentPhone,
+            })
+            .from(clearanceIssues)
+            .where(and(
+              eq(clearanceIssues.status, 'unresolved'),
+              eq(clearanceIssues.reportingSchoolId, selectedPreviousSchool.id),
+            ))
+        : [];
 
       const submittedTokenCount = getNameTokens(studentName).length;
       const candidateIssues = unresolvedIssues
@@ -107,27 +139,17 @@ export async function POST(request: Request) {
           const overlap = getNameTokenOverlap(issue.studentName, studentName);
           const enoughOverlap = submittedTokenCount <= 1 ? overlap >= 1 : overlap >= 2;
           const phoneMatch = normalizePhoneNumber(issue.parentPhone) === parentPhoneNormalized;
-          const schoolMatch = selectedPreviousSchool ? issue.reportingSchoolId === selectedPreviousSchool.id : false;
           const qualifies = exactName || signatureMatch || enoughOverlap;
-          const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + (schoolMatch ? 10 : 0) + overlap;
+          const score = (exactName ? 30 : 0) + (signatureMatch ? 25 : 0) + (phoneMatch ? 20 : 0) + overlap;
 
-          return { ...issue, exactName, signatureMatch, phoneMatch, schoolMatch, qualifies, score };
+          return { ...issue, exactName, signatureMatch, phoneMatch, qualifies, score };
         })
         .filter((issue) => issue.qualifies)
         .sort((a, b) => b.score - a.score);
 
-      const confirmedIssue = candidateIssues.find((issue) => issue.schoolMatch && (issue.exactName || issue.signatureMatch || issue.qualifies)) ?? null;
+      const confirmedIssue = candidateIssues.find((issue) => issue.phoneMatch && (issue.exactName || issue.signatureMatch)) ?? null;
       const possibleIssue = confirmedIssue ? null : candidateIssues[0] ?? null;
-      const issueSchoolId = confirmedIssue?.reportingSchoolId ?? possibleIssue?.reportingSchoolId ?? null;
-
-      const [matchedIssueSchool] = issueSchoolId && issueSchoolId !== selectedPreviousSchool?.id
-        ? await tx
-            .select({ id: schools.id, name: schools.name, status: schools.status })
-            .from(schools)
-            .where(eq(schools.id, issueSchoolId))
-            .limit(1)
-        : [null];
-      const previousSchool = matchedIssueSchool ?? selectedPreviousSchool ?? null;
+      const previousSchool = selectedPreviousSchool ?? null;
 
       const requestId = makeEntityId('clearance');
       const debitReference = makeWalletReference('clearance');
@@ -140,12 +162,10 @@ export async function POST(request: Request) {
             ? 'previous_school_notified'
             : 'no_platform_record_found';
       const notificationStatus = confirmedIssue || previousSchool?.status === 'active' ? 'dashboard' : possibleIssue ? 'not_sent' : 'whatsapp_generated';
-      const previousSchoolId = issueSchoolId ?? previousSchool?.id ?? null;
-
-      await tx.insert(clearanceRequests).values({
+      const insertedRequests = await tx.insert(clearanceRequests).values({
         id: requestId,
         incomingSchoolId: actor.schoolId,
-        previousSchoolId,
+        previousSchoolId: previousSchool?.id ?? null,
         previousSchoolNameSnapshot: previousSchool?.name ?? payload.data.previousSchoolName,
         studentName,
         studentNameNormalized,
@@ -156,12 +176,44 @@ export async function POST(request: Request) {
         status,
         searchResult,
         amountCharged: CHECK_PRICE_KOBO,
+        requestKey: payload.data.requestKey,
+        requestFingerprint,
         notificationStatus,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         createdByUserId: actor.userId,
-      });
+      }).onConflictDoNothing({ target: [clearanceRequests.incomingSchoolId, clearanceRequests.requestKey] })
+        .returning({ id: clearanceRequests.id });
 
-      const linkedIssue = confirmedIssue ?? possibleIssue;
+      if (insertedRequests.length === 0) {
+        const [racedRequest] = await tx
+          .select({
+            id: clearanceRequests.id,
+            status: clearanceRequests.status,
+            searchResult: clearanceRequests.searchResult,
+            amountCharged: clearanceRequests.amountCharged,
+            requestFingerprint: clearanceRequests.requestFingerprint,
+          })
+          .from(clearanceRequests)
+          .where(and(eq(clearanceRequests.incomingSchoolId, actor.schoolId), eq(clearanceRequests.requestKey, payload.data.requestKey)))
+          .limit(1);
+        if (!racedRequest) throw new Error('Clearance request key conflict without an existing request.');
+        const [walletAfterRace] = await tx
+          .select({ balanceKobo: wallets.balanceKobo })
+          .from(wallets)
+          .where(eq(wallets.schoolId, actor.schoolId))
+          .limit(1);
+        return { kind: 'existing' as const, request: racedRequest, balanceKobo: walletAfterRace?.balanceKobo ?? 0 };
+      }
+
+      const [updatedWallet] = await tx
+        .update(wallets)
+        .set({ balanceKobo: sql`${wallets.balanceKobo} - ${CHECK_PRICE_KOBO}`, updatedAt: new Date() })
+        .where(and(eq(wallets.schoolId, actor.schoolId), gte(wallets.balanceKobo, CHECK_PRICE_KOBO)))
+        .returning({ balanceKobo: wallets.balanceKobo });
+      if (!updatedWallet) throw new InsufficientFundsError(currentWallet.balanceKobo);
+
+      // A possible name match must not attach another child's debt to this case.
+      const linkedIssue = confirmedIssue;
 
       if (linkedIssue) {
         await tx
@@ -217,25 +269,6 @@ export async function POST(request: Request) {
           },
           ipAddress,
         },
-        ...(possibleIssue
-          ? [
-              {
-                id: makeEntityId('audit'),
-                actorUserId: actor.userId,
-                actorSchoolId: actor.schoolId,
-                action: 'clearance_possible_issue_linked',
-                entityType: 'clearance_issue',
-                entityId: possibleIssue.id,
-                metadataJson: {
-                  clearanceRequestId: requestId,
-                  searchResult,
-                  status,
-                  possibleIssueCount: candidateIssues.length,
-                },
-                ipAddress,
-              },
-            ]
-          : []),
       ]);
 
       return {
@@ -247,11 +280,8 @@ export async function POST(request: Request) {
         routeUrl: `/clearance/${requestId}`,
         walletBalanceKobo: updatedWallet.balanceKobo,
         matchedIssueId: confirmedIssue?.id ?? null,
-        possibleIssueId: possibleIssue?.id ?? null,
-        reviewMessage:
-          searchResult === 'possible_match'
-            ? 'A same-name unresolved issue needs staff review because parent phone did not match exactly.'
-            : null,
+        possibleIssueId: null,
+        reviewMessage: searchResult === 'possible_match' ? 'A similar name at the selected school requires direct verification; no issue details are shared.' : null,
       };
     });
 
@@ -260,6 +290,25 @@ export async function POST(request: Request) {
         { ok: false, message: 'Insufficient wallet balance.', balanceKobo: result.balanceKobo, requiredKobo: CHECK_PRICE_KOBO },
         { status: 402 },
       );
+    }
+
+    if (result.kind === 'existing') {
+      if (result.request.requestFingerprint !== requestFingerprint) {
+        return NextResponse.json({ ok: false, message: 'This request key was used for different details. Review your clearance history before starting a new check.' }, { status: 409 });
+      }
+      return NextResponse.json({
+        ok: true,
+        idempotent: true,
+        requestId: result.request.id,
+        status: result.request.status,
+        searchResult: result.request.searchResult,
+        amountChargedKobo: result.request.amountCharged,
+        routeUrl: `/clearance/${result.request.id}`,
+        walletBalanceKobo: result.balanceKobo,
+        matchedIssueId: null,
+        possibleIssueId: null,
+        reviewMessage: null,
+      });
     }
 
     return NextResponse.json({
@@ -275,6 +324,9 @@ export async function POST(request: Request) {
       reviewMessage: result.reviewMessage,
     });
   } catch (error) {
+    if (error instanceof InsufficientFundsError) {
+      return NextResponse.json({ ok: false, message: 'Insufficient wallet balance.', balanceKobo: error.balanceKobo, requiredKobo: CHECK_PRICE_KOBO }, { status: 402 });
+    }
     console.error('Clearance start failed.', error);
     return NextResponse.json({ ok: false, message: 'Unable to start clearance request.' }, { status: 500 });
   }

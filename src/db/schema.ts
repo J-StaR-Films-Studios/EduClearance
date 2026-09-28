@@ -163,6 +163,8 @@ export const clearanceRequests = pgTable(
     status: clearanceRequestStatusEnum('status').notNull(),
     searchResult: searchResultEnum('search_result').notNull(),
     amountCharged: integer('amount_charged').notNull(),
+    requestKey: text('request_key'),
+    requestFingerprint: text('request_fingerprint'),
     correctionCount: integer('correction_count').notNull().default(0),
     notificationStatus: notificationStatusEnum('notification_status').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
@@ -174,6 +176,7 @@ export const clearanceRequests = pgTable(
   },
   (table) => ({
     incomingSchoolIdx: index('clearance_requests_incoming_school_id_idx').on(table.incomingSchoolId),
+    requestKeyIdx: uniqueIndex('clearance_requests_school_request_key_unique').on(table.incomingSchoolId, table.requestKey),
     previousSchoolIdx: index('clearance_requests_previous_school_id_idx').on(table.previousSchoolId),
     studentNameIdx: index('clearance_requests_student_name_normalized_idx').on(table.studentNameNormalized),
     statusIdx: index('clearance_requests_status_idx').on(table.status),
