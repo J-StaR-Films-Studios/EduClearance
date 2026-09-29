@@ -39,6 +39,10 @@ export function normalizePhoneNumber(value: string) {
     return `234${digits.slice(1)}`;
   }
 
+  if (/^[789]\d{9}$/.test(digits)) {
+    return `234${digits}`;
+  }
+
   return digits;
 }
 

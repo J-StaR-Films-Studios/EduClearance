@@ -146,6 +146,18 @@ test('school-scoped matching finds issue after row 100 and retries charge once',
   assert.equal(debitCount, 1);
 });
 
+test('national phone without trunk prefix confirms an issue reported with the prefix', async () => {
+  requestRow = null;
+  balanceKobo = 20_000;
+  const response = await start(post('/api/clearance/start', {
+    ...payload, requestKey: '05d479de-b017-4a7a-9091-902b4864485a', parentPhone: '8031234567',
+  }));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.searchResult, 'confirmed_match');
+  assert.equal(body.matchedIssueId, 'late-match');
+});
+
 test('name-only match stays unconfirmed and never links another child\'s debt', async () => {
   requestRow = null;
   balanceKobo = 20_000;
@@ -174,6 +186,24 @@ test('free-text school name cannot use SQL wildcards to select another school', 
   const body = await response.json();
   assert.equal(body.searchResult, 'no_match');
   assert.equal(body.matchedIssueId, null);
+});
+
+test('correction confirms a matching issue when the request phone omits the trunk prefix', async () => {
+  requestRow = null;
+  balanceKobo = 20_000;
+  const initial = await start(post('/api/clearance/start', {
+    ...payload, requestKey: '5bdde986-17e5-46e1-95d5-eb940ff9ed18',
+    studentLastName: 'Obi Jr', parentPhone: '8031234567',
+  }));
+  const initialBody = await initial.json();
+  assert.equal(initialBody.searchResult, 'possible_match');
+
+  const correction = await correct(post('/api/clearance/correct', {
+    clearanceRequestId: initialBody.requestId, studentFirstName: 'Ada', studentLastName: 'Obi',
+    previousSchoolId: previousSchool.id, previousSchoolName: previousSchool.name,
+  }));
+  assert.equal(correction.status, 200);
+  assert.equal((await correction.json()).searchResult, 'confirmed_match');
 });
 
 test('correction can confirm a matching issue after row 100', async () => {
